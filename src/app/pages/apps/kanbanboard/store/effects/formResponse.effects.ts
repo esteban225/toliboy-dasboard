@@ -13,13 +13,22 @@ export class FormResponseEffects {
 
     fetchForms$ = createEffect(() =>
         this.actions$.pipe(
-            ofType(FormResponseActions.fetchForms),
+            ofType(FormResponseActions.fetchAllForms),
+            tap(() => console.log('🎯 Efecto fetchForms$ - acción fetchAllForms detectada')),
             mergeMap(() =>
                 this.formResponseService.getForms().pipe(
-                    map(forms => FormResponseActions.fetchFormsSuccess({ forms })),
+                    tap(forms => {
+                        console.log('🎯 Efecto fetchForms$ - formularios recibidos del servicio:', forms);
+                        console.log('🎯 Efecto fetchForms$ - cantidad:', forms?.length || 0);
+                    }),
+                    map(forms => {
+                        const action = FormResponseActions.fetchAllFormsSuccess({ forms });
+                        console.log('🎯 Efecto fetchForms$ - despachando fetchAllFormsSuccess con:', action);
+                        return action;
+                    }),
                     catchError(error => {
-                        console.error('❌ Error al obtener los formularios:', error);
-                        return of(FormResponseActions.fetchFormsFailure({ error }));
+                        console.error('❌ Error en efecto fetchForms$:', error);
+                        return of(FormResponseActions.fetchAllFormsFailure({ error }));
                     })
                 )
             )
@@ -112,6 +121,41 @@ export class FormResponseEffects {
             )
         )
     );
+
+    // cargar reglas de validación para un formulario específico
+    loadValidationRules$ = createEffect(() =>
+        this.actions$.pipe(
+            ofType(FormResponseActions.loadValidationRules),
+            switchMap(({ formId }) =>
+                this.formResponseService.getValidationRulesByFormId(formId).pipe(
+                    tap(rules => console.log(`✅ Reglas de validación obtenidas para formulario ${formId}:`, rules)),
+                    map(validationRules => FormResponseActions.loadValidationRulesSuccess({ formId, validationRules })),
+                    catchError(error => {
+                        console.error(`❌ Error al obtener reglas de validación para formulario ${formId}:`, error);
+                        return of(FormResponseActions.loadValidationRulesFailure({ formId, error }));
+                    })
+                )
+            )
+        )
+    );
+
+    // cargar campos de un formulario específico
+    loadFormFields$ = createEffect(() =>
+        this.actions$.pipe(
+            ofType(FormResponseActions.loadFormFields),
+            switchMap(({ formId }) =>
+                this.formResponseService.getFormFields(formId).pipe(
+                    tap(fields => console.log(`✅ Campos obtenidos para formulario ${formId}:`, fields)),
+                    map(fields => FormResponseActions.loadFormFieldsSuccess({ formId, fields })),
+                    catchError(error => {
+                        console.error(`❌ Error al obtener campos para formulario ${formId}:`, error);
+                        return of(FormResponseActions.loadFormFieldsFailure({ formId, error }));
+                    })
+                )
+            )
+        )
+    );
+
     constructor(
         private actions$: Actions,
         private formResponseService: FormResponseService

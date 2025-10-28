@@ -7,24 +7,136 @@
 
   <!-- SUBBOTONES MATERIA PRIMA -->
   <div *ngIf="showMateria" class="sub-buttons" [@fadeZoom]>
-    <button class="sub-btn" (click)="openModal('Materia Prima - Formulario 1')">Formulario 1</button>
-    <button class="sub-btn" (click)="openModal('Materia Prima - Formulario 2')">Formulario 2</button>
+    <ng-container *ngIf="forms$ | async as forms">
+      <button
+        *ngFor="let form of forms"
+        class="sub-btn"
+        (click)="openModal(form)"
+      >
+        {{ form.title || form.name }}
+      </button>
+    </ng-container>
   </div>
 
   <!-- SUBBOTONES PRODUCCIÓN -->
   <div *ngIf="showProduccion" class="sub-buttons" [@fadeZoom]>
-    <button class="sub-btn" (click)="openModal('Panadería y Pastelería')">Panadería y Pastelería</button>
-    <button class="sub-btn" (click)="openModal('Empacado de Productos')">Empacado de Productos</button>
-    <button class="sub-btn" (click)="openModal('Línea Richart')">Línea Richart</button>
-    <button class="sub-btn" (click)="openModal('Producto Terminado')">Producto Terminado</button>
+    <ng-container *ngIf="forms$ | async as forms">
+      <button
+        *ngFor="let form of forms"
+        class="sub-btn"
+        (click)="openModal(form)"
+      >
+        {{ form.title || form.name }}
+      </button>
+    </ng-container>
   </div>
 
   <!-- MODAL FLOTANTE -->
   <div class="modal-backdrop" *ngIf="modalVisible" (click)="closeModal()">
     <div class="modal-box" (click)="$event.stopPropagation()">
-      <h3>{{ modalTitle }}</h3>
-      <p>No hay formularios disponibles por ahora 🧩</p>
-      <button class="close-btn" (click)="closeModal()">Cerrar</button>
+      
+      <!-- CABECERA DEL MODAL -->
+      <div class="modal-header">
+        <h3>{{ modalTitle }}</h3>
+        <button class="close-btn" (click)="closeModal()">×</button>
+      </div>
+
+      <!-- CONTENIDO SCROLLEABLE -->
+      <div class="modal-content">
+        <div *ngIf="selectedForm" class="form-container">
+          <h4>{{ selectedForm.name || selectedForm.title || 'Formulario' }}</h4>
+
+          <form [formGroup]="dynamicForm" (ngSubmit)="onSubmitForm()" *ngIf="dynamicForm && selectedForm.form_fields?.length > 0">
+            <div *ngFor="let field of selectedForm.form_fields; let i = index" class="form-group mb-3">
+              
+              <label [for]="getFieldCode(field)" class="form-label">
+                {{ getFieldLabel(field) }}
+                <span *ngIf="isFieldRequired(field)" class="text-danger">*</span>
+              </label>
+
+              <!-- TEXT -->
+              <input 
+                *ngIf="getFieldType(field) === 'text' || getFieldType(field) === 'string'" 
+                type="text" 
+                [id]="getFieldCode(field)"
+                [formControlName]="getFieldCode(field)" 
+                [placeholder]="getFieldPlaceholder(field)"
+                class="form-control"
+              />
+
+              <!-- NUMBER -->
+              <input 
+                *ngIf="getFieldType(field) === 'number' || getFieldType(field) === 'integer'" 
+                type="number" 
+                [id]="getFieldCode(field)"
+                [formControlName]="getFieldCode(field)" 
+                [placeholder]="getFieldPlaceholder(field)"
+                class="form-control"
+              />
+
+              <!-- DATE -->
+              <input 
+                *ngIf="getFieldType(field) === 'date'" 
+                type="date" 
+                [id]="getFieldCode(field)"
+                [formControlName]="getFieldCode(field)" 
+                class="form-control"
+              />
+
+              <!-- EMAIL -->
+              <input 
+                *ngIf="getFieldType(field) === 'email'" 
+                type="email" 
+                [id]="getFieldCode(field)"
+                [formControlName]="getFieldCode(field)" 
+                [placeholder]="getFieldPlaceholder(field) || 'ejemplo@correo.com'"
+                class="form-control"
+              />
+
+              <!-- TEXTAREA -->
+              <textarea 
+                *ngIf="getFieldType(field) === 'textarea' || getFieldType(field) === 'text_area'" 
+                [id]="getFieldCode(field)"
+                [formControlName]="getFieldCode(field)"
+                [placeholder]="getFieldPlaceholder(field)"
+                class="form-control"
+                rows="4"
+              ></textarea>
+
+              <!-- SELECT -->
+              <select 
+                *ngIf="getFieldType(field) === 'select' || getFieldType(field) === 'dropdown'" 
+                [id]="getFieldCode(field)"
+                [formControlName]="getFieldCode(field)"
+                class="form-control"
+              >
+                <option value="">Seleccionar...</option>
+                <option *ngFor="let option of field.options" [value]="option.value || option">
+                  {{ option.label || option.text || option }}
+                </option>
+              </select>
+
+              <!-- DESCRIPCIÓN -->
+              <small *ngIf="getFieldDescription(field)" class="form-text text-muted">
+                {{ getFieldDescription(field) }}
+              </small>
+            </div>
+          </form>
+
+          <!-- SIN CAMPOS -->
+          <div *ngIf="!selectedForm.form_fields || selectedForm.form_fields.length === 0" class="alert alert-warning">
+            <h5><i class="fas fa-exclamation-triangle me-2"></i>No hay campos definidos</h5>
+            <p>Este formulario no tiene campos configurados para mostrar.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- PIE DEL MODAL -->
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="closeModal()">Cancelar</button>
+        <button class="btn btn-primary" (click)="onSubmitForm()" [disabled]="!dynamicForm || dynamicForm.invalid">Guardar</button>
+      </div>
+
     </div>
   </div>
 </div>
