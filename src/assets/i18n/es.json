@@ -1,0 +1,53 @@
+{
+  "MENUITEMS": {
+    "MENU": {
+      "TEXT": "MENÚ"
+    },
+    "DASHBOARD": {
+      "TEXT": "Tableros",
+      "LIST": {
+        "ANALYTICS": "Analítica",
+        "ECOMMERCE": "Comercio Electrónico"
+      }
+    },
+    "APPS": {
+      "TEXT": "Aplicaciones",
+      "LIST": {
+        "USERS": "Usuarios",
+        "USERS.LIST": "Lista de Usuarios",
+        "USERS.NEW": "Nuevo Usuario",
+        "CALENDAR": "Calendario",
+        "CHAT": "Chat",
+        "EMAIL": "Correo Electrónico",
+        "FILEMANAGER": "Administrador de Archivos",
+        "TODO": "Tareas",
+        "CONTACTS": "Contactos",
+        "LEARNING": "Aprendizaje",
+        "COURSES": "Cursos",
+        "KANBANBOARD": "Tablero Kanban",
+        "INVOICES": "Facturas",
+        "LISTVIEW": "Vista de Lista",
+        "OVERVIEW": "Resumen",
+        "CREATEINVOICE": "Crear Factura",
+        "FORMMANAGER": "Gestor de Formularios"
+      }
+    },
+    "MODULES": {
+      "TEXT": "Módulos"
+    },
+    "USERMANAGEMENT":{
+      "TEXT": "Gestión de Usuarios",
+      "LIST": {
+        "USERMANAGEMENT": "Gestión de Usuarios"
+      }
+    },
+    "ADMIN": {
+      "TEXT": "Desarrollador",
+      "LIST": {
+        "USERS": "Gestión de Usuarios",
+        "SETTINGS": "Configuraciones",
+        "REPORTS": "Reportes"
+      }
+    }
+  }
+}

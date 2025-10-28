@@ -1,0 +1,185 @@
+<!-- Page Title -->
+<div class="row">
+  <div class="col-12">
+    <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+      <h4 class="mb-sm-0">Project Manager</h4>
+      <div class="page-title-right">
+        <ol class="breadcrumb m-0">
+          <li class="breadcrumb-item"><a href="javascript: void(0);">Apps</a></li>
+          <li class="breadcrumb-item active">Project Manager</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Projects Overview -->
+<div class="row">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">
+          <i class="ri-folder-line me-2"></i>Projects Overview
+        </h5>
+        <button class="btn btn-primary btn-sm">
+          <i class="ri-add-line me-1"></i>New Project
+        </button>
+      </div>
+      <div class="card-body">
+        <div class="row g-4">
+          <div 
+            *ngFor="let project of projects" 
+            class="col-xl-4 col-lg-6">
+            <div 
+              class="card project-card h-100" 
+              [class.selected]="selectedProject?.id === project.id"
+              (click)="onProjectSelect(project)">
+              <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                  <div>
+                    <h6 class="card-title mb-2">{{ project.name }}</h6>
+                    <span [ngClass]="getStatusClass(project.status)">
+                      {{ project.status | titlecase }}
+                    </span>
+                  </div>
+                  <span [ngClass]="getPriorityClass(project.priority)">
+                    {{ project.priority | titlecase }}
+                  </span>
+                </div>
+                
+                <p class="text-muted small mb-3">{{ project.description }}</p>
+                
+                <!-- Progress Bar -->
+                <div class="mb-3">
+                  <div class="d-flex justify-content-between mb-1">
+                    <small class="text-muted">Progress</small>
+                    <small class="text-muted">{{ project.progress }}%</small>
+                  </div>
+                  <div class="progress progress-sm">
+                    <div 
+                      class="progress-bar" 
+                      [style.width.%]="project.progress"
+                      [ngClass]="{
+                        'bg-success': project.progress >= 80,
+                        'bg-warning': project.progress >= 50 && project.progress < 80,
+                        'bg-danger': project.progress < 50
+                      }">
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Team Members -->
+                <div class="mb-3">
+                  <small class="text-muted d-block mb-2">Team Members</small>
+                  <div class="d-flex flex-wrap gap-1">
+                    <span 
+                      *ngFor="let member of project.teamMembers" 
+                      class="badge bg-light text-dark">
+                      {{ member }}
+                    </span>
+                  </div>
+                </div>
+
+                <!-- Project Info -->
+                <div class="row text-center">
+                  <div class="col-6">
+                    <small class="text-muted d-block">Budget</small>
+                    <strong class="text-success">${{ project.budget | number }}</strong>
+                  </div>
+                  <div class="col-6">
+                    <small class="text-muted d-block">Due Date</small>
+                    <strong>{{ project.endDate | date:'MMM dd' }}</strong>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Project Details (when selected) -->
+<div class="row" *ngIf="selectedProject">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header">
+        <h5 class="mb-0">
+          <i class="ri-information-line me-2"></i>
+          {{ selectedProject.name }} - Details
+        </h5>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <!-- Project Info -->
+          <div class="col-lg-6">
+            <h6>Project Information</h6>
+            <table class="table table-borderless table-sm">
+              <tr>
+                <td class="fw-semibold">Status:</td>
+                <td>
+                  <span [ngClass]="getStatusClass(selectedProject.status)">
+                    {{ selectedProject.status | titlecase }}
+                  </span>
+                </td>
+              </tr>
+              <tr>
+                <td class="fw-semibold">Priority:</td>
+                <td>
+                  <span [ngClass]="getPriorityClass(selectedProject.priority)">
+                    {{ selectedProject.priority | titlecase }}
+                  </span>
+                </td>
+              </tr>
+              <tr>
+                <td class="fw-semibold">Start Date:</td>
+                <td>{{ selectedProject.startDate | date:'medium' }}</td>
+              </tr>
+              <tr>
+                <td class="fw-semibold">End Date:</td>
+                <td>{{ selectedProject.endDate | date:'medium' }}</td>
+              </tr>
+              <tr>
+                <td class="fw-semibold">Budget:</td>
+                <td class="text-success fw-bold">${{ selectedProject.budget | number }}</td>
+              </tr>
+            </table>
+          </div>
+
+          <!-- Tasks -->
+          <div class="col-lg-6">
+            <h6>Recent Tasks</h6>
+            <div class="tasks-list">
+              <div 
+                *ngFor="let task of tasks | slice:0:5" 
+                class="task-item d-flex justify-content-between align-items-center p-2 border-bottom">
+                <div>
+                  <div class="fw-semibold">{{ task.title }}</div>
+                  <small class="text-muted">Assigned to: {{ task.assignedTo }}</small>
+                </div>
+                <div class="text-end">
+                  <span 
+                    class="badge"
+                    [ngClass]="{
+                      'bg-success': task.status === 'done',
+                      'bg-primary': task.status === 'in-progress',
+                      'bg-light text-dark': task.status === 'todo'
+                    }">
+                    {{ task.status | titlecase }}
+                  </span>
+                  <div class="small text-muted mt-1">{{ task.dueDate | date:'MMM dd' }}</div>
+                </div>
+              </div>
+              
+              <div *ngIf="tasks.length === 0" class="text-center text-muted p-4">
+                <i class="ri-task-line display-6"></i>
+                <p class="mt-2">No tasks found</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

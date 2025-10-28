@@ -1,0 +1,317 @@
+<div class="user-management">
+  <!-- 🎯 Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <h1 class="page-title">Gestión de Usuarios</h1>
+      <p class="page-subtitle">Administra los usuarios del sistema</p>
+    </div>
+    <button class="btn btn-primary" (click)="openCreateModal()">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+        <circle cx="9" cy="7" r="4"></circle>
+        <line x1="19" y1="8" x2="19" y2="14"></line>
+        <line x1="22" y1="11" x2="16" y2="11"></line>
+      </svg>
+      Nuevo Usuario
+    </button>
+  </div>
+
+  <!-- 🔄 Estados de carga y error -->
+  <div *ngIf="loading$ | async" class="loading-state">
+    <div class="spinner"></div>
+    <p>Cargando usuarios...</p>
+  </div>
+  <!---
+  <div *ngIf="error$ | async as error" class="error-banner">
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="10"></circle>
+      <line x1="12" y1="8" x2="12" y2="12"></line>
+      <line x1="12" y1="16" x2="12.01" y2="16"></line>
+    </svg>
+    {{ error }}
+  </div>-->
+
+  <!-- 👥 Grid de usuarios -->
+  <ng-container *ngIf="(users$ | async) as users">
+    <div *ngIf="users.length > 0; else noUsers" class="users-grid">
+      <div *ngFor="let user of users$ | async" class="user-card">
+        <div class="user-card-header">
+          <div class="user-avatar">
+            {{ user.name.charAt(0).toUpperCase() }}
+          </div>
+          <div class="user-info">
+            <h3 class="user-name">{{ user.name }}</h3>
+            <p class="user-email">{{ user.email }}</p>
+          </div>
+          <span class="role-badge" [ngClass]="getRoleBadgeClass(user.role_id)">
+            {{ getRoleName(user.role_id) }}
+          </span>
+        </div>
+
+        <div class="user-card-body">
+          <div class="user-detail">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+              <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+            </svg>
+            <span>{{ user.position || 'Sin cargo asignado' }}</span>
+          </div>
+        </div>
+
+        <div class="user-card-actions">
+          <button class="btn-icon btn-view" (click)="viewUser(user)" title="Ver detalles">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+              <circle cx="12" cy="12" r="3"></circle>
+            </svg>
+          </button>
+          <button class="btn-icon btn-edit" (click)="editUser(user)" title="Editar">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+            </svg>
+          </button>
+          <button class="btn-icon btn-delete" (click)="deleteUser(user.id!)" title="Eliminar">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="3 6 5 6 21 6"></polyline>
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+
+  <!-- 📭 Estado vacío -->
+  <ng-template #noUsers>
+    <div class="empty-state">
+      <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+        <circle cx="9" cy="7" r="4"></circle>
+        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+      </svg>
+      <h3>No hay usuarios registrados</h3>
+      <p>Comienza agregando tu primer usuario al sistema</p>
+      <button class="btn btn-primary" (click)="openCreateModal()">Crear primer usuario</button>
+    </div>
+  </ng-template>
+</div>
+
+<!-- 🎨 Modal de Formulario -->
+<div class="modal-overlay" *ngIf="showFormModal" (click)="closeFormModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>{{ isEditMode ? 'Editar Usuario' : 'Nuevo Usuario' }}</h2>
+      <button class="btn-close" (click)="closeFormModal()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+
+    <form (ngSubmit)="onSubmit()" #userForm="ngForm" class="modal-form">
+
+      <!-- 🔹 Información del Usuario -->
+      <fieldset>
+        <legend>Información del Usuario</legend>
+
+        <div class="form-group">
+          <label for="name">Nombre completo</label>
+          <input id="name" type="text" name="name" [(ngModel)]="newUser.name"
+            placeholder="Ej: Juan Pérez" required class="form-control" />
+        </div>
+
+        <div class="form-group">
+          <label for="email">Correo electrónico</label>
+          <input id="email" type="email" name="email" [(ngModel)]="newUser.email"
+            placeholder="Ej: juan@empresa.com" required class="form-control" />
+        </div>
+
+        <div class="form-group" *ngIf="!isEditMode">
+          <label for="password">Contraseña</label>
+          <input id="password" type="password" name="password" [(ngModel)]="newUser.password"
+            placeholder="Mínimo 8 caracteres" required class="form-control" />
+        </div>
+
+        <div class="form-group">
+          <label for="position">Cargo</label>
+          <input id="position" type="text" name="position" [(ngModel)]="newUser.position"
+            placeholder="Ej: Desarrollador Frontend" class="form-control" />
+        </div>
+
+        <div class="form-group">
+          <label for="role">Rol del usuario</label>
+          <select id="role" name="role_id" [(ngModel)]="newUser.role_id" class="form-control">
+            <option [value]="1">Desarrollador</option>
+            <option [value]="2">Gerente General</option>
+            <option [value]="3">Ingeniero de planta</option>
+            <option [value]="4">Ingeniero de producción</option>
+            <option [value]="5">Trazabilidad</option>
+            <option [value]="6">Operador</option>
+          </select>
+        </div>
+      </fieldset>
+
+      <!-- 🔹 Información de Contacto -->
+      <fieldset>
+        <legend>Información de Contacto</legend>
+
+        <div class="form-group">
+          <label for="num_phone">Teléfono principal</label>
+          <input id="num_phone" type="text" name="num_phone"
+            [(ngModel)]="newUserContact.num_phone"
+            placeholder="Ej: 3001234567" class="form-control" />
+        </div>
+
+        <div class="form-group">
+          <label for="num_phone_alt">Teléfono alternativo</label>
+          <input id="num_phone_alt" type="text" name="num_phone_alt"
+            [(ngModel)]="newUserContact.num_phone_alt"
+            placeholder="Ej: 3117654321" class="form-control" />
+        </div>
+
+        <div class="form-group">
+          <label for="identification_type">Tipo de identificación</label>
+          <input id="identification_type" type="text" name="identification_type"
+            [(ngModel)]="newUserContact.identification_type"
+            placeholder="Ej: Cédula de ciudadanía" class="form-control" />
+        </div>
+
+        <div class="form-group">
+          <label for="address">Dirección</label>
+          <input id="address" type="text" name="address"
+            [(ngModel)]="newUserContact.address"
+            placeholder="Ej: Calle 10 #25-36" class="form-control" />
+        </div>
+
+        <div class="form-group">
+          <label for="emergency_contact">Contacto de emergencia</label>
+          <input id="emergency_contact" type="text" name="emergency_contact"
+            [(ngModel)]="newUserContact.emergency_contact"
+            placeholder="Ej: María Pérez" class="form-control" />
+        </div>
+
+        <div class="form-group">
+          <label for="emergency_phone">Teléfono de emergencia</label>
+          <input id="emergency_phone" type="text" name="emergency_phone"
+            [(ngModel)]="newUserContact.emergency_phone"
+            placeholder="Ej: 3129876543" class="form-control" />
+        </div>
+      </fieldset>
+
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" (click)="closeFormModal()">Cancelar</button>
+        <button type="submit" class="btn btn-primary" [disabled]="userForm.invalid">
+          {{ isEditMode ? 'Actualizar' : 'Crear Usuario' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+
+<!-- 🎯 Modal de Detalle del Usuario -->
+<div class="modal-overlay" *ngIf="showDetailModal" (click)="closeDetailModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Detalles del Usuario</h2>
+      <button class="btn-close" (click)="closeDetailModal()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <!-- 🧍 Información General -->
+      <fieldset>
+        <legend>Información del Usuario</legend>
+
+        <div class="detail-group">
+          <strong>Nombre:</strong>
+          <span>{{ selectedUser?.name || 'No registrado' }}</span>
+        </div>
+
+        <div class="detail-group">
+          <strong>Correo electrónico:</strong>
+          <span>{{ selectedUser?.email || 'No registrado' }}</span>
+        </div>
+
+        <div class="detail-group">
+          <strong>Cargo:</strong>
+          <span>{{ selectedUser?.position || 'No registrado' }}</span>
+        </div>
+
+        <div class="detail-group">
+          <strong>Rol:</strong>
+          <span>{{ getRoleName(selectedUser?.role_id || 0) }}</span>
+        </div>
+
+        <div class="detail-group">
+          <strong>Estado:</strong>
+          <span [ngClass]="selectedUser?.is_active ? 'status-active' : 'status-inactive'">
+            {{ selectedUser?.is_active ? 'Activo' : 'Inactivo' }}
+          </span>
+        </div>
+      </fieldset>
+
+      <!-- ☎️ Información de Contacto -->
+      <fieldset *ngIf="selectedUserContact">
+        <legend>Información de Contacto</legend>
+
+        <div class="detail-group">
+          <strong>Teléfono principal:</strong>
+          <span>{{ selectedUserContact?.num_phone || 'No registrado' }}</span>
+        </div>
+
+        <div class="detail-group">
+          <strong>Teléfono alternativo:</strong>
+          <span>{{ selectedUserContact?.num_phone_alt || 'No registrado' }}</span>
+        </div>
+
+        <div class="detail-group">
+          <strong>Tipo de identificación:</strong>
+          <span>{{ selectedUserContact?.identification_type || 'No registrado' }}</span>
+        </div>
+
+        <div class="detail-group">
+          <strong>Dirección:</strong>
+          <span>{{ selectedUserContact?.address || 'No registrada' }}</span>
+        </div>
+
+        <div class="detail-group">
+          <strong>Contacto de emergencia:</strong>
+          <span>{{ selectedUserContact?.emergency_contact || 'No registrado' }}</span>
+        </div>
+
+        <div class="detail-group">
+          <strong>Teléfono de emergencia:</strong>
+          <span>{{ selectedUserContact?.emergency_phone || 'No registrado' }}</span>
+        </div>
+      </fieldset>
+
+      <!-- 🚫 Si no hay información de contacto -->
+      <fieldset *ngIf="!selectedUserContact">
+        <legend>Información de Contacto</legend>
+        <p class="no-data">No hay información de contacto registrada.</p>
+      </fieldset>
+    </div>
+
+    <div class="modal-actions">
+      <button type="button" class="btn btn-primary" (click)="closeDetailModal()">Cerrar</button>
+    </div>
+  </div>
+</div>
+

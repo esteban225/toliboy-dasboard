@@ -1,0 +1,21 @@
+<div class="form-card">
+  <h4>{{ formData.name }}</h4>
+
+  <form [formGroup]="dynamicForm" (ngSubmit)="submit()">
+    <div *ngFor="let field of formData.form_fields" class="form-group">
+      <label>{{ field.label }}</label>
+
+      <!-- Input dinámico -->
+      <input *ngIf="field.type === 'text'" type="text" [formControlName]="field.field_code" />
+      <input *ngIf="field.type === 'number'" type="number" [formControlName]="field.field_code" />
+      <input *ngIf="field.type === 'date'" type="date" [formControlName]="field.field_code" />
+      <textarea *ngIf="field.type === 'textarea'" [formControlName]="field.field_code"></textarea>
+
+      <div *ngIf="dynamicForm.get(field.field_code)?.invalid && dynamicForm.get(field.field_code)?.touched" class="error">
+        Campo inválido o requerido.
+      </div>
+    </div>
+
+    <button type="submit" [disabled]="dynamicForm.invalid">Enviar</button>
+  </form>
+</div>

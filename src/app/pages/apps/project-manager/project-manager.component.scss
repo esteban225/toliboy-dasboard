@@ -1,0 +1,60 @@
+.project-card {
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+  
+  &.selected {
+    border-color: var(--vz-primary);
+    box-shadow: 0 4px 12px rgba(var(--vz-primary-rgb), 0.3);
+  }
+}
+
+.progress-sm {
+  height: 6px;
+}
+
+.task-item {
+  transition: background-color 0.2s ease;
+  
+  &:hover {
+    background-color: var(--vz-gray-100);
+  }
+  
+  &:last-child {
+    border-bottom: none !important;
+  }
+}
+
+.tasks-list {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.badge {
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+// Custom scrollbar for tasks list
+.tasks-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.tasks-list::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.tasks-list::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+  
+  &:hover {
+    background: #a1a1a1;
+  }
+}

@@ -1,0 +1,30 @@
+<div class="kanban-container">
+  <!-- BOTONES PRINCIPALES -->
+  <div class="main-buttons">
+    <button (click)="toggleSection('materia')" class="main-btn">Materia Prima</button>
+    <button (click)="toggleSection('produccion')" class="main-btn">Producción de Productos</button>
+  </div>
+
+  <!-- SUBBOTONES MATERIA PRIMA -->
+  <div *ngIf="showMateria" class="sub-buttons" [@fadeZoom]>
+    <button class="sub-btn" (click)="openModal('Materia Prima - Formulario 1')">Formulario 1</button>
+    <button class="sub-btn" (click)="openModal('Materia Prima - Formulario 2')">Formulario 2</button>
+  </div>
+
+  <!-- SUBBOTONES PRODUCCIÓN -->
+  <div *ngIf="showProduccion" class="sub-buttons" [@fadeZoom]>
+    <button class="sub-btn" (click)="openModal('Panadería y Pastelería')">Panadería y Pastelería</button>
+    <button class="sub-btn" (click)="openModal('Empacado de Productos')">Empacado de Productos</button>
+    <button class="sub-btn" (click)="openModal('Línea Richart')">Línea Richart</button>
+    <button class="sub-btn" (click)="openModal('Producto Terminado')">Producto Terminado</button>
+  </div>
+
+  <!-- MODAL FLOTANTE -->
+  <div class="modal-backdrop" *ngIf="modalVisible" (click)="closeModal()">
+    <div class="modal-box" (click)="$event.stopPropagation()">
+      <h3>{{ modalTitle }}</h3>
+      <p>No hay formularios disponibles por ahora 🧩</p>
+      <button class="close-btn" (click)="closeModal()">Cerrar</button>
+    </div>
+  </div>
+</div>
