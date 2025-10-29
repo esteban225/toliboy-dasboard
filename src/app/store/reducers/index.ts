@@ -9,7 +9,7 @@ import { ToDoReducer, ToDoState } from "./to-do-reducer";
 import { KanbanReducer, KanbanState } from "./kanban-reducer";
 import { userReducer, UserState } from "src/app/pages/modules/user-module/store/reducers/user.reducer";
 import { userContactReducer, UserContactState } from "src/app/pages/modules/user-module/store/reducers/userContact.reducer";
-import { formResponseReducer,FormResponseState } from "src/app/pages/apps/kanbanboard/store/reducers/formResponse.reducers";
+import { formResponseReducer,FormResponseState } from "src/app/pages/modules/forms-module/store/reducers/formResponse.reducers";
 
 export interface RootReducerState {
     layout: fromLayout.LayoutState;

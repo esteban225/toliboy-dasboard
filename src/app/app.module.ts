@@ -51,7 +51,7 @@ import { UserContactEffects } from './pages/modules/user-module/store/effects/us
 
 
 //forms response effects
-import { FormResponseEffects } from './pages/apps/kanbanboard/store/effects/formResponse.effects';
+import { FormResponseEffects } from './pages/modules/forms-module/store/effects/formResponse.effects';
 
 
 // Forms validation effects
