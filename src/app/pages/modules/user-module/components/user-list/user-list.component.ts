@@ -24,7 +24,15 @@ export class UserListComponent implements OnInit, OnDestroy {
   loading$: Observable<boolean>;
   error$: Observable<string | null>;
 
+  // 👇 Agrega esto justo aquí
+  userViewModel$: Observable<{
+    users: UserData[];
+    loading: boolean;
+    error: string | null;
+  }>;
+
   private subscriptions: Subscription[] = [];
+
 
   // Estado de modales
   showFormModal = false;
@@ -66,12 +74,15 @@ export class UserListComponent implements OnInit, OnDestroy {
     this.userContacts$ = this.store.select(UserContactSelector.selectAllUserContacts);
     this.loading$ = this.store.select(UserSelectors.selectUsersLoading);
     this.error$ = this.store.select(UserSelectors.selectUsersError);
+    this.userViewModel$ = this.store.select(UserSelectors.selectUserViewModel);
   }
 
   ngOnInit(): void {
-    this.store.dispatch(UserActions.fetchUsers());
-    this.store.dispatch(UserContactActions.fetchUserContacts());
-  }
+  this.store.dispatch(UserActions.fetchUsers());
+  this.store.dispatch(UserContactActions.fetchUserContacts());
+  this.handleErrors(); 
+}
+
 
   // 🔹 Abrir modal para crear nuevo usuario
   openCreateModal(): void {
@@ -96,10 +107,16 @@ export class UserListComponent implements OnInit, OnDestroy {
   }
 
   // 🔹 Abrir modal para ver detalles del usuario
-  viewUser(user: UserData): void {
-    this.selectedUser = user;
-    this.showDetailModal = true;
-  }
+ viewUser(user: UserData): void {
+  this.selectedUser = user;
+  this.showDetailModal = true;
+
+  // Obtener contacto asociado (suscripción rápida y auto-unsubscribe)
+  const sub = this.userContacts$.subscribe(contacts => {
+    this.selectedUserContact = contacts?.find(c => c.user_id === user.id) || null;
+    sub.unsubscribe();
+  });
+}
 
   // 🔹 Cerrar modales
   closeFormModal(): void {
@@ -114,7 +131,7 @@ export class UserListComponent implements OnInit, OnDestroy {
   // 🔹 Enviar formulario (crear o actualizar)
   onSubmit(): void {
     if (!this.newUser.name || !this.newUser.email) {
-      alert('Por favor, completa los campos obligatorios.');
+      this.alertService.warning('Campos incompletos', 'Por favor completa los campos obligatorios.');
       return;
     }
 
@@ -158,28 +175,65 @@ export class UserListComponent implements OnInit, OnDestroy {
         }
       });
       this.subscriptions.push(sub);
-      this.alertService.success('Usuario creado con éxito');
     }
   }
 
   // 🔹 Eliminar usuario
   deleteUser(id: number): void {
-    if (!id) return;
-    this.alertService.confirm('Eliminar Usuario', '¿Seguro que deseas eliminar este usuario?').then(confirmed => {
-      if (confirmed) {
-        this.store.dispatch(UserActions.deleteUser({ id }));
-      }
-    });
+    this.alertService.confirm('Eliminar Usuario', '¿Seguro que deseas eliminar este usuario?')
+      .then(result => {
+        if (result.isConfirmed) {
+          this.store.dispatch(UserActions.deleteUser({ id }));
+          this.alertService.success('Usuario eliminado', 'El usuario se eliminó correctamente.');
+        } else {
+          this.alertService.info('Cancelado', 'El usuario no fue eliminado.');
+        }
+      });
+
   }
 
   // 🔹 Cargar usuarios manualmente
   loadUsers(): void {
     const token = localStorage.getItem('token');
+
     if (!token) {
-      alert('No hay sesión activa. Inicie sesión por favor.');
+      this.alertService.error(
+        'Sesión no encontrada',
+        'Por favor inicia sesión antes de continuar.'
+      );
       return;
     }
-    this.store.dispatch(UserActions.fetchUsers());
+
+    // Mostrar alerta de carga
+    this.alertService.loading('Cargando usuarios...', 'Por favor espera.');
+
+    try {
+      this.store.dispatch(UserActions.fetchUsers());
+
+      // Cerrar la alerta de carga y mostrar confirmación
+            // en lugar de setTimeout, cerramos el loading cuando loading$ indique que terminó
+      const loadingSub = this.loading$.subscribe(isLoading => {
+        if (!isLoading) {
+          this.alertService.close();
+          this.alertService.success('Usuarios cargados', 'La lista de usuarios se actualizó correctamente.');
+          loadingSub.unsubscribe();
+        }
+      });
+      this.subscriptions.push(loadingSub);
+    } catch (err: any) {
+      this.alertService.close();
+      this.alertService.error('Error inesperado', err.message || 'Ocurrió un error desconocido.');
+    }
+  }
+
+  // 🔹 Manejo general de errores del componente
+  private handleErrors(): void {
+    const sub = this.error$.subscribe(error => {
+      if (error) {
+        this.alertService.error('Error detectado', error);
+      }
+    });
+    this.subscriptions.push(sub);
   }
 
   // 🔹 Obtener nombre del rol
@@ -211,4 +265,5 @@ export class UserListComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.subscriptions.forEach(sub => sub.unsubscribe());
   }
+
 }
