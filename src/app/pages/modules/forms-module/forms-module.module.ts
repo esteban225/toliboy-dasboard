@@ -10,6 +10,8 @@ import { formResponseReducer } from './store/reducers/formResponse.reducers';
 import { FormResponseEffects } from './store/effects/formResponse.effects';
 import { formReducer } from './store/reducers/forms.reducers';
 import { FormsEffects } from './store/effects/forms.effects';
+import { formFilesReducer } from './store/reducers/formFiles.reducers';
+import { FormFilesEffects } from './store/effects/formFiles.effects';
 
 // Components
 import { FormsComponent } from './forms/forms.component';
@@ -31,7 +33,8 @@ import { FormsTrazabilityComponent } from "./pages/forms-trazability/forms-traza
     FormsModuleRoutingModule,
     StoreModule.forFeature('formResponse', formResponseReducer),
     StoreModule.forFeature('forms', formReducer),
-    EffectsModule.forFeature([FormResponseEffects, FormsEffects]),
+    StoreModule.forFeature('formFiles', formFilesReducer),
+    EffectsModule.forFeature([FormResponseEffects, FormsEffects, FormFilesEffects]),
     FormsManagerComponent,
     FormsResponsesComponent,
     FormsTrazabilityComponent,

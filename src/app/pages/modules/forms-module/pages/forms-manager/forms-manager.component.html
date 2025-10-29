@@ -1,44 +1,70 @@
-<div class="container py-4">
+<div class="container-fluid px-4 py-4">
 
-  <!-- Header -->
-  <div class="d-flex justify-content-between align-items-center mb-4 ">
-    <div>
-      <h2 class="fw-bold mb-1">
-        <i class="bx bx-list-ul"></i> Gestor de Formularios
-      </h2>
-      <p class="text-muted">Administra y crea formularios dinámicos para tu aplicación</p>
+  <!-- Header Section -->
+  <div class="row align-items-center mb-5">
+    <div class="col-lg-8">
+      <div class="page-header">
+        <div class="d-flex align-items-center mb-2">
+          <div class="icon-container bg-primary bg-opacity-10 rounded-3 p-3 me-3">
+            <i class="bx bx-list-ul fs-3 text-primary"></i>
+          </div>
+          <div>
+            <h1 class="h3 fw-bold mb-1 text-dark">Gestor de Formularios</h1>
+            <p class="text-muted mb-0 fs-6">Administra y crea formularios dinámicos para tu aplicación</p>
+          </div>
+        </div>
+      </div>
     </div>
-
-    <button 
-      class="btn btn-primary"
-      (click)="openCreateModal()"
-      [disabled]="(loading$ | async)">
-      <i class="bx bx-plus"></i> Nuevo Formulario
-    </button>
+    <div class="col-lg-4 text-lg-end">
+      <button 
+        class="btn btn-primary btn-lg px-4 py-2 shadow-sm"
+        (click)="openCreateModal()"
+        [disabled]="(loading$ | async)"
+        style="border-radius: 12px;">
+        <i class="bx bx-plus fs-5 me-2"></i>
+        <span class="fw-semibold">Nuevo Formulario</span>
+      </button>
+    </div>
   </div>
 
-  <!-- Loading -->
-  <div *ngIf="loading$ | async" class="text-center my-5">
-    <div class="spinner-border"></div>
-    <p class="mt-2">Cargando formularios...</p>
+  <!-- Loading State -->
+  <div *ngIf="loading$ | async" class="d-flex flex-column align-items-center justify-content-center" style="min-height: 300px;">
+    <div class="spinner-border text-primary mb-3" style="width: 3rem; height: 3rem;"></div>
+    <h5 class="text-muted fw-normal">Cargando formularios...</h5>
+    <p class="text-muted small mb-0">Por favor espera un momento</p>
   </div>
 
   <!-- Error Alert 
-  <div *ngIf="error$ | async as error" class="alert alert-danger alert-dismissible fade show" role="alert">
-    <i class="bx bx-error-circle me-2"></i>
-    <strong>Error:</strong> {{ error }}
+  <div *ngIf="error$ | async as error" class="alert alert-danger alert-dismissible fade show border-0 shadow-sm" role="alert" style="border-radius: 12px;">
+    <div class="d-flex align-items-center">
+      <i class="bx bx-error-circle fs-4 me-3"></i>
+      <div>
+        <strong class="d-block">¡Oops! Algo salió mal</strong>
+        <span>{{ error }}</span>
+      </div>
+    </div>
     <button type="button" class="btn-close" (click)="closeError()"></button>
   </div>-->
 
   <!-- Empty State -->
   <div *ngIf="(forms$ | async) as forms">
-    <div *ngIf="forms.length === 0 && !(loading$ | async)" class="text-center py-5">
-      <i class="bx bx-inbox fs-1 text-muted"></i>
-      <h4 class="mt-2">No hay formularios</h4>
-      <p class="text-muted">Crea tu primer formulario para comenzar</p>
-      <button class="btn btn-primary mt-2" (click)="openCreateModal()">
-        <i class="bx bx-plus"></i> Crear Formulario
-      </button>
+    <div *ngIf="forms.length === 0 && !(loading$ | async)" class="empty-state text-center py-5">
+      <div class="empty-state-container">
+        <div class="empty-icon bg-light rounded-circle d-inline-flex align-items-center justify-content-center mb-4" 
+             style="width: 120px; height: 120px;">
+          <i class="bx bx-inbox display-1 text-muted"></i>
+        </div>
+        <h3 class="fw-bold text-dark mb-3">No hay formularios creados</h3>
+        <p class="text-muted mb-4 fs-6 mx-auto" style="max-width: 400px;">
+          Comienza creando tu primer formulario dinámico para recopilar información de manera organizada
+        </p>
+        <button class="btn btn-primary btn-lg px-4 py-3 shadow-sm" 
+                (click)="openCreateModal()"
+                style="border-radius: 12px;">
+          <i class="bx bx-plus fs-5 me-2"></i>
+          <span class="fw-semibold">Crear Mi Primer Formulario</span>
+        </button>
+      </div>
     </div>
 
     <!-- Listado -->
@@ -67,19 +93,18 @@
             </div>
 
             <div class="d-flex gap-2">
-              <button class="btn btn-info btn-sm" (click)="viewFormDetails(form.id!)">
+              <button class="btn btn-info btn-sm" (click)="viewFormDetails(form.id!)" [disabled]="!form">
                 <i class="bx bx-show"></i> Ver
               </button>
-              <button class="btn btn-warning btn-sm" (click)="openEditModal(form)">
+              <button class="btn btn-warning btn-sm" (click)="openEditModal(form)" [disabled]="!form">
                 <i class="bx bx-edit"></i> Editar
               </button>
-              <button class="btn btn-danger btn-sm" (click)="deleteForm(form.id!)">
+              <button class="btn btn-danger btn-sm" (click)="deleteForm(form.id!)" [disabled]="!form || !form.id">
                 <i class="bx bx-trash"></i> Eliminar
               </button>
             </div>
           </div>
         </div>
-
       </div>
     </div>
   </div>
@@ -88,7 +113,7 @@
 
 <!-- Modal Crear/Editar -->
 <div class="modal fade show d-block" tabindex="-1" role="dialog" *ngIf="showFormModal" (click)="closeFormModal()">
-  <div class="modal-dialog modal-lg" (click)="$event.stopPropagation()">
+  <div class="modal-dialog modal-xl" (click)="$event.stopPropagation()">
     <div class="modal-content">
 
       <div class="modal-header">
@@ -100,41 +125,176 @@
       </div>
 
       <form (ngSubmit)="onSubmit()" #formForm="ngForm">
-        <div class="modal-body row g-3">
+        <div class="modal-body">
+          
+          <!-- Información del Formulario -->
+          <h6 class="text-primary mb-3">
+            <i class="bx bx-file-blank"></i> Información del Formulario
+          </h6>
+          
+          <div class="row g-3 mb-4">
+            <div class="col-md-6">
+              <label class="form-label">Nombre *</label>
+              <input class="form-control" required [(ngModel)]="newForm.name" name="name" placeholder="Ej: Formulario de Contacto">
+            </div>
 
-          <div class="col-md-6">
-            <label class="form-label">Nombre *</label>
-            <input class="form-control" required [(ngModel)]="newForm.name" name="name">
+            <div class="col-md-6">
+              <label class="form-label">Código *</label>
+              <input class="form-control" required [(ngModel)]="newForm.code" name="code" [disabled]="isEditMode" placeholder="Ej: contact_form">
+              <small class="text-muted">Solo letras, números, guiones y guiones bajos</small>
+            </div>
+
+            <div class="col-12">
+              <label class="form-label">Descripción</label>
+              <textarea class="form-control" rows="2" [(ngModel)]="newForm.description" name="description" placeholder="Describe el propósito de este formulario"></textarea>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">Versión *</label>
+              <input class="form-control" required [(ngModel)]="newForm.version" name="version" placeholder="Ej: 1.0">
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">Orden de Visualización</label>
+              <input type="number" class="form-control" [(ngModel)]="newForm.display_order" name="display_order" min="0">
+            </div>
+
+            <div class="col-12">
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" [(ngModel)]="newForm.is_active" name="is_active" id="formActive">
+                <label class="form-check-label" for="formActive">Formulario Activo</label>
+              </div>
+            </div>
           </div>
 
-          <div class="col-md-6">
-            <label class="form-label">Código *</label>
-            <input class="form-control" required [(ngModel)]="newForm.code" name="code" [disabled]="isEditMode">
+          <!-- Información del Campo del Formulario -->
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h6 class="text-success mb-0">
+              <i class="bx bx-list-ul"></i> Campo del Formulario
+              <span class="badge bg-primary ms-2" *ngIf="isEditMode && editFormFiles.length > 0">
+                {{ currentEditingFileIndex + 1 }} de {{ editFormFiles.length }}
+              </span>
+            </h6>
+            
+            <!-- Navigation and actions for editing mode -->
+            <div class="btn-group" *ngIf="isEditMode">
+              <button 
+                type="button" 
+                class="btn btn-outline-secondary btn-sm"
+                (click)="goToPreviousField()"
+                [disabled]="currentEditingFileIndex <= 0"
+                title="Campo anterior">
+                <i class="bx bx-chevron-left"></i>
+              </button>
+              <button 
+                type="button" 
+                class="btn btn-outline-secondary btn-sm"
+                (click)="goToNextField()"
+                [disabled]="currentEditingFileIndex >= editFormFiles.length - 1"
+                title="Campo siguiente">
+                <i class="bx bx-chevron-right"></i>
+              </button>
+              <button 
+                type="button" 
+                class="btn btn-outline-success btn-sm"
+                (click)="addNewField()"
+                title="Agregar nuevo campo">
+                <i class="bx bx-plus"></i>
+              </button>
+              <button 
+                type="button" 
+                class="btn btn-outline-danger btn-sm"
+                (click)="deleteCurrentField()"
+                [disabled]="!newFormFile.id"
+                title="Eliminar campo actual">
+                <i class="bx bx-trash"></i>
+              </button>
+            </div>
           </div>
-
-          <div class="col-12">
-            <label class="form-label">Descripción</label>
-            <textarea class="form-control" rows="2" [(ngModel)]="newForm.description" name="description"></textarea>
+          
+          <!-- Field editing indicator -->
+          <div class="alert alert-info py-2" *ngIf="isEditMode">
+            <small>
+              <i class="bx bx-info-circle"></i>
+              <span *ngIf="currentEditingFileIndex === -1">
+                <strong>Creando nuevo campo</strong> para el formulario "{{ newForm.name }}"
+              </span>
+              <span *ngIf="currentEditingFileIndex >= 0">
+                <strong>Editando campo:</strong> {{ newFormFile.label || 'Sin nombre' }}
+              </span>
+            </small>
           </div>
+          
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">Etiqueta del Campo *</label>
+              <input class="form-control" required [(ngModel)]="newFormFile.label" name="field_label" placeholder="Ej: Nombre Completo">
+            </div>
 
-          <div class="col-md-6">
-            <label class="form-label">Versión *</label>
-            <input class="form-control" required [(ngModel)]="newForm.version" name="version">
-          </div>
+            <div class="col-md-6">
+              <label class="form-label">Código del Campo *</label>
+              <input class="form-control" required [(ngModel)]="newFormFile.field_code" name="field_code" placeholder="Ej: full_name">
+              <small class="text-muted">Identificador único del campo</small>
+            </div>
 
-          <div class="col-md-6">
-            <label class="form-label">Orden</label>
-            <input type="number" class="form-control" [(ngModel)]="newForm.display_order" name="display_order">
-          </div>
+            <div class="col-md-6">
+              <label class="form-label">Tipo de Campo *</label>
+              <select class="form-select" required [(ngModel)]="newFormFile.type" name="field_type">
+                <option value="">Seleccionar tipo</option>
+                <option value="text">Texto</option>
+                <option value="email">Email</option>
+                <option value="number">Número</option>
+                <option value="tel">Teléfono</option>
+                <option value="password">Contraseña</option>
+                <option value="textarea">Área de Texto</option>
+                <option value="select">Lista Desplegable</option>
+                <option value="radio">Botones de Radio</option>
+                <option value="checkbox">Casillas de Verificación</option>
+                <option value="date">Fecha</option>
+                <option value="time">Hora</option>
+                <option value="file">Archivo</option>
+              </select>
+            </div>
 
-          <div class="form-check form-switch ms-3">
-            <input class="form-check-input" type="checkbox" [(ngModel)]="newForm.is_active" name="is_active">
-            <label class="form-check-label">Activo</label>
+            <div class="col-md-6">
+              <label class="form-label">Orden del Campo</label>
+              <input type="number" class="form-control" [(ngModel)]="newFormFile.field_order" name="field_order" min="0" placeholder="0">
+            </div>
+
+            <div class="col-12" *ngIf="newFormFile.type === 'select' || newFormFile.type === 'radio' || newFormFile.type === 'checkbox'">
+              <label class="form-label">Opciones (separadas por comas)</label>
+              <textarea class="form-control" rows="2" [(ngModel)]="optionsText" name="options_text" placeholder="Opción 1, Opción 2, Opción 3"></textarea>
+              <small class="text-muted">Para campos de selección múltiple</small>
+            </div>
+
+            <div class="col-12">
+              <label class="form-label">Reglas de Validación (JSON)</label>
+              <textarea class="form-control" rows="2" [(ngModel)]="validationRulesText" name="validation_rules_text" placeholder='{"minLength": 3, "maxLength": 50}'></textarea>
+              <small class="text-muted">Formato JSON con reglas de validación</small>
+            </div>
+
+            <div class="col-md-6">
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" [(ngModel)]="newFormFile.required" name="field_required" id="fieldRequired">
+                <label class="form-check-label" for="fieldRequired">Campo Requerido</label>
+              </div>
+            </div>
+
+            <div class="col-md-6">
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" [(ngModel)]="newFormFile.is_active" name="field_active" id="fieldActive">
+                <label class="form-check-label" for="fieldActive">Campo Activo</label>
+              </div>
+            </div>
           </div>
 
         </div>
 
         <div class="modal-footer">
+          <div class="me-auto small text-muted" *ngIf="isEditMode && editFormFiles.length > 0">
+            <i class="bx bx-info-circle"></i>
+            Este formulario tiene {{ editFormFiles.length }} campo(s) configurado(s)
+          </div>
           <button class="btn btn-secondary" (click)="closeFormModal()">Cancelar</button>
           <button class="btn btn-primary" type="submit" [disabled]="!formForm.valid">
             {{ isEditMode ? 'Actualizar' : 'Crear' }}
@@ -145,3 +305,168 @@
     </div>
   </div>
 </div>
+
+
+<!-- Modal de Detalles del Formulario -->
+<div class="modal fade show d-block" tabindex="-1" role="dialog" *ngIf="showDetailsModal" (click)="closeDetailsModal()">
+  <div class="modal-dialog modal-lg" (click)="$event.stopPropagation()">
+    <div class="modal-content">
+      
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title">
+          <i class="bx bx-show"></i> Detalles del Formulario
+        </h5>
+        <button type="button" class="btn-close btn-close-white" (click)="closeDetailsModal()"></button>
+      </div>
+
+      <div class="modal-body" *ngIf="selectedForm; else loadingDetails">
+        
+        <!-- Información General del Formulario -->
+        <div class="card mb-4">
+          <div class="card-header bg-light">
+            <h6 class="mb-0">
+              <i class="bx bx-info-circle text-primary"></i> Información General
+            </h6>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-md-6">
+                <h5 class="fw-bold text-primary">{{ selectedForm.name }}</h5>
+                <span class="badge bg-secondary mb-2">{{ selectedForm.code }}</span>
+                <p class="text-muted">{{ selectedForm.description || 'Sin descripción disponible' }}</p>
+              </div>
+              <div class="col-md-6">
+                <table class="table table-sm table-borderless">
+                  <tr>
+                    <td><strong>Versión:</strong></td>
+                    <td>v{{ selectedForm.version }}</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Creado por:</strong></td>
+                    <td>ID {{ selectedForm.created_by }}</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Orden:</strong></td>
+                    <td>{{ selectedForm.display_order }}</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Estado:</strong></td>
+                    <td>
+                      <span class="badge" [class.bg-success]="selectedForm.is_active" [class.bg-danger]="!selectedForm.is_active">
+                        {{ selectedForm.is_active ? 'Activo' : 'Inactivo' }}
+                      </span>
+                    </td>
+                  </tr>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Campos del Formulario -->
+        <div class="card">
+          <div class="card-header bg-light">
+            <h6 class="mb-0">
+              <i class="bx bx-list-ul text-success"></i> Campos del Formulario
+              <span class="badge bg-primary ms-2">{{ selectedFormFiles.length }}</span>
+            </h6>
+          </div>
+          <div class="card-body">
+            
+            <!-- Sin campos -->
+            <div *ngIf="selectedFormFiles.length === 0" class="text-center py-4">
+              <i class="bx bx-folder-open fs-1 text-muted"></i>
+              <h6 class="text-muted mt-2">No hay campos configurados</h6>
+              <p class="text-muted small">Este formulario aún no tiene campos definidos</p>
+              <button class="btn btn-outline-primary btn-sm" (click)="closeDetailsModal(); openEditModal(selectedForm)">
+                <i class="bx bx-plus"></i> Agregar Campo
+              </button>
+            </div>
+
+            <!-- Lista de campos -->
+            <div *ngIf="selectedFormFiles.length > 0">
+              <div class="row g-3">
+                <div class="col-md-6" *ngFor="let field of selectedFormFiles; let i = index">
+                  
+                  <div class="card border h-100">
+                    <div class="card-body p-3">
+                      <div class="d-flex justify-content-between align-items-start mb-2">
+                        <h6 class="mb-0 fw-bold">{{ field.label }}</h6>
+                        <span class="badge bg-info">{{ field.type }}</span>
+                      </div>
+                      
+                      <p class="text-muted small mb-2">
+                        <code>{{ field.field_code }}</code>
+                      </p>
+
+                      <div class="small">
+                        <div class="row">
+                          <div class="col-6">
+                            <span class="text-muted">Orden:</span> {{ field.field_order }}
+                          </div>
+                          <div class="col-6">
+                            <span class="badge" [class.bg-success]="field.is_active" [class.bg-secondary]="!field.is_active">
+                              {{ field.is_active ? 'Activo' : 'Inactivo' }}
+                            </span>
+                          </div>
+                        </div>
+                        
+                        <div class="mt-2" *ngIf="field.required">
+                          <span class="badge bg-warning">
+                            <i class="bx bx-asterisk"></i> Requerido
+                          </span>
+                        </div>
+
+                        <!-- Opciones si existen -->
+                        <div class="mt-2" *ngIf="field.options && field.options.length > 0">
+                          <small class="text-muted d-block">Opciones:</small>
+                          <div class="mt-1">
+                            <span class="badge bg-light text-dark me-1" *ngFor="let option of field.options.slice(0, 3)">
+                              {{ option }}
+                            </span>
+                            <span class="text-muted small" *ngIf="field.options.length > 3">
+                              +{{ field.options.length - 3 }} más
+                            </span>
+                          </div>
+                        </div>
+
+                        <!-- Reglas de validación si existen -->
+                        <div class="mt-2" *ngIf="field.validation_rules && field.validation_rules.length > 0">
+                          <small class="text-muted">
+                            <i class="bx bx-shield"></i> Con validaciones
+                          </small>
+                        </div>
+                      </div>
+                      
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Loading state -->
+      <ng-template #loadingDetails>
+        <div class="modal-body text-center py-5">
+          <div class="spinner-border text-primary"></div>
+          <p class="mt-3 text-muted">Cargando detalles del formulario...</p>
+        </div>
+      </ng-template>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="closeDetailsModal()">
+          <i class="bx bx-x"></i> Cerrar
+        </button>
+        <button type="button" class="btn btn-primary" (click)="closeDetailsModal(); openEditModal(selectedForm)" *ngIf="selectedForm">
+          <i class="bx bx-edit"></i> Editar Formulario
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>  

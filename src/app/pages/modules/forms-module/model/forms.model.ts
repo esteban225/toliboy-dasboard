@@ -10,7 +10,7 @@ export interface Forms{
 }
 
 export interface FormsFiles{
-    id: number;
+    id?: number;
     label: string;
     field_code: string;
     type: string;
