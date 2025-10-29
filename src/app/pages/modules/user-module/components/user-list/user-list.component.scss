@@ -40,12 +40,18 @@ $shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
     font-weight: 700;
     color: $text-primary;
     margin: 0 0 0.5rem 0;
+    position: relative;
+    z-index: 1;
+    top: -110px;
+    /* mueve el título 20px hacia arriba */
   }
 
   .page-subtitle {
     color: $text-secondary;
     margin: 0;
     font-size: 0.95rem;
+    position: relative;
+    z-index: 1;
   }
 }
 
@@ -80,6 +86,7 @@ $shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
     background: $primary-dark;
     transform: translateY(-1px);
     box-shadow: $shadow-md;
+
   }
 }
 
@@ -115,17 +122,26 @@ $shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
 
 .btn-view {
   color: $primary;
-  &:hover { background: rgba($primary, 0.1); }
+
+  &:hover {
+    background: rgba($primary, 0.1);
+  }
 }
 
 .btn-edit {
   color: $warning;
-  &:hover { background: rgba($warning, 0.1); }
+
+  &:hover {
+    background: rgba($warning, 0.1);
+  }
 }
 
 .btn-delete {
   color: $danger;
-  &:hover { background: rgba($danger, 0.1); }
+
+  &:hover {
+    background: rgba($danger, 0.1);
+  }
 }
 
 // 📊 Grid de usuarios
@@ -299,7 +315,9 @@ $shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 // ⚠️ Banner de error
@@ -337,6 +355,7 @@ $shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }
@@ -358,6 +377,7 @@ $shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
     transform: translateY(20px);
     opacity: 0;
   }
+
   to {
     transform: translateY(0);
     opacity: 1;
@@ -626,5 +646,96 @@ fieldset {
 
   &:hover {
     background: $secondary;
+  }
+}
+
+/* ----- Parche responsividad texto (añadir al final) ----- */
+@media (max-width: 480px) {
+  .page-title {
+    font-size: 1.25rem !important;
+    text-align: center;
+  }
+
+  .page-subtitle {
+    font-size: 0.9rem !important;
+    text-align: center;
+    line-height: 1.4;
+    position: relative;
+    z-index: 1;
+  }
+
+  .user-card {
+    padding: 0.85rem;
+  }
+
+  .user-card-header {
+    gap: 0.6rem;
+    align-items: center;
+  }
+
+  .user-avatar {
+    width: 40px;
+    height: 40px;
+    font-size: 1rem;
+  }
+
+  .user-name {
+    font-size: 1rem !important;
+    white-space: normal !important;
+    word-break: break-word;
+  }
+
+  .user-email {
+    font-size: 0.82rem !important;
+    white-space: normal !important;
+    word-break: break-word;
+    color: $text-secondary;
+  }
+
+  .user-detail span {
+    font-size: 0.8rem !important;
+    white-space: normal !important;
+    word-break: break-word;
+  }
+
+  .role-badge {
+    font-size: 0.72rem !important;
+    white-space: normal !important;
+    margin-top: 0.5rem;
+  }
+
+  .user-card-actions {
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+
+}
+
+/* ----- 🟡 Estilo del cuadro amarillo de descripción ----- */
+.page-description {
+  background: #fff8e1;
+  /* Fondo amarillo suave */
+  border-left: 4px solid #7c3aed;
+  /* Borde morado */
+  padding: 1rem 1.25rem;
+  margin-top: 1.5rem;
+  margin-bottom: 1.5rem;
+  border-radius: 8px;
+  color: #1e293b;
+  /* Texto oscuro legible */
+  font-size: 0.95rem;
+  line-height: 1.5;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+  position: relative;
+  z-index: 1;
+}
+
+/* 📱 Responsivo (celulares) */
+@media (max-width: 480px) {
+  .page-description {
+    font-size: 0.9rem;
+    line-height: 1.4;
+    text-align: center;
+    padding: 0.9rem 1rem;
   }
 }

@@ -17,3 +17,13 @@ export const selectUsersError = createSelector(
     selectUserState,
     (state: UserState) => state.error
 );
+
+// Selector combinado para obtener todo el estado de usuarios
+export const selectUserViewModel = createSelector(
+  selectUserState,
+  (state) => ({
+    users: state.users,
+    loading: state.loading,
+    error: state.error,
+  })
+);
