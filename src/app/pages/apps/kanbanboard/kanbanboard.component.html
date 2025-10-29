@@ -44,7 +44,6 @@
       <!-- CONTENIDO SCROLLEABLE -->
       <div class="modal-content">
         <div *ngIf="selectedForm" class="form-container">
-          <h4>{{ selectedForm.name || selectedForm.title || 'Formulario' }}</h4>
 
           <form [formGroup]="dynamicForm" (ngSubmit)="onSubmitForm()" *ngIf="dynamicForm && selectedForm.form_fields?.length > 0">
             <div *ngFor="let field of selectedForm.form_fields; let i = index" class="form-group mb-3">

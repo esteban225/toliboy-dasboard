@@ -114,7 +114,7 @@ export class MenuService {
         id: 103,
         label: 'MENUITEMS.MODULES.LIST.INVENTORY',
         icon: 'ti ti-box',
-        link: '/modules/inventory',
+        link: '/modules/forms',
         parentId: 100 
       },/*
       {
