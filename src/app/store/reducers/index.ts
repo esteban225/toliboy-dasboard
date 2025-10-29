@@ -10,7 +10,7 @@ import { KanbanReducer, KanbanState } from "./kanban-reducer";
 import { userReducer, UserState } from "src/app/pages/modules/user-module/store/reducers/user.reducer";
 import { userContactReducer, UserContactState } from "src/app/pages/modules/user-module/store/reducers/userContact.reducer";
 import { formResponseReducer,FormResponseState } from "src/app/pages/modules/forms-module/store/reducers/formResponse.reducers";
-
+import {formReducer, FormState} from "src/app/pages/modules/forms-module/store/reducers/forms.reducers"
 export interface RootReducerState {
     layout: fromLayout.LayoutState;
     authentication: AuthenticationState;
@@ -23,6 +23,7 @@ export interface RootReducerState {
     users: UserState;
     userContacts: UserContactState;
     formResponse: FormResponseState;
+    forms: FormState;
 }
 
 export const rootReducer: ActionReducerMap<RootReducerState> = {
@@ -36,7 +37,8 @@ export const rootReducer: ActionReducerMap<RootReducerState> = {
     kanban:KanbanReducer,
     users: userReducer,
     userContacts: userContactReducer,
-    formResponse: formResponseReducer
+    formResponse: formResponseReducer,
+    forms: formReducer
 }
 
 // Create a selector to retrieve the initial Layout state

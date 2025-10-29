@@ -124,19 +124,25 @@ export class MenuService {
           {
             id: 104,
             label: 'MENUITEMS.FORMMANAGER.LIST.FORMRESPONSES',
-            link: '/modules/form-manager',
+            link: '/modules/forms',
             parentId: 103
           },
           {
             id: 105,
             label: 'MENUITEMS.FORMMANAGER.LIST.FORMMANAGER',
-            link: '/modules/forms',
+            link: '/modules/forms/forms-manager',
             parentId: 103
           },
           {
             id: 106,
             label: 'MENUITEMS.FORMMANAGER.LIST.FORMSTRAZABILITY',
-            link: '/modules/forms-trazability',
+            link: '/modules/forms/forms-trazability',
+            parentId: 103
+          },
+          {
+            id: 107,
+            label: 'MENUITEMS.FORMMANAGER.LIST.FORMRESPONSESDETAIL',
+            link: '/modules/forms/forms-responses',
             parentId: 103
           }
         ],

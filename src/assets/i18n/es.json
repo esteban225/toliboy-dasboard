@@ -47,7 +47,8 @@
       "LIST": {
         "FORMRESPONSES":"Respuestas de Formularios",
         "FORMMANAGER": "Gestor de Formularios",
-        "FORMSTRAZABILITY": "Trazabilidad de Formularios"
+        "FORMSTRAZABILITY": "Trazabilidad de Formularios",
+        "FORMRESPONSESDETAIL":"Detalle de Respuestas de Formularios"
       }
     },
     "INVENTORY": {
