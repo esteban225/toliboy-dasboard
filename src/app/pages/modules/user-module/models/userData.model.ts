@@ -27,6 +27,7 @@ export interface DataUser {
     num_phone: string;
     num_phone_alt: string;
     identification_type: string;
+    num_identification: string;
     address: string;
     emergency_contact: string;
     emergency_phone: string;

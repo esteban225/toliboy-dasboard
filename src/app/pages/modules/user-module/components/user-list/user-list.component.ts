@@ -49,6 +49,7 @@ export class UserListComponent implements OnInit, OnDestroy {
     num_phone: '',
     num_phone_alt: '',
     identification_type: '',
+    num_identification: '',
     address: '',
     emergency_contact: '',
     emergency_phone: ''
@@ -99,6 +100,11 @@ export class UserListComponent implements OnInit, OnDestroy {
   viewUser(user: UserData): void {
     this.selectedUser = user;
     this.showDetailModal = true;
+    // Obtener el contacto asociado
+    const sub = this.userContacts$.subscribe(contacts => {
+      this.selectedUserContact = contacts.find(contact => contact.user_id === user.id) || null;
+    });
+    this.subscriptions.push(sub);
   }
 
   // 🔹 Cerrar modales
@@ -138,10 +144,12 @@ export class UserListComponent implements OnInit, OnDestroy {
       // Crear nuevo usuario
       this.store.dispatch(UserActions.createUser({ user: this.newUser }));
 
-      // 🔹 Escuchar cuando el usuario se haya creado exitosamente
-      const sub = this.store.select(UserSelectors.selectUserState).subscribe(state => {
-        const lastUser = state.users[state.users.length - 1]; // último usuario en la lista
+      let sub: Subscription;
 
+      // 🔹 Escuchar cuando el usuario se haya creado exitosamente
+       sub = this.store.select(UserSelectors.selectUserState).subscribe(state => {
+        const lastUser = state.users[state.users.length - 1]; // último usuario en la lista
+        console.log('Último usuario creado:', lastUser.id);
         if (lastUser && lastUser.id) {
           // Crear contacto con el user_id del nuevo usuario
           const contactToCreate = {
@@ -170,16 +178,6 @@ export class UserListComponent implements OnInit, OnDestroy {
         this.store.dispatch(UserActions.deleteUser({ id }));
       }
     });
-  }
-
-  // 🔹 Cargar usuarios manualmente
-  loadUsers(): void {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      alert('No hay sesión activa. Inicie sesión por favor.');
-      return;
-    }
-    this.store.dispatch(UserActions.fetchUsers());
   }
 
   // 🔹 Obtener nombre del rol

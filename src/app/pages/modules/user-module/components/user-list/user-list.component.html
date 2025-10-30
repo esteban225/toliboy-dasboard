@@ -127,14 +127,14 @@
 
         <div class="form-group">
           <label for="name">Nombre completo</label>
-          <input id="name" type="text" name="name" [(ngModel)]="newUser.name"
-            placeholder="Ej: Juan Pérez" required class="form-control" />
+          <input id="name" type="text" name="name" [(ngModel)]="newUser.name" placeholder="Ej: Juan Pérez" required
+            class="form-control" />
         </div>
 
         <div class="form-group">
           <label for="email">Correo electrónico</label>
-          <input id="email" type="email" name="email" [(ngModel)]="newUser.email"
-            placeholder="Ej: juan@empresa.com" required class="form-control" />
+          <input id="email" type="email" name="email" [(ngModel)]="newUser.email" placeholder="Ej: juan@empresa.com"
+            required class="form-control" />
         </div>
 
         <div class="form-group" *ngIf="!isEditMode">
@@ -168,43 +168,44 @@
 
         <div class="form-group">
           <label for="num_phone">Teléfono principal</label>
-          <input id="num_phone" type="text" name="num_phone"
-            [(ngModel)]="newUserContact.num_phone"
+          <input id="num_phone" type="text" name="num_phone" [(ngModel)]="newUserContact.num_phone"
             placeholder="Ej: 3001234567" class="form-control" />
         </div>
 
         <div class="form-group">
           <label for="num_phone_alt">Teléfono alternativo</label>
-          <input id="num_phone_alt" type="text" name="num_phone_alt"
-            [(ngModel)]="newUserContact.num_phone_alt"
+          <input id="num_phone_alt" type="text" name="num_phone_alt" [(ngModel)]="newUserContact.num_phone_alt"
             placeholder="Ej: 3117654321" class="form-control" />
         </div>
 
         <div class="form-group">
           <label for="identification_type">Tipo de identificación</label>
           <input id="identification_type" type="text" name="identification_type"
-            [(ngModel)]="newUserContact.identification_type"
-            placeholder="Ej: Cédula de ciudadanía" class="form-control" />
+            [(ngModel)]="newUserContact.identification_type" placeholder="Ej: Cédula de ciudadanía"
+            class="form-control" />
+        </div>
+
+        <div class="form-group">
+          <label for="num_identification">Número de identificación</label>
+          <input id="num_identification" type="text" name="num_identification"
+            [(ngModel)]="newUserContact.num_identification" placeholder="Ej: 123456789" class="form-control" />
         </div>
 
         <div class="form-group">
           <label for="address">Dirección</label>
-          <input id="address" type="text" name="address"
-            [(ngModel)]="newUserContact.address"
+          <input id="address" type="text" name="address" [(ngModel)]="newUserContact.address"
             placeholder="Ej: Calle 10 #25-36" class="form-control" />
         </div>
 
         <div class="form-group">
           <label for="emergency_contact">Contacto de emergencia</label>
           <input id="emergency_contact" type="text" name="emergency_contact"
-            [(ngModel)]="newUserContact.emergency_contact"
-            placeholder="Ej: María Pérez" class="form-control" />
+            [(ngModel)]="newUserContact.emergency_contact" placeholder="Ej: María Pérez" class="form-control" />
         </div>
 
         <div class="form-group">
           <label for="emergency_phone">Teléfono de emergencia</label>
-          <input id="emergency_phone" type="text" name="emergency_phone"
-            [(ngModel)]="newUserContact.emergency_phone"
+          <input id="emergency_phone" type="text" name="emergency_phone" [(ngModel)]="newUserContact.emergency_phone"
             placeholder="Ej: 3129876543" class="form-control" />
         </div>
       </fieldset>
@@ -282,8 +283,8 @@
         </div>
 
         <div class="detail-group">
-          <strong>Tipo de identificación:</strong>
-          <span>{{ selectedUserContact.identification_type || 'No registrado' }}</span>
+          <strong>Número de identificación:</strong>
+          <span>{{ selectedUserContact.identification_type || 'No registrado' }}: {{ selectedUserContact.num_identification || 'No registrado' }}</span>
         </div>
 
         <div class="detail-group">
@@ -314,4 +315,3 @@
     </div>
   </div>
 </div>
-
