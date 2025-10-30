@@ -24,7 +24,6 @@ export class UserListComponent implements OnInit, OnDestroy {
   loading$: Observable<boolean>;
   error$: Observable<string | null>;
 
-  // 👇 Agrega esto justo aquí
   userViewModel$: Observable<{
     users: UserData[];
     loading: boolean;
@@ -33,13 +32,10 @@ export class UserListComponent implements OnInit, OnDestroy {
 
   private subscriptions: Subscription[] = [];
 
-
-  // Estado de modales
   showFormModal = false;
   showDetailModal = false;
   isEditMode = false;
 
-  // Usuario en edición o creación
   newUser: UserData = {
     id: undefined,
     name: '',
@@ -62,7 +58,6 @@ export class UserListComponent implements OnInit, OnDestroy {
     emergency_phone: ''
   };
 
-  // Usuario seleccionado para detalles
   selectedUser: UserData | null = null;
   selectedUserContact: DataUser | null = null;
 
@@ -78,11 +73,16 @@ export class UserListComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-  this.store.dispatch(UserActions.fetchUsers());
-  this.store.dispatch(UserContactActions.fetchUserContacts());
-  this.handleErrors(); 
-}
+    this.store.dispatch(UserActions.fetchUsers());
+    this.store.dispatch(UserContactActions.fetchUserContacts());
+    this.handleErrors();
 
+    // 🔹 Mostrar mensaje de bienvenida informativo al entrar
+    this.alertService.info(
+      'Gestión de usuarios',
+      'Aquí puedes visualizar, editar, eliminar y crear usuarios junto con su información de contacto.'
+    );
+  }
 
   // 🔹 Abrir modal para crear nuevo usuario
   openCreateModal(): void {
@@ -107,18 +107,16 @@ export class UserListComponent implements OnInit, OnDestroy {
   }
 
   // 🔹 Abrir modal para ver detalles del usuario
- viewUser(user: UserData): void {
-  this.selectedUser = user;
-  this.showDetailModal = true;
+  viewUser(user: UserData): void {
+    this.selectedUser = user;
+    this.showDetailModal = true;
 
-  // Obtener contacto asociado (suscripción rápida y auto-unsubscribe)
-  const sub = this.userContacts$.subscribe(contacts => {
-    this.selectedUserContact = contacts?.find(c => c.user_id === user.id) || null;
-    sub.unsubscribe();
-  });
-}
+    const sub = this.userContacts$.subscribe(contacts => {
+      this.selectedUserContact = contacts?.find(c => c.user_id === user.id) || null;
+      sub.unsubscribe();
+    });
+  }
 
-  // 🔹 Cerrar modales
   closeFormModal(): void {
     this.showFormModal = false;
   }
@@ -136,41 +134,25 @@ export class UserListComponent implements OnInit, OnDestroy {
     }
 
     if (this.isEditMode && this.newUser.id) {
-      // Actualizar usuario existente
       this.store.dispatch(UserActions.updateUser({ id: this.newUser.id, user: this.newUser }));
-      //Actualizar el contacto del usuario si es necesario
-      const updateContact = {
-        ...this.newUserContact,
-        user_id: this.newUser.id
-      }
 
-      // Si el contacto no existe, lo creamos 
+      const updateContact = { ...this.newUserContact, user_id: this.newUser.id };
       this.store.dispatch(UserContactActions.updateUserContact({ id: updateContact.id!, userContact: updateContact }));
 
-      // Alert de éxito
-      this.alertService.success('Usuario y contacto actualizados con éxito');
+      this.alertService.success('Usuario actualizado', 'El usuario y su contacto se actualizaron correctamente.');
       this.closeFormModal();
     } else {
-
-      // Crear nuevo usuario
       this.store.dispatch(UserActions.createUser({ user: this.newUser }));
 
-      // 🔹 Escuchar cuando el usuario se haya creado exitosamente
       const sub = this.store.select(UserSelectors.selectUserState).subscribe(state => {
-        const lastUser = state.users[state.users.length - 1]; // último usuario en la lista
+        const lastUser = state.users[state.users.length - 1];
 
         if (lastUser && lastUser.id) {
-          // Crear contacto con el user_id del nuevo usuario
-          const contactToCreate = {
-            ...this.newUserContact,
-            user_id: lastUser.id
-          };
-
+          const contactToCreate = { ...this.newUserContact, user_id: lastUser.id };
           this.store.dispatch(UserContactActions.createUserContact({ userContact: contactToCreate }));
-          this.alertService.success('Usuario y contacto creados con éxito');
-          this.closeFormModal();
 
-          // Muy importante: desuscribirse para no duplicar
+          this.alertService.success('Usuario creado', 'El usuario y su contacto fueron registrados correctamente.');
+          this.closeFormModal();
           sub.unsubscribe();
         }
       });
@@ -184,34 +166,28 @@ export class UserListComponent implements OnInit, OnDestroy {
       .then(result => {
         if (result.isConfirmed) {
           this.store.dispatch(UserActions.deleteUser({ id }));
-          this.alertService.success('Usuario eliminado', 'El usuario se eliminó correctamente.');
+          this.alertService.success('Usuario eliminado', 'El usuario fue eliminado correctamente.');
         } else {
-          this.alertService.info('Cancelado', 'El usuario no fue eliminado.');
+          this.alertService.info('Cancelado', 'No se realizó ninguna acción.');
         }
+      })
+      .catch(err => {
+        this.alertService.error('Error', 'No se pudo procesar la eliminación.');
+        console.error(err);
       });
-
   }
 
   // 🔹 Cargar usuarios manualmente
   loadUsers(): void {
     const token = localStorage.getItem('token');
-
     if (!token) {
-      this.alertService.error(
-        'Sesión no encontrada',
-        'Por favor inicia sesión antes de continuar.'
-      );
+      this.alertService.error('Sesión no encontrada', 'Por favor inicia sesión antes de continuar.');
       return;
     }
 
-    // Mostrar alerta de carga
     this.alertService.loading('Cargando usuarios...', 'Por favor espera.');
-
     try {
       this.store.dispatch(UserActions.fetchUsers());
-
-      // Cerrar la alerta de carga y mostrar confirmación
-            // en lugar de setTimeout, cerramos el loading cuando loading$ indique que terminó
       const loadingSub = this.loading$.subscribe(isLoading => {
         if (!isLoading) {
           this.alertService.close();
@@ -226,7 +202,7 @@ export class UserListComponent implements OnInit, OnDestroy {
     }
   }
 
-  // 🔹 Manejo general de errores del componente
+  // 🔹 Manejo general de errores
   private handleErrors(): void {
     const sub = this.error$.subscribe(error => {
       if (error) {
@@ -236,7 +212,6 @@ export class UserListComponent implements OnInit, OnDestroy {
     this.subscriptions.push(sub);
   }
 
-  // 🔹 Obtener nombre del rol
   getRoleName(roleId: number): string {
     const roles: Record<number, string> = {
       1: 'Desarrollador',
@@ -249,7 +224,6 @@ export class UserListComponent implements OnInit, OnDestroy {
     return roles[roleId] || 'Sin rol';
   }
 
-  // 🔹 Clase visual para badges de roles
   getRoleBadgeClass(roleId: number): string {
     const classes: Record<number, string> = {
       1: 'badge-developer',
@@ -265,5 +239,4 @@ export class UserListComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.subscriptions.forEach(sub => sub.unsubscribe());
   }
-
 }
