@@ -1,5 +1,5 @@
 export interface Forms{
-    id: number;
+    id?: number;
     name: string;
     code: string;
     description: string;
@@ -10,7 +10,7 @@ export interface Forms{
 }
 
 export interface FormsFiles{
-    id: number;
+    id?: number;
     label: string;
     field_code: string;
     type: string;

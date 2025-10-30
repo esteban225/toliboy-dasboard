@@ -48,6 +48,22 @@ export const loadValidationRulesFailure = createAction(
     props<{ formId: number; error: any }>()
 );
 
+// load form fields actions
+export const loadFormFields = createAction(
+    '[Forms] Load Form Fields',
+    props<{ formId: number }>()
+);
+
+export const loadFormFieldsSuccess = createAction(
+    '[Forms] Load Form Fields Success',
+    props<{ formId: number; fields: any[] }>()
+);
+
+export const loadFormFieldsFailure = createAction(
+    '[Forms] Load Form Fields Failure',
+    props<{ formId: number; error: any }>()
+);
+
 // fetch forms actions
 export const fetchForms = createAction(
     '[Form] Fetch Forms',

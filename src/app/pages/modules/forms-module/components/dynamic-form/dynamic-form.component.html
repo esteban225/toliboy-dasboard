@@ -1,0 +1,114 @@
+<div class="form-card">
+  <!-- Debug básico para verificar que el componente se renderiza -->
+  <div style="background: #e7f3ff; border: 2px solid #2196F3; padding: 15px; margin-bottom: 15px;">
+    <h5>🎨 DynamicFormComponent Cargado</h5>
+    <p>Este mensaje confirma que el componente se está renderizando correctamente.</p>
+  </div>
+
+  <h4>{{ formData?.name || formData?.title || 'Formulario' }}</h4>
+
+  <!-- Debug info detallado -->
+  <div style="background: #f9f9f9; padding: 10px; margin-bottom: 15px; font-size: 11px; border: 1px solid #ddd;">
+    <p><strong>Debug - Dynamic Form:</strong></p>
+    <p>formData: {{ formData ? 'EXISTE' : 'NULL' }}</p>
+    <p>formData.form_fields: {{ getFields()?.length || 0 }} campos</p>
+    <p>dynamicForm válido: {{ dynamicForm?.valid }}</p>
+    <p>dynamicForm existe: {{ dynamicForm ? 'SÍ' : 'NO' }}</p>
+    <p>Campos encontrados en: {{ getFieldsSource() }}</p>
+  </div>
+
+  <!-- Mostrar si hay campos para renderizar -->
+  <div *ngIf="getFields().length > 0">
+    <form [formGroup]="dynamicForm" (ngSubmit)="submit()" *ngIf="dynamicForm">
+      <div *ngFor="let field of getFields(); let i = index" class="form-group">
+        <label [for]="getFieldCode(field)">
+          {{ getFieldLabel(field) }}
+          <span *ngIf="isFieldRequired(field)" class="required">*</span>
+        </label>
+
+      <!-- Input dinámico -->
+      <input 
+        *ngIf="getFieldType(field) === 'text'" 
+        type="text" 
+        [id]="getFieldCode(field)"
+        [formControlName]="getFieldCode(field)" 
+        [placeholder]="getFieldPlaceholder(field)"
+        class="form-control"
+        [class.is-invalid]="dynamicForm.get(getFieldCode(field))?.invalid && dynamicForm.get(getFieldCode(field))?.touched"
+      />
+      
+      <input 
+        *ngIf="getFieldType(field) === 'number'" 
+        type="number" 
+        [id]="getFieldCode(field)"
+        [formControlName]="getFieldCode(field)" 
+        [placeholder]="getFieldPlaceholder(field)"
+        class="form-control"
+        [class.is-invalid]="dynamicForm.get(getFieldCode(field))?.invalid && dynamicForm.get(getFieldCode(field))?.touched"
+      />
+      
+      <input 
+        *ngIf="getFieldType(field) === 'date'" 
+        type="date" 
+        [id]="getFieldCode(field)"
+        [formControlName]="getFieldCode(field)" 
+        class="form-control"
+        [class.is-invalid]="dynamicForm.get(getFieldCode(field))?.invalid && dynamicForm.get(getFieldCode(field))?.touched"
+      />
+      
+      <input 
+        *ngIf="getFieldType(field) === 'email'" 
+        type="email" 
+        [id]="getFieldCode(field)"
+        [formControlName]="getFieldCode(field)" 
+        [placeholder]="getFieldPlaceholder(field) || 'ejemplo@correo.com'"
+        class="form-control"
+        [class.is-invalid]="dynamicForm.get(getFieldCode(field))?.invalid && dynamicForm.get(getFieldCode(field))?.touched"
+      />
+      
+      <textarea 
+        *ngIf="getFieldType(field) === 'textarea'" 
+        [id]="getFieldCode(field)"
+        [formControlName]="getFieldCode(field)"
+        [placeholder]="getFieldPlaceholder(field)"
+        class="form-control"
+        rows="4"
+        [class.is-invalid]="dynamicForm.get(getFieldCode(field))?.invalid && dynamicForm.get(getFieldCode(field))?.touched"
+      ></textarea>
+
+      <!-- Mensaje de error personalizado -->
+      <div *ngIf="getFieldError(getFieldCode(field))" class="error-message">
+        {{ getFieldError(getFieldCode(field)) }}
+      </div>
+
+      <!-- Descripción del campo si existe -->
+      <small *ngIf="getFieldDescription(field)" class="field-description">
+        {{ getFieldDescription(field) }}
+      </small>
+    </div>
+
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary" [disabled]="!dynamicForm || dynamicForm.invalid">
+        Enviar Formulario
+      </button>
+      <button type="button" class="btn btn-secondary" (click)="dynamicForm.reset()">
+        Limpiar
+      </button>
+    </div>
+  </form>
+
+  <!-- Mensaje si no hay formulario dinámico -->
+  <div *ngIf="!dynamicForm" class="no-form">
+    <p>No se pudo construir el formulario. Verifique la estructura de datos.</p>
+  </div>
+  </div>
+
+  <!-- Mensaje si no hay campos -->
+  <div *ngIf="getFields().length === 0" class="no-fields" style="background: #fff3cd; border: 1px solid #ffeaa7; padding: 20px; border-radius: 8px; text-align: center;">
+    <h5>⚠️ No hay campos definidos</h5>
+    <p>Este formulario no tiene campos configurados.</p>
+    <p><strong>Estructura del formulario:</strong></p>
+    <pre style="background: #f8f9fa; padding: 10px; border-radius: 4px; text-align: left; font-size: 12px;">{{ formData | json }}</pre>
+    <p>Para que funcione, el formulario debe tener una propiedad <code>form_fields</code>, <code>fields</code> o <code>formFields</code> con los campos.</p>
+  </div>
+</div>

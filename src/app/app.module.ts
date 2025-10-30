@@ -51,9 +51,8 @@ import { UserContactEffects } from './pages/modules/user-module/store/effects/us
 
 
 //forms response effects
-import { FormResponseEffects } from './pages/apps/kanbanboard/store/effects/formResponse.effects';
-
-// Forms validation effects
+import { FormResponseEffects } from './pages/modules/forms-module/store/effects/formResponse.effects';
+import { FormFilesEffects } from './pages/modules/forms-module/store/effects/formFiles.effects';
 
 
 // Función para traducciones
@@ -102,6 +101,7 @@ if (environment.defaultauth === 'firebase') {
       UserEffects,
       UserContactEffects,
       FormResponseEffects,
+      FormFilesEffects,
     ]),
     AngularFireModule.initializeApp(environment.firebaseConfig),
     AngularFireAuthModule,

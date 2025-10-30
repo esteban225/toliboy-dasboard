@@ -7,9 +7,14 @@ import { CalendarState, calendarReducer } from "./calendar.reducer";
 import { FileReducer, FileState } from "./filemanager-reducer";
 import { ToDoReducer, ToDoState } from "./to-do-reducer";
 import { KanbanReducer, KanbanState } from "./kanban-reducer";
+// User Module Reducers
 import { userReducer, UserState } from "src/app/pages/modules/user-module/store/reducers/user.reducer";
 import { userContactReducer, UserContactState } from "src/app/pages/modules/user-module/store/reducers/userContact.reducer";
 
+// Forms Module Reducers
+import { formResponseReducer,FormResponseState } from "src/app/pages/modules/forms-module/store/reducers/formResponse.reducers";
+import {formReducer, FormState} from "src/app/pages/modules/forms-module/store/reducers/forms.reducers"
+import {formFilesReducer, FormFilesState } from 'src/app/pages/modules/forms-module/store/reducers/formFiles.reducers';
 export interface RootReducerState {
     layout: fromLayout.LayoutState;
     authentication: AuthenticationState;
@@ -18,9 +23,12 @@ export interface RootReducerState {
     calendar: CalendarState;
     files: FileState;
     todo: ToDoState;
-    kanban:KanbanState
+    kanban: KanbanState;
     users: UserState;
     userContacts: UserContactState;
+    formResponse: FormResponseState;
+    forms: FormState;
+    formFiles: FormFilesState;
 }
 
 export const rootReducer: ActionReducerMap<RootReducerState> = {
@@ -33,7 +41,10 @@ export const rootReducer: ActionReducerMap<RootReducerState> = {
     todo: ToDoReducer,
     kanban:KanbanReducer,
     users: userReducer,
-    userContacts: userContactReducer
+    userContacts: userContactReducer,
+    formResponse: formResponseReducer,
+    forms: formReducer,
+    formFiles: formFilesReducer
 }
 
 // Create a selector to retrieve the initial Layout state
