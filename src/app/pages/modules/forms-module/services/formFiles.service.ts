@@ -33,7 +33,8 @@ export class FormFilesService {
         );
     }   
     uploadFormFile(formId: number, fileData: Partial<FormsFiles>): Observable<FormsFiles> {
-        return this.http.post<any>(`${this.apiUrl}/${formId}/files`, fileData).pipe(
+        
+        return this.http.post<any>(`${this.apiUrl}/${formId}/fields`, fileData).pipe(
             // si el backend devuelve { status, message, data: file }
             map((resp) => resp?.data ?? resp),
             catchError(this.handleError)

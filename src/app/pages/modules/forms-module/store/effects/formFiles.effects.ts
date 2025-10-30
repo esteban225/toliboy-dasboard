@@ -40,7 +40,7 @@ export class FormFilesEffects {
         this.actions$.pipe(
             ofType(FormFilesActions.uploadFormFile),
             mergeMap(({ formId, fileData }) =>
-                this.formFilesService.uploadFormFile(formId, fileData as any).pipe(
+                this.formFilesService.uploadFormFile(formId, fileData).pipe(
                     map((response) => FormFilesActions.uploadFormFileSuccess({ response: response as any })),
                     catchError(error => of(FormFilesActions.uploadFormFileFailure({ error })))
                 )

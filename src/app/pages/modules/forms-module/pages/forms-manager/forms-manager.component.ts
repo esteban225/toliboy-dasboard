@@ -31,6 +31,9 @@ export class FormsManagerComponent implements OnInit, OnDestroy {
   showDetailsModal = false;
   selectedForm: Forms | null = null;
   selectedFormFiles: FormsFiles[] = [];
+  
+  // Variable to keep reference to form when adding fields
+  targetFormForNewField: Forms | null = null;
 
   // Edit mode form files
   editFormFiles: FormsFiles[] = [];
@@ -42,6 +45,7 @@ export class FormsManagerComponent implements OnInit, OnDestroy {
   // Estado de modales
   showFormModal = false;
   isEditMode = false;
+  isAddFieldMode = false; // Nueva propiedad para distinguir modo agregar campo
 
   // Formulario en edición o creación
   newForm: Forms = {
@@ -123,6 +127,7 @@ export class FormsManagerComponent implements OnInit, OnDestroy {
 
   openCreateModal() {
     this.isEditMode = false;
+    this.isAddFieldMode = false; // Reset mode
     this.newForm = {
       id: undefined,
       name: '',
@@ -271,9 +276,120 @@ export class FormsManagerComponent implements OnInit, OnDestroy {
 
   closeFormModal() {
     this.showFormModal = false;
+    this.isAddFieldMode = false; // Reset add field mode
+    this.targetFormForNewField = null; // Clear target form reference
     // Clear edit form files when closing
     this.editFormFiles = [];
     this.currentEditingFileIndex = 0;
+    
+    // Clean up any pending form creation subscriptions
+    this.cleanupFormCreationSubscriptions();
+  }
+
+  /**
+   * Alternative method to handle form creation with field
+   * This method uses a more robust approach by monitoring the store state
+   */
+  private handleFormCreationWithField() {
+    const hasFieldData = this.newFormFile.label.trim() || this.newFormFile.field_code.trim();
+    
+    if (!hasFieldData) {
+      console.log('📝 Solo se creó el formulario (sin campos)');
+      return;
+    }
+
+    console.log('⏳ Configurando monitoreo para creación de formulario...');
+    
+    // Store current form count to detect when a new form is added
+    let initialFormCount = 0;
+    const initialCountSubscription = this.forms$.subscribe(forms => {
+      initialFormCount = forms ? forms.length : 0;
+      console.log('📊 Cantidad inicial de formularios:', initialFormCount);
+      initialCountSubscription.unsubscribe();
+    });
+
+    // Monitor for new forms
+    const newFormSubscription = this.forms$.subscribe(forms => {
+      if (forms && forms.length > initialFormCount) {
+        console.log('📊 Nueva cantidad de formularios:', forms.length);
+        
+        // Find the newest form (should have the highest ID or be the last in array)
+        const newestForm = forms.reduce((newest, current) => {
+          if (!newest) return current;
+          if (!current.id || !newest.id) return current.id ? current : newest;
+          return current.id > newest.id ? current : newest;
+        });
+
+        if (newestForm && newestForm.id) {
+          console.log('✅ Formulario más reciente encontrado con ID:', newestForm.id);
+          console.log('📝 Formulario:', newestForm.name);
+          
+          // Verify this is likely our form by checking name/code match
+          if (newestForm.name === this.newForm.name && newestForm.code === this.newForm.code) {
+            console.log('✅ Confirmado: Este es nuestro formulario recién creado');
+            console.log('➕ Creando campo para el formulario...');
+            
+            // Create the field
+            this.createFieldForForm(newestForm.id);
+            
+            // Update our form reference
+            this.newForm.id = newestForm.id;
+            
+            // Clean up subscription
+            newFormSubscription.unsubscribe();
+          } else {
+            console.log('⚠️ El formulario encontrado no coincide con el que estamos creando');
+          }
+        }
+      }
+    });
+
+    // Add to subscription cleanup
+    this.subscription.push(newFormSubscription);
+
+    // Timeout to avoid infinite monitoring
+    setTimeout(() => {
+      if (!newFormSubscription.closed) {
+        console.warn('⚠️ Timeout: No se detectó la creación del formulario');
+        newFormSubscription.unsubscribe();
+      }
+    }, 15000); // 15 seconds timeout
+  }
+
+  /**
+   * Create a field for a specific form
+   */
+  private createFieldForForm(formId: number) {
+    console.log('🔧 Creando campo para formulario ID:', formId);
+    
+    const fieldData: Partial<FormsFiles> = {
+      label: this.newFormFile.label,
+      field_code: this.newFormFile.field_code,
+      type: this.newFormFile.type,
+      required: this.newFormFile.required,
+      options: this.newFormFile.options,
+      validation_rules: this.newFormFile.validation_rules,
+      field_order: this.newFormFile.field_order,
+      is_active: this.newFormFile.is_active
+    };
+    
+    this.store.dispatch(FormFilesActions.uploadFormFile({ formId, fileData: fieldData }));
+    console.log('🎉 Campo enviado para creación');
+  }
+
+  /**
+   * Clean up subscriptions related to form creation
+   */
+  private cleanupFormCreationSubscriptions() {
+    // Filter out any closed subscriptions and keep active ones
+    this.subscription = this.subscription.filter(sub => {
+      if (sub && !sub.closed) {
+        return true; // Keep active subscriptions
+      } else {
+        return false; // Remove closed subscriptions
+      }
+    });
+    console.log('🧹 Cleaned up form creation subscriptions');
   }
 
   // Navigation methods for editing multiple fields
@@ -324,6 +440,126 @@ export class FormsManagerComponent implements OnInit, OnDestroy {
     }
   }
 
+  handleAddField() {
+    if (!this.selectedForm || !this.selectedForm.id) {
+      console.error('❌ Error: No hay formulario seleccionado para agregar campo');
+      this.alertService.toast('error', 'No se puede agregar campo: formulario no válido');
+      return;
+    }
+
+    console.log('➕ Preparando modal para agregar campo al formulario:', this.selectedForm.name);
+    console.log('🔧 Formulario ID:', this.selectedForm.id);
+    
+    // Keep reference to the target form for adding fields
+    this.targetFormForNewField = { ...this.selectedForm };
+    
+    // Close details modal
+    this.closeDetailsModal();
+    
+    // Set up for "add field" mode
+    this.isEditMode = false; // Not editing form itself
+    this.isAddFieldMode = true; // Specifically adding a field
+    this.newForm = { ...this.selectedForm };
+    
+    // Clear previous form files and set up for new field creation
+    this.clearFormFilesStorage();
+    this.editFormFiles = [...this.selectedFormFiles]; // Copy current fields
+    this.currentEditingFileIndex = -1; // Indicates new field
+    
+    // Initialize new field with proper order
+    this.newFormFile = {
+      id: undefined,
+      label: '',
+      field_code: '',
+      type: 'text', // Default type
+      required: false,
+      options: [],
+      validation_rules: [],
+      field_order: this.selectedFormFiles.length, // Next available order
+      is_active: true
+    };
+    
+    // Reset auxiliary properties
+    this.optionsText = '';
+    this.validationRulesText = '';
+    
+    // Show form modal in "add field" mode
+    this.showFormModal = true;
+    
+    console.log('✅ Modal configurado para agregar campo');
+    console.log('📋 Orden del nuevo campo:', this.newFormFile.field_order);
+    console.log('🎯 Modo: isAddFieldMode =', this.isAddFieldMode);
+  }
+
+  /**
+   * Handle submission specifically for adding a new field to existing form
+   */
+  onSubmitNewField() {
+    if (!this.targetFormForNewField || !this.targetFormForNewField.id) {
+      console.error('❌ Error: No hay formulario válido para agregar campo');
+      this.alertService.toast('error', 'Error: Formulario no válido');
+      return;
+    }
+
+    // Validate field data
+    if (!this.newFormFile.label.trim()) {
+      this.alertService.toast('error', 'El nombre del campo es requerido');
+      return;
+    }
+
+    if (!this.newFormFile.field_code.trim()) {
+      this.alertService.toast('error', 'El código del campo es requerido');
+      return;
+    }
+
+    if (!this.newFormFile.type.trim()) {
+      this.alertService.toast('error', 'El tipo de campo es requerido');
+      return;
+    }
+
+    console.log('📝 Creando nuevo campo para formulario ID:', this.targetFormForNewField.id);
+    console.log('🔧 Datos del campo:', {
+      label: this.newFormFile.label,
+      code: this.newFormFile.field_code,
+      type: this.newFormFile.type,
+      order: this.newFormFile.field_order
+    });
+
+    // Process auxiliary properties
+    this.processFormData();
+
+    // Create JSON object for the new field
+    const fieldData: Partial<FormsFiles> = {
+      label: this.newFormFile.label,
+      field_code: this.newFormFile.field_code,
+      type: this.newFormFile.type,
+      required: this.newFormFile.required,
+      options: this.newFormFile.options,
+      validation_rules: this.newFormFile.validation_rules,
+      field_order: this.newFormFile.field_order,
+      is_active: this.newFormFile.is_active
+    };
+
+    console.log('📤 Enviando datos del campo:', fieldData);
+
+    // Dispatch action to create the field
+    this.store.dispatch(FormFilesActions.uploadFormFile({ 
+      formId: this.targetFormForNewField.id!, 
+      fileData: fieldData 
+    }));
+
+    // Show success message
+    this.alertService.toast('success', `Campo "${this.newFormFile.label}" agregado al formulario`);
+
+    // Close modal and refresh form details
+    this.closeFormModal();
+    
+    // Optionally reopen the details modal to show the updated form
+    setTimeout(() => {
+      this.viewFormDetails(this.targetFormForNewField!.id!);
+    }, 500);
+  }
+
   closeDetailsModal() {
     this.showDetailsModal = false;
     this.selectedForm = null;
@@ -340,6 +576,13 @@ export class FormsManagerComponent implements OnInit, OnDestroy {
   }
 
   onSubmit() {
+    // Check if we're adding a field to an existing form
+    if (this.isAddFieldMode) {
+      console.log('🔧 Detectado: Agregando campo a formulario existente');
+      this.onSubmitNewField();
+      return;
+    }
+
     // Process auxiliary properties before submitting
     this.processFormData();
     
@@ -352,18 +595,19 @@ export class FormsManagerComponent implements OnInit, OnDestroy {
         // Creating a new field
         console.log('➕ Creando nuevo campo:', this.newFormFile.label);
         
-        // Convert FormsFiles to FormData for new field
-        const formData = new FormData();
-        formData.append('label', this.newFormFile.label);
-        formData.append('field_code', this.newFormFile.field_code);
-        formData.append('type', this.newFormFile.type);
-        formData.append('required', this.newFormFile.required.toString());
-        formData.append('options', JSON.stringify(this.newFormFile.options));
-        formData.append('validation_rules', JSON.stringify(this.newFormFile.validation_rules));
-        formData.append('field_order', this.newFormFile.field_order.toString());
-        formData.append('is_active', this.newFormFile.is_active.toString());
-        
-        this.store.dispatch(FormFilesActions.uploadFormFile({ formId: this.newForm.id!, fileData: formData }));
+        // Convert FormsFiles to JSON object for new field
+        const fieldData: Partial<FormsFiles> = {
+          label: this.newFormFile.label,
+          field_code: this.newFormFile.field_code,
+          type: this.newFormFile.type,
+          required: this.newFormFile.required,
+          options: this.newFormFile.options,
+          validation_rules: this.newFormFile.validation_rules,
+          field_order: this.newFormFile.field_order,
+          is_active: this.newFormFile.is_active
+        };
+
+        this.store.dispatch(FormFilesActions.uploadFormFile({ formId: this.newForm.id!, fileData: fieldData }));
       } else {
         // Updating existing field
         console.log('✏️ Actualizando campo:', this.newFormFile.label);
@@ -371,24 +615,15 @@ export class FormsManagerComponent implements OnInit, OnDestroy {
       }
     } else {
       // Creating new form
-      this.store.dispatch(FormActions.postForm({ formData: this.newForm }));
+      console.log('📝 Creando nuevo formulario:', this.newForm.name);
       
-      // Only create form field if there's actually data
-      if (this.newFormFile.label.trim() || this.newFormFile.field_code.trim()) {
-        // Convert FormsFiles to FormData
-        const formData = new FormData();
-        formData.append('label', this.newFormFile.label);
-        formData.append('field_code', this.newFormFile.field_code);
-        formData.append('type', this.newFormFile.type);
-        formData.append('required', this.newFormFile.required.toString());
-        formData.append('options', JSON.stringify(this.newFormFile.options));
-        formData.append('validation_rules', JSON.stringify(this.newFormFile.validation_rules));
-        formData.append('field_order', this.newFormFile.field_order.toString());
-        formData.append('is_active', this.newFormFile.is_active.toString());
-        
-        this.store.dispatch(FormFilesActions.uploadFormFile({ formId: this.newForm.id!, fileData: formData }));
-      }
+      // Set up monitoring for form creation with field
+      this.handleFormCreationWithField();
+      
+      // Create the form
+      this.store.dispatch(FormActions.postForm({ formData: this.newForm }));
     }
+    
     this.closeFormModal();
   }
 
@@ -475,8 +710,9 @@ export class FormsManagerComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     // Unsubscribe from all subscriptions to prevent memory leaks
-    this.subscription.forEach(sub => {
-      if (sub) {
+    this.subscription.forEach((sub, index) => {
+      if (sub && !sub.closed) {
+        console.log(`🧹 Unsubscribing from subscription ${index}`);
         sub.unsubscribe();
       }
     });

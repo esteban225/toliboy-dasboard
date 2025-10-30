@@ -18,7 +18,7 @@ export const getFormFilesFailure = createAction(
 
 export const uploadFormFile = createAction(
   "[FormFiles] Upload Form File",
-  props<{ formId: number; fileData: FormData }>()
+  props<{ formId: number; fileData: Partial<FormsFiles> }>()
 );
 
 export const uploadFormFileSuccess = createAction(
