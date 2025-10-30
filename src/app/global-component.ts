@@ -1,6 +1,6 @@
 export const GlobalComponent = {
   // 🌐 URL base de tu API
-  API_URL: 'https://3.85.24.170/api/',
+  API_URL: 'https://apitoliboy.lat/api/',
 
   // 🧾 Token para endpoints protegidos
   headerToken: {
@@ -9,10 +9,10 @@ export const GlobalComponent = {
   },
 
   // 🔐 Endpoints de autenticación
-  AUTH_API: 'https://3.85.24.170/api/',
-  LOGIN_API: 'https://3.85.24.170/api/',
-  REGISTER_API: 'https://3.85.24.170/api/',
+  AUTH_API: 'https://apitoliboy.lat/api/',
+  LOGIN_API: 'https://apitoliboy.lat/api/',
+  REGISTER_API: 'https://apitoliboy.lat/api/',
 
   // Si después tienes más módulos, puedes agregarlos aquí
-  PRODUCTION_API: 'https://3.85.24.170/api/forms'
+  PRODUCTION_API: 'https://apitoliboy.lat/api/forms'
 };

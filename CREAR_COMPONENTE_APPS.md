@@ -284,7 +284,7 @@ ng serve
 ```
 
 #### 10.3: Acceder al Componente
-Navega a: `https://3.85.24.170:4200/apps/mi-componente`
+Navega a: `https://apitoliboy.lat:4200/apps/mi-componente`
 
 ## ✅ Checklist de Verificación
 
@@ -359,7 +359,7 @@ Este ejemplo incluye:
 - Verifica que no hay errores de sintaxis en TypeScript
 
 ### Componente no se muestra
-- Verifica la URL: `https://3.85.24.170:4200/apps/tu-componente`
+- Verifica la URL: `https://apitoliboy.lat:4200/apps/tu-componente`
 - Verifica que el servidor está ejecutándose: `ng serve`
 - Revisa la consola del navegador para errores
 
