@@ -1,6 +1,11 @@
-import { NgModule } from '@angular/core';
+import { NgModule, LOCALE_ID } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { registerLocaleData } from '@angular/common';
+import localeEs from '@angular/common/locales/es';
+
+// Registrar el locale español
+registerLocaleData(localeEs);
 
 // Page Route
 import { AppRoutingModule } from './app-routing.module';
@@ -110,6 +115,7 @@ if (environment.defaultauth === 'firebase') {
   providers: [
     { provide: HTTP_INTERCEPTORS, useClass: JwtInterceptor, multi: true },
     { provide: HTTP_INTERCEPTORS, useClass: ErrorInterceptor, multi: true },
+    { provide: LOCALE_ID, useValue: 'es-ES' },
   ],
   bootstrap: [AppComponent],
 })
