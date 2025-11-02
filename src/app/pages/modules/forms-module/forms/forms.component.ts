@@ -214,13 +214,54 @@ export class FormsComponent implements OnInit, OnDestroy {
     switch (fieldType) {
       case 'number':
       case 'integer':
+      case 'decimal':
+      case 'float':
         validators.push(Validators.pattern(/^-?\d+(?:\.\d+)?$/));
+        if (field.min !== undefined) validators.push(Validators.min(field.min));
+        if (field.max !== undefined) validators.push(Validators.max(field.max));
         console.log('📋 Agregado validador pattern para number');
         break;
+        
       case 'email':
         validators.push(Validators.email);
         console.log('📋 Agregado validador email');
         break;
+        
+      case 'url':
+        validators.push(Validators.pattern(/^https?:\/\/.+/));
+        console.log('📋 Agregado validador pattern para URL');
+        break;
+        
+      case 'tel':
+      case 'phone':
+        if (field.pattern) {
+          validators.push(Validators.pattern(field.pattern));
+        } else {
+          validators.push(Validators.pattern(/^[\+]?[0-9\s\-\(\)]{10,}$/));
+        }
+        console.log('📋 Agregado validador pattern para teléfono');
+        break;
+        
+      case 'password':
+        validators.push(Validators.minLength(field.minLength || 8));
+        if (field.requireUppercase !== false) {
+          validators.push(Validators.pattern(/^(?=.*[A-Z])/));
+        }
+        if (field.requireNumbers !== false) {
+          validators.push(Validators.pattern(/^(?=.*\d)/));
+        }
+        console.log('📋 Agregado validadores para password');
+        break;
+    }
+
+    // Validaciones de longitud para campos de texto
+    if (['text', 'string', 'textarea', 'text_area', 'search'].includes(fieldType)) {
+      if (field.minLength || field.min_length) {
+        validators.push(Validators.minLength(field.minLength || field.min_length));
+      }
+      if (field.maxLength || field.max_length) {
+        validators.push(Validators.maxLength(field.maxLength || field.max_length));
+      }
     }
 
     // Aplicar reglas de validación adicionales si están disponibles
@@ -373,6 +414,183 @@ export class FormsComponent implements OnInit, OnDestroy {
     // Opcional: Cerrar modal después del envío
     this.alertService.success('Formulario enviado correctamente');
     this.closeModal();
+  }
+
+  // ===== MÉTODOS PARA NUEVOS TIPOS DE INPUT =====
+
+  /**
+   * Maneja el cambio en checkboxes múltiples
+   */
+  onCheckboxChange(event: any, fieldCode: string, value: string): void {
+    const formArray = this.dynamicForm.get(fieldCode);
+    
+    if (event.target.checked) {
+      // Agregar valor si está marcado
+      const currentValue = formArray?.value || [];
+      const newValue = Array.isArray(currentValue) ? [...currentValue, value] : [value];
+      this.dynamicForm.patchValue({ [fieldCode]: newValue });
+    } else {
+      // Remover valor si está desmarcado
+      const currentValue = formArray?.value || [];
+      const newValue = Array.isArray(currentValue) 
+        ? currentValue.filter((item: string) => item !== value) 
+        : [];
+      this.dynamicForm.patchValue({ [fieldCode]: newValue });
+    }
+    
+    console.log(`✅ Checkbox ${fieldCode} actualizado:`, this.dynamicForm.get(fieldCode)?.value);
+  }
+
+  /**
+   * Maneja la carga de archivos
+   */
+  onFileChange(event: any, fieldCode: string): void {
+    const files = event.target.files;
+    
+    if (files && files.length > 0) {
+      // Para archivos únicos, guardar solo el primer archivo
+      // Para múltiples archivos, guardar todos
+      const fieldValue = event.target.multiple ? Array.from(files) : files[0];
+      
+      this.dynamicForm.patchValue({ [fieldCode]: fieldValue });
+      
+      console.log(`📎 Archivo(s) seleccionado(s) para ${fieldCode}:`, fieldValue);
+      
+      // Validar tamaño de archivo si está especificado
+      this.validateFileSize(files, fieldCode);
+    }
+  }
+
+  /**
+   * Valida el tamaño de los archivos
+   */
+  private validateFileSize(files: FileList, fieldCode: string): void {
+    const maxSize = 5 * 1024 * 1024; // 5MB por defecto
+    
+    Array.from(files).forEach((file: File) => {
+      if (file.size > maxSize) {
+        this.alertService.error(`El archivo ${file.name} excede el tamaño máximo permitido (5MB)`);
+        // Limpiar el campo
+        this.dynamicForm.patchValue({ [fieldCode]: null });
+      }
+    });
+  }
+
+  /**
+   * Obtiene el tipo MIME aceptado para archivos
+   */
+  getAcceptedFileTypes(field: any): string {
+    if (this.getFieldType(field) === 'image') {
+      return 'image/*';
+    }
+    return field.accept || '*/*';
+  }
+
+  /**
+   * Formatea el valor mostrado para inputs de rango
+   */
+  formatRangeValue(fieldCode: string, field: any): string {
+    const value = this.dynamicForm.get(fieldCode)?.value;
+    const suffix = field.suffix || '';
+    const prefix = field.prefix || '';
+    
+    return `${prefix}${value || field.min || 0}${suffix}`;
+  }
+
+  /**
+   * Obtiene el texto de ayuda para tipos específicos de campos
+   */
+  getFieldHelpText(field: any): string {
+    const type = this.getFieldType(field);
+    
+    switch (type) {
+      case 'password':
+        return 'Mínimo 8 caracteres, incluya mayúsculas, minúsculas y números';
+      case 'tel':
+      case 'phone':
+        return 'Formato: +52 55 1234 5678';
+      case 'url':
+        return 'Incluya http:// o https://';
+      case 'file':
+        return `Tamaño máximo: ${field.maxSize || '5MB'}`;
+      case 'image':
+        return 'Formatos: JPG, PNG, GIF. Máximo 5MB';
+      case 'color':
+        return 'Seleccione un color de la paleta';
+      case 'range':
+        return `Rango: ${field.min || 0} - ${field.max || 100}`;
+      default:
+        return this.getFieldDescription(field);
+    }
+  }
+
+  /**
+   * Determina si un campo debe ocupar el ancho completo
+   */
+  isFullWidthField(field: any): boolean {
+    const type = this.getFieldType(field);
+    const fullWidthTypes = ['textarea', 'text_area', 'file', 'image', 'range', 'color'];
+    return fullWidthTypes.includes(type) || field.fullWidth === true;
+  }
+
+  /**
+   * Obtiene la clase CSS para el tamaño de la columna
+   */
+  getColumnClass(field: any): string {
+    if (this.isFullWidthField(field)) {
+      return 'col-12';
+    }
+    return 'col-12 col-md-6';
+  }
+
+  /**
+   * Verifica si un campo es de tipo fecha/hora
+   */
+  isDateTimeField(field: any): boolean {
+    const type = this.getFieldType(field);
+    const dateTimeTypes = ['date', 'time', 'datetime-local', 'datetime', 'month', 'week'];
+    return dateTimeTypes.includes(type);
+  }
+
+  /**
+   * Obtiene el icono FontAwesome apropiado para cada tipo de campo
+   */
+  getFieldIcon(field: any): string {
+    const type = this.getFieldType(field);
+    
+    const iconMap: { [key: string]: string } = {
+      'text': 'fas fa-font',
+      'string': 'fas fa-font',
+      'email': 'fas fa-envelope',
+      'password': 'fas fa-lock',
+      'number': 'fas fa-hashtag',
+      'integer': 'fas fa-hashtag',
+      'decimal': 'fas fa-calculator',
+      'float': 'fas fa-calculator',
+      'tel': 'fas fa-phone',
+      'phone': 'fas fa-phone',
+      'url': 'fas fa-link',
+      'search': 'fas fa-search',
+      'date': 'fas fa-calendar',
+      'time': 'fas fa-clock',
+      'datetime-local': 'fas fa-calendar-alt',
+      'datetime': 'fas fa-calendar-alt',
+      'month': 'fas fa-calendar-check',
+      'week': 'fas fa-calendar-week',
+      'textarea': 'fas fa-align-left',
+      'text_area': 'fas fa-align-left',
+      'select': 'fas fa-list',
+      'dropdown': 'fas fa-list',
+      'checkbox': 'fas fa-check-square',
+      'radio': 'fas fa-dot-circle',
+      'file': 'fas fa-file-upload',
+      'image': 'fas fa-image',
+      'range': 'fas fa-sliders-h',
+      'color': 'fas fa-palette',
+      'hidden': 'fas fa-eye-slash'
+    };
+    
+    return iconMap[type] || 'fas fa-question-circle';
   }
 
   ngOnDestroy(): void {

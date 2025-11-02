@@ -49,7 +49,7 @@ export class MenuService {
         link: '/apps/calendar',
         parentId: 8
       },
-      {
+      /*{
         id: 10,
         label: 'MENUITEMS.APPS.LIST.CHAT',
         icon: 'ti ti-messages',
@@ -69,7 +69,7 @@ export class MenuService {
         icon: 'ti ti-folders',
         link: '/apps/file-manager',
         parentId: 8,
-      },
+      },*/
       {
         id: 24,
         label: 'MENUITEMS.APPS.LIST.TODO',
@@ -77,13 +77,13 @@ export class MenuService {
         link: '/apps/to-do',
         parentId: 8,
       },
-      {
+      /*{
         id: 25,
         label: 'MENUITEMS.APPS.LIST.CONTACTS',
         icon: 'ti ti-address-book',
         link: '/apps/contacts',
         parentId: 8,
-      },
+      },*/
       {
         id: 26,
         label: 'MENUITEMS.APPS.LIST.KANBANBOARD',

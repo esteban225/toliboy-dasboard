@@ -1,121 +1,100 @@
-/* CONTENEDOR PRINCIPAL */
-.kanban-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 100vh;
-  padding: 2rem;
-  background-color: #f8f9fa;
-}
+// ===================================
+// ESTILOS MÍNIMOS - SOLO LAYOUT Y POSICIONAMIENTO
+// ===================================
 
-/* BOTONES */
-.main-buttons {
-  display: flex;
-  gap: 2rem;
-  margin-bottom: 2rem;
-}
-
-.main-btn {
-  background-color: #0d6efd;
-  color: #fff;
-  border: none;
-  padding: 1rem 2.5rem;
-  border-radius: 10px;
-  font-size: 1.1rem;
-  font-weight: 600;
-  cursor: pointer;
+// Solo animaciones y transiciones básicas
+.btn {
   transition: all 0.3s ease;
+  
+  &:hover {
+    transform: translateY(-2px);
+  }
+  
+  &:active {
+    transform: translateY(0);
+  }
 }
 
-.main-btn:hover {
-  background-color: #0b5ed7;
-  transform: translateY(-3px);
+// ===================================
+// ANIMACIONES PARA ENTRADA DE ELEMENTOS
+// ===================================
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-.sub-buttons {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 1.25rem;
-  width: 85%;
-  max-width: 900px;
-  margin: 0 auto 2rem auto;
+// Aplicar animaciones secuenciales a los elementos
+.row .col-12:nth-child(1) { animation: fadeInUp 0.6s ease-out 0.1s both; }
+.row .col-12:nth-child(2) { animation: fadeInUp 0.6s ease-out 0.2s both; }
+.row .col-12:nth-child(3) { animation: fadeInUp 0.6s ease-out 0.3s both; }
+.row .col-12:nth-child(4) { animation: fadeInUp 0.6s ease-out 0.4s both; }
+.row .col-sm-6:nth-child(5) { animation: fadeInUp 0.6s ease-out 0.5s both; }
+.row .col-sm-6:nth-child(6) { animation: fadeInUp 0.6s ease-out 0.6s both; }
+
+// ===================================
+// MEJORAS PARA MODAL (solo layout)
+// ===================================
+.modal {
+  backdrop-filter: blur(5px);
+  
+  .modal-dialog {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  &.show .modal-dialog {
+    transform: scale(1) translateY(0);
+  }
 }
 
-.sub-btn {
-  background-color: #ffffff;
-  border: 1.5px solid #0d6efd;
-  color: #0d6efd;
-  padding: 0.9rem 1.2rem;
-  border-radius: 10px;
-  font-weight: 500;
-  width: 100%;
-  max-width: 260px;
-  text-align: center;
-  cursor: pointer;
-  transition: all 0.25s ease;
+// ===================================
+// MEJORAS PARA FORMULARIOS (solo layout y focus)
+// ===================================
+.form-control, .form-select {
+  transition: all 0.3s ease;
+  
+  &:focus {
+    transform: translateY(-1px);
+  }
 }
 
-.sub-btn:hover {
-  background-color: #e9f2ff;
-  transform: scale(1.04);
+// ===================================
+// RESPONSIVE ADJUSTMENTS
+// ===================================
+
+// Extra small devices (portrait phones, less than 576px)
+@media (max-width: 575.98px) {
+  .modal-dialog {
+    margin: 0.5rem;
+  }
+  
+  .modal-body {
+    padding: 1rem;
+  }
 }
 
-/* MODAL */
-.modal-backdrop {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(33, 37, 41, 0.6);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 100;
+// Medium devices (tablets, 768px and up)
+@media (min-width: 768px) {
+  .modal-lg {
+    max-width: 700px;
+  }
 }
 
-.modal-box {
-  background-color: #ffffff;
-  border-radius: 12px;
-  max-width: 600px;
-  width: 90%;
-  max-height: 85vh;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
+// Large devices (desktops, 992px and up)
+@media (min-width: 992px) {
+  .modal-lg {
+    max-width: 900px;
+  }
 }
 
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1rem 1.5rem;
-  border-bottom: 1px solid #dee2e6;
-  background-color: #f8f9fa;
-}
-
-.modal-header h3 {
-  margin: 0;
-  font-size: 1.25rem;
-}
-
-.close-btn {
-  background: none;
-  border: none;
-  font-size: 1.5rem;
-  cursor: pointer;
-}
-
-.modal-content {
-  padding: 1.5rem;
-  overflow-y: auto;
-  flex-grow: 1;
-}
-
-.modal-footer {
-  padding: 1rem 1.5rem;
-  border-top: 1px solid #dee2e6;
-  background-color: #f8f9fa;
-  text-align: right;
+// Extra large devices (large desktops, 1200px and up)
+@media (min-width: 1200px) {
+  .container-xl {
+    max-width: 1140px;
+  }
 }
