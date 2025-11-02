@@ -33,20 +33,6 @@ export interface DataUser {
     emergency_phone: string;
 }
 
-/*
-{
-  "user_id": 0,
-  "num_phone": "string",
-  "num_phone_alt": "string",
-  "num_identification": "string",
-  "identification_type": "string",
-  "address": "string",
-  "emergency_contact": "string",
-  "emergency_phone": "string"
-}
-*/
-
-
 
 /// Modelo para horas trabajadas asociado a un usuario
 export interface Worklog {

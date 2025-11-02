@@ -90,9 +90,20 @@ export class UserListComponent implements OnInit, OnDestroy {
   }
 
   // 🔹 Abrir modal para editar usuario existente
-  editUser(user: UserData): void {
+  editUser(user: UserData, userContact: DataUser | null): void {
     this.isEditMode = true;
     this.newUser = { ...user };
+    this.newUserContact = userContact ? { ...userContact } : {
+      id: undefined,
+      user_id: user.id || 0,
+      num_phone: '',
+      num_phone_alt: '',
+      identification_type: '',
+      num_identification: '',
+      address: '',
+      emergency_contact: '',
+      emergency_phone: ''
+    };
     this.showFormModal = true;
   }
 
@@ -180,6 +191,11 @@ export class UserListComponent implements OnInit, OnDestroy {
     });
   }
 
+  // 🔹 Buscar contacto por user_id
+  getUserContact(userId: number, contacts: DataUser[]): DataUser | null {
+    return contacts.find(contact => contact.user_id === userId) || null;
+  }
+
   // 🔹 Obtener nombre del rol
   getRoleName(roleId: number): string {
     const roles: Record<number, string> = {
@@ -196,14 +212,14 @@ export class UserListComponent implements OnInit, OnDestroy {
   // 🔹 Clase visual para badges de roles
   getRoleBadgeClass(roleId: number): string {
     const classes: Record<number, string> = {
-      1: 'badge-developer',
-      2: 'badge-manager',
-      3: 'badge-plant-engineer',
-      4: 'badge-production-engineer',
-      5: 'badge-traceability',
-      6: 'badge-operator'
+      1: 'badge bg-info text-dark',        // Desarrollador
+      2: 'badge bg-primary',               // Gerente General
+      3: 'badge bg-success',               // Ingeniero de planta
+      4: 'badge bg-warning text-dark',     // Ingeniero de producción
+      5: 'badge bg-secondary',             // Trazabilidad
+      6: 'badge bg-dark'                   // Operador
     };
-    return classes[roleId] || 'badge-user';
+    return classes[roleId] || 'badge bg-secondary';
   }
 
   ngOnDestroy(): void {
