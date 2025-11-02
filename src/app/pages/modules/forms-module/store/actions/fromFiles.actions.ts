@@ -33,7 +33,7 @@ export const uploadFormFileFailure = createAction(
 
 export const updateFormFile = createAction(
   "[FormFiles] Update Form File",
-  props<{ id: number; formFileData: Partial<FormsFiles> }>()
+  props<{ formId: number; fieldId: number; formFileData: Partial<FormsFiles> }>()
 );
 
 export const updateFormFileSuccess = createAction(
@@ -48,7 +48,7 @@ export const updateFormFileFailure = createAction(
 
 export const deleteFormFile = createAction(
   "[FormFiles] Delete Form File",
-  props<{ fileId: number }>()
+  props<{ formId: number; fieldId: number }>()
 );
 export const deleteFormFileSuccess = createAction(
   "[FormFiles] Delete Form File Success",

@@ -41,8 +41,28 @@ export class FormFilesEffects {
             ofType(FormFilesActions.uploadFormFile),
             mergeMap(({ formId, fileData }) =>
                 this.formFilesService.uploadFormFile(formId, fileData).pipe(
+                    tap(response => console.log('✅ Archivo de formulario creado exitosamente:', response)),
                     map((response) => FormFilesActions.uploadFormFileSuccess({ response: response as any })),
-                    catchError(error => of(FormFilesActions.uploadFormFileFailure({ error })))
+                    catchError(error => {
+                        console.error('❌ Error al crear archivo de formulario:', error);
+                        return of(FormFilesActions.uploadFormFileFailure({ error }));
+                    })
+                )
+            )
+        )
+    );
+
+    updateFile$ = createEffect(() =>
+        this.actions$.pipe(
+            ofType(FormFilesActions.updateFormFile),
+            mergeMap(({ formId, fieldId, formFileData }) =>
+                this.formFilesService.updateFormFile(formId, fieldId, formFileData).pipe(
+                    tap(response => console.log('✅ Archivo de formulario actualizado exitosamente:', response)),
+                    map((response) => FormFilesActions.updateFormFileSuccess({ response: response as any })),
+                    catchError(error => {
+                        console.error('❌ Error al actualizar archivo de formulario:', error);
+                        return of(FormFilesActions.updateFormFileFailure({ error }));
+                    })
                 )
             )
         )
@@ -51,10 +71,14 @@ export class FormFilesEffects {
     deleteFile$ = createEffect(() =>
         this.actions$.pipe(
             ofType(FormFilesActions.deleteFormFile),
-            mergeMap(({ fileId }) =>
-                this.formFilesService.deleteFormFile(fileId).pipe(
+            mergeMap(({ formId, fieldId }) =>
+                this.formFilesService.deleteFormFile(formId, fieldId).pipe(
+                    tap(response => console.log('✅ Archivo de formulario eliminado exitosamente:', response)),
                     map((response) => FormFilesActions.deleteFormFileSuccess({ response: response as any })),
-                    catchError(error => of(FormFilesActions.deleteFormFileFailure({ error })))
+                    catchError(error => {
+                        console.error('❌ Error al eliminar archivo de formulario:', error);
+                        return of(FormFilesActions.deleteFormFileFailure({ error }));
+                    })
                 )
             )
         )

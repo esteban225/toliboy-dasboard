@@ -1,0 +1,260 @@
+/* Advanced Field Editor Modal Styles */
+.modal {
+  &.show {
+    display: block !important;
+  }
+}
+
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1040;
+}
+
+.bg-dark.bg-opacity-50 {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  z-index: 1050 !important;
+  background-color: rgba(0, 0, 0, 0.6) !important;
+}
+
+.modal-dialog {
+  position: relative;
+  z-index: 1055;
+  margin: 0 auto;
+  pointer-events: auto;
+}
+
+.modal-xl {
+  max-width: 95%;
+  width: 95%;
+  
+  @media (min-width: 1200px) {
+    max-width: 1140px;
+  }
+}
+
+.modal-dialog-centered {
+  display: flex;
+  align-items: center;
+  min-height: 100vh;
+  padding: 1rem;
+}
+
+// Field Editor Specific Styles
+.field-editor-container {
+  height: 100%;
+  max-height: 80vh;
+  overflow: hidden;
+}
+
+.field-list-panel {
+  height: 100%;
+  max-height: 70vh;
+  overflow-y: auto;
+  border-right: 1px solid #dee2e6;
+}
+
+.field-editor-panel {
+  height: 100%;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.cursor-pointer {
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+}
+
+.badge {
+  font-size: 0.75rem;
+  
+  &.bg-success {
+    background-color: #198754 !important;
+  }
+  
+  &.bg-warning {
+    background-color: #ffc107 !important;
+    color: #000 !important;
+  }
+  
+  &.bg-secondary {
+    background-color: #6c757d !important;
+  }
+}
+
+// Cards in field list
+.card {
+  transition: all 0.2s ease;
+  border: 2px solid transparent;
+  
+  &.border-primary {
+    border-color: #0d6efd !important;
+    
+    .card-body {
+      background-color: #0d6efd;
+      color: white;
+    }
+  }
+  
+  &:hover:not(.border-primary) {
+    border-color: #dee2e6;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+}
+
+// Form controls styling
+.form-control, .form-select {
+  border: 1px solid #ced4da;
+  border-radius: 0.375rem;
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+  
+  &:focus {
+    border-color: #80bdff;
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+  }
+}
+
+// Section cards
+.card {
+  &.border-primary {
+    .card-header {
+      background-color: rgba(13, 110, 253, 0.1) !important;
+      border-bottom: 1px solid rgba(13, 110, 253, 0.2);
+      
+      h6 {
+        color: #0d6efd;
+        margin: 0;
+      }
+    }
+  }
+  
+  &.border-success {
+    .card-header {
+      background-color: rgba(25, 135, 84, 0.1) !important;
+      border-bottom: 1px solid rgba(25, 135, 84, 0.2);
+      
+      h6 {
+        color: #198754;
+        margin: 0;
+      }
+    }
+  }
+  
+  &.border-warning {
+    .card-header {
+      background-color: rgba(255, 193, 7, 0.1) !important;
+      border-bottom: 1px solid rgba(255, 193, 7, 0.2);
+      
+      h6 {
+        color: #ffc107;
+        margin: 0;
+      }
+    }
+  }
+}
+
+// Button styles
+.btn {
+  transition: all 0.2s ease;
+  
+  &:hover {
+    transform: translateY(-1px);
+  }
+  
+  &:disabled {
+    opacity: 0.6;
+    transform: none;
+  }
+}
+
+// Navigation controls
+.btn-outline-secondary {
+  &:hover {
+    background-color: #6c757d;
+    border-color: #6c757d;
+    color: white;
+  }
+}
+
+// Form switches
+.form-check-input {
+  &:checked {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+  }
+}
+
+// Text utilities
+.text-muted {
+  color: #6c757d !important;
+}
+
+.text-primary {
+  color: #0d6efd !important;
+}
+
+.text-success {
+  color: #198754 !important;
+}
+
+.text-warning {
+  color: #ffc107 !important;
+}
+
+.text-danger {
+  color: #dc3545 !important;
+}
+
+// Responsive utilities
+@media (max-width: 768px) {
+  .modal-xl {
+    max-width: 100%;
+    width: 100%;
+    margin: 0;
+  }
+  
+  .modal-dialog-centered {
+    min-height: 100vh;
+    padding: 0;
+  }
+  
+  .row.g-0 .col-md-4,
+  .row.g-0 .col-md-8 {
+    flex: 0 0 100%;
+    max-width: 100%;
+  }
+  
+  .field-list-panel,
+  .field-editor-panel {
+    max-height: 50vh;
+  }
+}
+
+// Animation for modal appearance
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.modal.show .modal-dialog {
+  animation: modalSlideIn 0.3s ease-out;
+}

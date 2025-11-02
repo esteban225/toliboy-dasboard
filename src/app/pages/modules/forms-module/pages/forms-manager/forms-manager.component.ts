@@ -39,6 +39,9 @@ export class FormsManagerComponent implements OnInit, OnDestroy {
   editFormFiles: FormsFiles[] = [];
   currentEditingFileIndex: number = 0;
 
+  // Advanced field editor
+  showAdvancedFieldEditor = false;
+
   private subscription: Subscription[] = [];
 
   user: any = null;
@@ -114,6 +117,19 @@ export class FormsManagerComponent implements OnInit, OnDestroy {
 
     this.formFiles$.subscribe(files => {
       console.log('📝 Form files data received:', files);
+      console.log('📝 Number of files:', files?.length || 0);
+    });
+
+    // Monitor store state changes for debugging
+    this.loading$.subscribe(loading => {
+      console.log('⏳ Loading state:', loading);
+    });
+
+    this.error$.subscribe(error => {
+      if (error) {
+        console.error('❌ Error state:', error);
+        this.alertService.toast('error', `Error: ${error}`);
+      }
     });
 
     this.loading$.subscribe(loading => {
@@ -179,8 +195,8 @@ export class FormsManagerComponent implements OnInit, OnDestroy {
       // Wait a moment for the store to load, then subscribe to get the files
       setTimeout(() => {
         const editFormFilesSubscription = this.formFiles$.subscribe(files => {
-          this.editFormFiles = files || [];
-          console.log('📋 Campos cargados para edición:', this.editFormFiles);
+          this.editFormFiles = this.sortFormFilesByOrder(files || []);
+          console.log('📋 Campos cargados para edición ordenados:', this.editFormFiles);
           
           // If a specific file is provided, use it; otherwise use the first file or create a new one
           if (file) {
@@ -209,22 +225,34 @@ export class FormsManagerComponent implements OnInit, OnDestroy {
 
   private loadFileForEditing(file: FormsFiles | null) {
     if (file) {
-      this.newFormFile = { ...file };
-      // Convert arrays to text for editing
-      this.optionsText = this.newFormFile.options?.join(', ') || '';
-      this.validationRulesText = this.newFormFile.validation_rules ? JSON.stringify(this.newFormFile.validation_rules) : '';
+      // Create a deep copy to avoid read-only property issues
+      this.newFormFile = {
+        id: file.id,
+        label: file.label,
+        field_code: file.field_code,
+        type: file.type,
+        required: file.required,
+        options: [...(file.options || [])],
+        validation_rules: [...(file.validation_rules || [])],
+        field_order: file.field_order,
+        is_active: file.is_active
+      };
+      // Convert arrays to text for editing - use line breaks for options
+      this.optionsText = this.newFormFile.options?.join('\n') || '';
+      this.validationRulesText = this.newFormFile.validation_rules?.join('\n') || '';
       console.log('✏️ Cargando campo para edición:', file.label || 'Sin etiqueta');
     } else {
       // Default empty FormsFiles for creating a new field
+      const nextOrder = this.getNextFieldOrder();
       this.newFormFile = {
         id: undefined,
         label: '',
         field_code: '',
-        type: '',
+        type: 'text',
         required: false,
         options: [],
         validation_rules: [],
-        field_order: this.editFormFiles?.length || 0, // Set order to next available
+        field_order: nextOrder, // Set order to next available
         is_active: true
       };
       this.optionsText = '';
@@ -259,8 +287,8 @@ export class FormsManagerComponent implements OnInit, OnDestroy {
           
           // Subscribe to form files to get the files for this form
           const formFilesSubscription = this.formFiles$.subscribe(files => {
-            this.selectedFormFiles = files || [];
-            console.log('📁 Archivos del formulario:', this.selectedFormFiles);
+            this.selectedFormFiles = this.sortFormFilesByOrder(files || []);
+            console.log('📁 Archivos del formulario ordenados:', this.selectedFormFiles);
           });
           this.subscription.push(formFilesSubscription);
         }, 100);
@@ -397,6 +425,7 @@ export class FormsManagerComponent implements OnInit, OnDestroy {
     if (this.currentEditingFileIndex < this.editFormFiles.length - 1) {
       this.currentEditingFileIndex++;
       this.loadFileForEditing(this.editFormFiles[this.currentEditingFileIndex]);
+      console.log('➡️ Navegando al campo siguiente:', this.currentEditingFileIndex + 1);
     }
   }
 
@@ -404,39 +433,332 @@ export class FormsManagerComponent implements OnInit, OnDestroy {
     if (this.currentEditingFileIndex > 0) {
       this.currentEditingFileIndex--;
       this.loadFileForEditing(this.editFormFiles[this.currentEditingFileIndex]);
+      console.log('⬅️ Navegando al campo anterior:', this.currentEditingFileIndex + 1);
     }
+  }
+
+  /**
+   * Navigate to a specific field by index
+   */
+  goToField(index: number) {
+    if (index >= 0 && index < this.editFormFiles.length) {
+      this.currentEditingFileIndex = index;
+      this.loadFileForEditing(this.editFormFiles[index]);
+      console.log('🎯 Navegando al campo:', index + 1);
+    }
+  }
+
+  /**
+   * Load specific field for editing
+   */
+  editSpecificField(field: FormsFiles, index: number) {
+    this.currentEditingFileIndex = index;
+    this.loadFileForEditing(field);
+    console.log('✏️ Editando campo específico:', field.label);
   }
 
   addNewField() {
     this.currentEditingFileIndex = -1; // Indicates new field
     this.loadFileForEditing(null);
+    console.log('➕ Preparando nuevo campo');
   }
 
+  /**
+   * Save the current field being edited
+   */
+  saveCurrentField() {
+    if (!this.isCurrentFieldValid()) {
+      this.alertService.toast('error', 'Por favor completa todos los campos requeridos');
+      return;
+    }
+
+    // Process form data before saving
+    this.processFormData();
+
+    if (this.currentEditingFileIndex === -1) {
+      // Creating a new field
+      console.log('💾 Guardando nuevo campo:', this.newFormFile.label);
+      
+      const fieldData: Partial<FormsFiles> = {
+        label: this.newFormFile.label,
+        field_code: this.newFormFile.field_code,
+        type: this.newFormFile.type,
+        required: this.newFormFile.required,
+        options: [...(this.newFormFile.options || [])],
+        validation_rules: [...(this.newFormFile.validation_rules || [])],
+        field_order: this.newFormFile.field_order,
+        is_active: this.newFormFile.is_active
+      };
+
+      // Use selectedForm.id for advanced editor context
+      const formId = this.selectedForm?.id || this.newForm.id;
+      if (!formId) {
+        this.alertService.toast('error', 'No se puede guardar: formulario no seleccionado');
+        return;
+      }
+
+      this.store.dispatch(FormFilesActions.uploadFormFile({ 
+        formId: formId, 
+        fileData: fieldData 
+      }));
+
+      // Add to local array for immediate UI feedback
+      const newField: FormsFiles = {
+        ...fieldData,
+        id: Date.now() // Temporary ID until real one comes from server
+      } as FormsFiles;
+      
+      this.editFormFiles.push(newField);
+      this.editFormFiles = this.sortFormFilesByOrder(this.editFormFiles);
+      
+      // Update current index to point to the new field
+      this.currentEditingFileIndex = this.editFormFiles.findIndex(f => f.id === newField.id);
+      
+      this.alertService.toast('success', `Campo "${this.newFormFile.label}" creado exitosamente`);
+    } else {
+      // Updating existing field
+      console.log('💾 Actualizando campo existente:', this.newFormFile.label);
+      
+      // Get the form ID
+      const formId = this.selectedForm?.id || this.newForm.id;
+      if (!formId) {
+        this.alertService.toast('error', 'No se puede actualizar: formulario no seleccionado');
+        return;
+      }
+      
+      // Create a clean copy for the update
+      const updatedFieldData: Partial<FormsFiles> = {
+        label: this.newFormFile.label,
+        field_code: this.newFormFile.field_code,
+        type: this.newFormFile.type,
+        required: this.newFormFile.required,
+        options: [...(this.newFormFile.options || [])],
+        validation_rules: [...(this.newFormFile.validation_rules || [])],
+        field_order: this.newFormFile.field_order,
+        is_active: this.newFormFile.is_active
+      };
+      
+      this.store.dispatch(FormFilesActions.updateFormFile({ 
+        formId: formId,
+        fieldId: this.newFormFile.id!, 
+        formFileData: updatedFieldData 
+      }));
+
+      // Update local array for immediate UI feedback
+      this.editFormFiles[this.currentEditingFileIndex] = { ...updatedFieldData } as FormsFiles;
+      this.editFormFiles = this.sortFormFilesByOrder([...this.editFormFiles]);
+      
+      // Find the updated field's new position after sorting
+      this.currentEditingFileIndex = this.editFormFiles.findIndex(f => f.id === this.newFormFile.id);
+      
+      this.alertService.toast('success', `Campo "${this.newFormFile.label}" actualizado exitosamente`);
+    }
+
+    // Reload the form files to get fresh data from server
+    const formId = this.selectedForm?.id || this.newForm.id;
+    if (formId) {
+      setTimeout(() => {
+        this.store.dispatch(FormFilesActions.getFormFiles({ formId: formId }));
+      }, 500);
+    }
+  }
+
+  /**
+   * Delete the current field being edited
+   */
   deleteCurrentField() {
     if (this.newFormFile.id && this.currentEditingFileIndex >= 0) {
-      this.alertService.confirm('¿Estás seguro?', 'Esta acción eliminará el campo del formulario')
-        .then((result) => {
-          if (result.isConfirmed) {
-            console.log('🗑️ Eliminando campo:', this.newFormFile.label);
-            this.store.dispatch(FormFilesActions.deleteFormFile({ fileId: this.newFormFile.id! }));
-            
-            // Remove from local array and adjust index
-            this.editFormFiles.splice(this.currentEditingFileIndex, 1);
-            
-            if (this.editFormFiles.length === 0) {
-              // No more fields, create new one
-              this.addNewField();
-            } else {
-              // Adjust index and load appropriate field
-              if (this.currentEditingFileIndex >= this.editFormFiles.length) {
-                this.currentEditingFileIndex = this.editFormFiles.length - 1;
-              }
-              this.loadFileForEditing(this.editFormFiles[this.currentEditingFileIndex]);
-            }
-            
-            this.alertService.toast('success', 'Campo eliminado');
+      this.alertService.confirm(
+        '¿Estás seguro?', 
+        `Esta acción eliminará permanentemente el campo "${this.newFormFile.label}"`
+      ).then((result) => {
+        if (result.isConfirmed) {
+          console.log('🗑️ Eliminando campo:', this.newFormFile.label);
+          
+          // Get the form ID for deletion
+          const deleteFormId = this.selectedForm?.id || this.newForm.id;
+          if (!deleteFormId) {
+            this.alertService.toast('error', 'No se puede eliminar: formulario no seleccionado');
+            return;
           }
-        });
+          
+          this.store.dispatch(FormFilesActions.deleteFormFile({ 
+            formId: deleteFormId,
+            fieldId: this.newFormFile.id! 
+          }));
+          
+          // Remove from local array
+          this.editFormFiles.splice(this.currentEditingFileIndex, 1);
+          
+          if (this.editFormFiles.length === 0) {
+            // No more fields, create new one
+            this.addNewField();
+          } else {
+            // Adjust index and load appropriate field
+            if (this.currentEditingFileIndex >= this.editFormFiles.length) {
+              this.currentEditingFileIndex = this.editFormFiles.length - 1;
+            }
+            this.loadFileForEditing(this.editFormFiles[this.currentEditingFileIndex]);
+          }
+          
+          this.alertService.toast('success', 'Campo eliminado exitosamente');
+          
+          // Reload the form files to get fresh data from server
+          const reloadFormId = this.selectedForm?.id || this.newForm.id;
+          if (reloadFormId) {
+            setTimeout(() => {
+              this.store.dispatch(FormFilesActions.getFormFiles({ formId: reloadFormId }));
+            }, 500);
+          }
+        }
+      });
+    } else {
+      this.alertService.toast('warning', 'No se puede eliminar un campo que no ha sido guardado');
+    }
+  }
+
+  /**
+   * Duplicate the current field
+   */
+  duplicateCurrentField() {
+    if (this.currentEditingFileIndex >= 0) {
+      const currentField = this.editFormFiles[this.currentEditingFileIndex];
+      const nextOrder = this.getNextFieldOrder();
+      
+      // Create a copy with new properties
+      const duplicatedField: Partial<FormsFiles> = {
+        label: `${currentField.label} (Copia)`,
+        field_code: `${currentField.field_code}_copy`,
+        type: currentField.type,
+        required: currentField.required,
+        options: currentField.options ? [...currentField.options] : [],
+        validation_rules: currentField.validation_rules ? { ...currentField.validation_rules } : [],
+        field_order: nextOrder,
+        is_active: currentField.is_active
+      };
+
+      console.log('📋 Duplicando campo:', currentField.label);
+      
+      this.store.dispatch(FormFilesActions.uploadFormFile({ 
+        formId: this.newForm.id!, 
+        fileData: duplicatedField 
+      }));
+
+      this.alertService.toast('success', `Campo "${currentField.label}" duplicado exitosamente`);
+      
+      // Reload the form files to get fresh data from server
+      if (this.newForm.id) {
+        setTimeout(() => {
+          this.store.dispatch(FormFilesActions.getFormFiles({ formId: this.newForm.id! }));
+        }, 500);
+      }
+    }
+  }
+
+  /**
+   * Check if current field has valid data
+   */
+  isCurrentFieldValid(): boolean {
+    return !!(
+      this.newFormFile.label?.trim() &&
+      this.newFormFile.field_code?.trim() &&
+      this.newFormFile.type?.trim()
+    );
+  }
+
+  /**
+   * Reset current field to original state
+   */
+  resetCurrentField() {
+    if (this.currentEditingFileIndex >= 0) {
+      const originalField = this.editFormFiles[this.currentEditingFileIndex];
+      this.loadFileForEditing(originalField);
+      this.alertService.toast('info', 'Campo restaurado a su estado original');
+    } else {
+      this.loadFileForEditing(null);
+      this.alertService.toast('info', 'Formulario de nuevo campo limpiado');
+    }
+  }
+
+  /**
+   * Move field up in order
+   */
+  moveFieldUp() {
+    if (this.currentEditingFileIndex > 0) {
+      const currentField = this.editFormFiles[this.currentEditingFileIndex];
+      const previousField = this.editFormFiles[this.currentEditingFileIndex - 1];
+      
+      // Swap orders
+      const tempOrder = currentField.field_order;
+      currentField.field_order = previousField.field_order;
+      previousField.field_order = tempOrder;
+      
+      // Get the form ID
+      const formId = this.selectedForm?.id || this.newForm.id;
+      if (!formId) {
+        this.alertService.toast('error', 'No se puede actualizar: formulario no seleccionado');
+        return;
+      }
+      
+      // Update both fields
+      this.store.dispatch(FormFilesActions.updateFormFile({ 
+        formId: formId,
+        fieldId: currentField.id!, 
+        formFileData: currentField 
+      }));
+      
+      this.store.dispatch(FormFilesActions.updateFormFile({ 
+        formId: formId,
+        fieldId: previousField.id!, 
+        formFileData: previousField 
+      }));
+      
+      // Update local array and current index
+      this.editFormFiles = this.sortFormFilesByOrder([...this.editFormFiles]);
+      this.currentEditingFileIndex = this.editFormFiles.findIndex(f => f.id === currentField.id);
+      
+      this.alertService.toast('success', 'Campo movido hacia arriba');
+    }
+  }
+
+  /**
+   * Move field down in order
+   */
+  moveFieldDown() {
+    if (this.currentEditingFileIndex < this.editFormFiles.length - 1) {
+      const currentField = this.editFormFiles[this.currentEditingFileIndex];
+      const nextField = this.editFormFiles[this.currentEditingFileIndex + 1];
+      
+      // Swap orders
+      const tempOrder = currentField.field_order;
+      currentField.field_order = nextField.field_order;
+      nextField.field_order = tempOrder;
+      
+      // Get the form ID
+      const formId = this.selectedForm?.id || this.newForm.id;
+      if (!formId) {
+        this.alertService.toast('error', 'No se puede actualizar: formulario no seleccionado');
+        return;
+      }
+      
+      // Update both fields
+      this.store.dispatch(FormFilesActions.updateFormFile({ 
+        formId: formId,
+        fieldId: currentField.id!, 
+        formFileData: currentField 
+      }));
+      
+      this.store.dispatch(FormFilesActions.updateFormFile({ 
+        formId: formId,
+        fieldId: nextField.id!, 
+        formFileData: nextField 
+      }));
+      
+      // Update local array and current index
+      this.editFormFiles = this.sortFormFilesByOrder([...this.editFormFiles]);
+      this.currentEditingFileIndex = this.editFormFiles.findIndex(f => f.id === currentField.id);
+      
+      this.alertService.toast('success', 'Campo movido hacia abajo');
     }
   }
 
@@ -463,10 +785,14 @@ export class FormsManagerComponent implements OnInit, OnDestroy {
     
     // Clear previous form files and set up for new field creation
     this.clearFormFilesStorage();
-    this.editFormFiles = [...this.selectedFormFiles]; // Copy current fields
+    this.editFormFiles = this.sortFormFilesByOrder([...this.selectedFormFiles]); // Copy and sort current fields
     this.currentEditingFileIndex = -1; // Indicates new field
     
     // Initialize new field with proper order
+    const nextOrder = this.selectedFormFiles && this.selectedFormFiles.length > 0 
+      ? Math.max(...this.selectedFormFiles.map(field => field.field_order ?? 0)) + 1 
+      : 0;
+      
     this.newFormFile = {
       id: undefined,
       label: '',
@@ -475,7 +801,7 @@ export class FormsManagerComponent implements OnInit, OnDestroy {
       required: false,
       options: [],
       validation_rules: [],
-      field_order: this.selectedFormFiles.length, // Next available order
+      field_order: nextOrder, // Next available order
       is_active: true
     };
     
@@ -611,7 +937,19 @@ export class FormsManagerComponent implements OnInit, OnDestroy {
       } else {
         // Updating existing field
         console.log('✏️ Actualizando campo:', this.newFormFile.label);
-        this.store.dispatch(FormFilesActions.updateFormFile({ id: this.newFormFile.id!, formFileData: this.newFormFile }));
+        
+        // Get the form ID
+        const formId = this.selectedForm?.id || this.newForm.id;
+        if (!formId || !this.newFormFile.id) {
+          this.alertService.toast('error', 'No se puede actualizar: formulario o campo no válido');
+          return;
+        }
+        
+        this.store.dispatch(FormFilesActions.updateFormFile({ 
+          formId: formId,
+          fieldId: this.newFormFile.id, 
+          formFileData: this.newFormFile 
+        }));
       }
     } else {
       // Creating new form
@@ -628,24 +966,56 @@ export class FormsManagerComponent implements OnInit, OnDestroy {
   }
 
   private processFormData() {
-    // Convert options text to array
+    // Create a mutable copy of the form file to avoid read-only property errors
+    const updatedFormFile = { ...this.newFormFile };
+    
+    // Convert options text to array (handle both line-separated and comma-separated)
     if (this.optionsText.trim()) {
-      this.newFormFile.options = this.optionsText.split(',').map(option => option.trim()).filter(option => option.length > 0);
+      // First try to split by lines, then by commas if no lines found
+      let options = this.optionsText.split('\n')
+        .map(option => option.trim())
+        .filter(option => option.length > 0);
+      
+      // If only one option and it contains commas, split by commas
+      if (options.length === 1 && options[0].includes(',')) {
+        options = options[0].split(',')
+          .map(option => option.trim())
+          .filter(option => option.length > 0);
+      }
+      
+      updatedFormFile.options = [...options];
     } else {
-      this.newFormFile.options = [];
+      updatedFormFile.options = [];
     }
 
-    // Convert validation rules text to object
+    // Convert validation rules text to array (based on the model definition)
     if (this.validationRulesText.trim()) {
-      try {
-        this.newFormFile.validation_rules = JSON.parse(this.validationRulesText);
-      } catch (error) {
-        console.warn('Invalid JSON for validation rules:', error);
-        this.newFormFile.validation_rules = [];
-      }
+      // Split by lines and filter empty lines
+      updatedFormFile.validation_rules = [
+        ...this.validationRulesText.split('\n')
+          .map(rule => rule.trim())
+          .filter(rule => rule.length > 0)
+      ];
     } else {
-      this.newFormFile.validation_rules = [];
+      updatedFormFile.validation_rules = [];
     }
+
+    // Ensure field_order is a number
+    if (typeof updatedFormFile.field_order === 'string') {
+      updatedFormFile.field_order = parseInt(updatedFormFile.field_order as string, 10) || 0;
+    }
+
+    // Update the form file with the processed data
+    this.newFormFile = updatedFormFile;
+
+    console.log('📋 Datos procesados del campo:', {
+      label: this.newFormFile.label,
+      field_code: this.newFormFile.field_code,
+      type: this.newFormFile.type,
+      options: this.newFormFile.options,
+      validation_rules: this.newFormFile.validation_rules,
+      field_order: this.newFormFile.field_order
+    });
   }
 
   deleteForm(id: number): void {
@@ -692,6 +1062,105 @@ export class FormsManagerComponent implements OnInit, OnDestroy {
     };
     
     return fieldTypes[type] || `❓ ${type}`;
+  }
+
+  /**
+   * Sort form files by field_order
+   */
+  private sortFormFilesByOrder(files: FormsFiles[]): FormsFiles[] {
+    if (!files || files.length === 0) return files;
+    
+    // Create a shallow copy of the array to avoid modifying the original read-only array
+    return [...files].sort((a, b) => {
+      const orderA = a.field_order ?? 0;
+      const orderB = b.field_order ?? 0;
+      return orderA - orderB;
+    });
+  }
+
+  /**
+   * Get the next available field order
+   */
+  private getNextFieldOrder(): number {
+    if (!this.editFormFiles || this.editFormFiles.length === 0) {
+      return 0;
+    }
+    
+    // Find the highest field_order and add 1
+    const maxOrder = Math.max(...this.editFormFiles.map(field => field.field_order ?? 0));
+    return maxOrder + 1;
+  }
+
+  /**
+   * Open advanced field editor
+   */
+  openAdvancedFieldEditor() {
+    if (!this.selectedForm || !this.selectedForm.id) {
+      this.alertService.toast('error', 'No hay formulario seleccionado');
+      return;
+    }
+
+    console.log('🚀 Abriendo editor avanzado para formulario:', this.selectedForm.name);
+    console.log('🔍 Estado antes de abrir:', {
+      selectedForm: this.selectedForm,
+      showAdvancedFieldEditor: this.showAdvancedFieldEditor
+    });
+    
+    // Load form files for editing
+    this.store.dispatch(FormFilesActions.getFormFiles({ formId: this.selectedForm.id }));
+    
+    // Set the flag immediately
+    this.showAdvancedFieldEditor = true;
+    console.log('✅ showAdvancedFieldEditor establecido en:', this.showAdvancedFieldEditor);
+    
+    // Wait for files to load
+    setTimeout(() => {
+      const advancedEditorSubscription = this.formFiles$.subscribe(files => {
+        this.editFormFiles = this.sortFormFilesByOrder(files || []);
+        console.log('📋 Campos cargados en editor avanzado:', this.editFormFiles);
+        
+        // Load first field if available
+        if (this.editFormFiles.length > 0) {
+          this.editSpecificField(this.editFormFiles[0], 0);
+        } else {
+          this.addNewField();
+        }
+      });
+      this.subscription.push(advancedEditorSubscription);
+    }, 200);
+
+    // Close details modal
+    this.closeDetailsModal();
+  }
+
+  /**
+   * Close advanced field editor
+   */
+  closeAdvancedFieldEditor() {
+    this.showAdvancedFieldEditor = false;
+    this.editFormFiles = [];
+    this.currentEditingFileIndex = 0;
+    console.log('❌ Editor avanzado cerrado');
+  }
+
+  /**
+   * Save all fields and close editor
+   */
+  saveAllFieldsAndClose() {
+    // Save current field if it's being edited
+    if (this.isCurrentFieldValid()) {
+      this.saveCurrentField();
+    }
+
+    this.alertService.toast('success', 'Todos los campos han sido guardados');
+    
+    // Refresh the form details
+    setTimeout(() => {
+      if (this.selectedForm?.id) {
+        this.viewFormDetails(this.selectedForm.id);
+      }
+      this.closeAdvancedFieldEditor();
+    }, 1000);
   }
 
   /**

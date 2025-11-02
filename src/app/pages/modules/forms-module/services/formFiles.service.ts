@@ -33,17 +33,45 @@ export class FormFilesService {
         );
     }   
     uploadFormFile(formId: number, fileData: Partial<FormsFiles>): Observable<FormsFiles> {
-        
+        console.log('🚀 Uploading form file to API:', { formId, fileData });
         return this.http.post<any>(`${this.apiUrl}/${formId}/fields`, fileData).pipe(
             // si el backend devuelve { status, message, data: file }
-            map((resp) => resp?.data ?? resp),
+            map((resp) => {
+                console.log('✅ Upload response:', resp);
+                return resp?.data ?? resp;
+            }),
+            tap(result => console.log('📁 File uploaded successfully:', result)),
             catchError(this.handleError)
         );
     }
 
-    deleteFormFile( fileId: number): Observable<any> {
-        const url = `${this.apiUrl}/files/${fileId}`;
+    updateFormFile(formId: number, fieldId: number, fileData: Partial<FormsFiles>): Observable<FormsFiles> {
+        console.log('🚀 Updating form file:', { formId, fieldId, fileData });
+        const url = `${this.apiUrl}/${formId}/fields/${fieldId}`;
+        return this.http.put<any>(url, fileData).pipe(
+            map((resp) => {
+                console.log('✅ Update response:', resp);
+                if (resp?.success) {
+                    // Si la respuesta es exitosa, devolver el campo actualizado
+                    return { id: fieldId, ...fileData } as FormsFiles;
+                } else if (resp?.data) {
+                    return resp.data;
+                } else if (resp?.field) {
+                    return resp.field;
+                } else {
+                    return { id: fieldId, ...fileData } as FormsFiles;
+                }
+            }),
+            tap(result => console.log('📁 File updated successfully:', result)),
+            catchError(this.handleError)
+        );
+    }
+
+    deleteFormFile(formId: number, fieldId: number): Observable<any> {
+        console.log('🚀 Deleting form file:', { formId, fieldId });
+        const url = `${this.apiUrl}/${formId}/fields/${fieldId}`;
         return this.http.delete<any>(url).pipe(
+            tap(result => console.log('🗑️ File deleted successfully:', result)),
             catchError(this.handleError)
         );
     }
