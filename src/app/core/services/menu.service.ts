@@ -147,7 +147,35 @@ export class MenuService {
           }
         ],
         parentId: 100 
-      },/*
+
+      },
+      {
+        id: 200,
+        label: 'MENUITEMS.INVENTORY.TEXT',
+        icon: 'ti ti-box',
+        subItems: [
+          {
+            id: 201,
+            label: 'MENUITEMS.INVENTORY.LIST.GESTIONINVENTORY',
+            link: '/modules/inventory',
+            parentId: 200
+          },
+          {
+            id: 202,
+            label: 'MENUITEMS.INVENTORY.LIST.INVENTORYMOVEMENT',
+            link: '/modules/inventory/inventoryMovement',
+            parentId: 200
+          },
+          {
+            id: 203,
+            label: 'MENUITEMS.INVENTORY.LIST.RAWMATERIALS',
+            link: '/modules/inventory/rawMaterial',
+            parentId: 200
+          }
+        ],
+        parentId: 100
+      }
+      /*
       {INVENTORY
         id: 200,
         label: 'MENUITEMS.ADMIN.TEXT',

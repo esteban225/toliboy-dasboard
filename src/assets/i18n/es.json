@@ -54,8 +54,11 @@
     "INVENTORY": {
       "TEXT": "Inventario",
       "LIST": {
+
         "GESTIONINVENTORY": "Gestión de Inventario",
-        "PRODUCTS": "Productos e Inventario"
+        "PRODUCTS": "Productos e Inventario",
+        "INVENTORYMOVEMENT": "Movimiento de Inventario",
+        "RAWMATERIALS": "Materias Primas"
       }
     },
     "ADMIN": {

@@ -1,0 +1,29 @@
+/* Styles for Raw Materials page:统一 color like title and ensure header displays above backgrounds */
+.rm-page {
+	/* Make most headings and labels use primary color */
+	color: var(--bs-body-color);
+
+	h2, .card-title, .fw-semibold, .form-label, .small, .page-link, .badge {
+		color: var(--bs-primary) !important;
+	}
+
+	/* Icons should also use primary tone */
+	.bi {
+		color: var(--bs-primary) !important;
+	}
+}
+
+.rm-page-header {
+	position: relative;
+	z-index: 1050; /* above cards */
+	background: rgba(255,255,255,0.95);
+	padding: 1rem;
+	border-radius: 0.375rem;
+	box-shadow: 0 0.25rem 0.5rem rgba(0,0,0,0.04);
+}
+
+/* Ensure the side form header text is white when using bg-primary */
+.rm-page .card-header.bg-primary h5, .rm-page .card-header.bg-success h5 {
+	color: #fff !important;
+}
+
