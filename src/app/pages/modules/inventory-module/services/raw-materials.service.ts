@@ -25,7 +25,7 @@ export class RawMaterialsService {
 	 * @param page número de página (1-based)
 	 * @param perPage registros por página
 	 */
-	list(filters: Record<string, any> = {}, page = 1, perPage = 15): Observable<{ data: RawMaterial[]; meta: PaginationMeta }> {
+	list(filters: Record<string, any> = {}, page = 1, perPage = 100): Observable<{ data: RawMaterial[]; meta: PaginationMeta }> {
 		let params = new HttpParams()
 			.set('page', String(page))
 			.set('per_page', String(perPage));

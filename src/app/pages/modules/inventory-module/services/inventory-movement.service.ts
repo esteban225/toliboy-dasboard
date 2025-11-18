@@ -12,7 +12,7 @@ export class InventoryMovementService {
 
 	constructor(private http: HttpClient) {}
 
-	list(filters: Record<string, any> = {}, perPage = 15, page = 1): Observable<any> {
+	list(filters: Record<string, any> = {}, perPage = 100, page = 1): Observable<any> {
 		let params = new HttpParams()
 			.set('per_page', String(perPage))
 			.set('page', String(page));
