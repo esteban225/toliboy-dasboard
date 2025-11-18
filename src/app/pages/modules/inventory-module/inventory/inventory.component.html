@@ -1,1 +1,158 @@
-<p>inventory works!</p>
+<div class="container-fluid py-4 inventory-dashboard">
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <div>
+      <p class="text-muted text-uppercase small mb-1">Panel del día</p>
+      <h2 class="fw-semibold mb-0">Dashboard de inventario</h2>
+    </div>
+    <button class="btn btn-primary" (click)="refresh()" [disabled]="loading">
+      <i class="bi bi-arrow-clockwise me-2"></i>
+      Actualizar datos
+    </button>
+  </div>
+
+  <div *ngIf="error" class="alert alert-danger d-flex align-items-center gap-3" role="alert">
+    <i class="bi bi-exclamation-triangle-fill fs-5"></i>
+    <div>
+      <strong>Ups.</strong> {{ error }}
+    </div>
+  </div>
+
+  <div *ngIf="loading" class="card border-0 shadow-sm">
+    <div class="card-body text-center py-5">
+      <div class="spinner-border text-primary mb-3" role="status">
+        <span class="visually-hidden">Cargando...</span>
+      </div>
+      <p class="text-muted mb-0">Preparando cifras clave…</p>
+    </div>
+  </div>
+
+  <ng-container *ngIf="!loading">
+    <div class="row g-3 mb-4">
+      <div class="col-12 col-md-6 col-xl-3" *ngFor="let stat of statsCards">
+        <div class="card border-0 shadow-sm h-100">
+          <div class="card-body d-flex flex-column">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+              <span class="text-muted text-uppercase small">{{ stat.title }}</span>
+              <span class="badge rounded-pill" [ngClass]="'bg-' + stat.color + ' bg-opacity-10 text-' + stat.color">
+                <i class="bi" [ngClass]="stat.icon"></i>
+              </span>
+            </div>
+            <div class="fs-3 fw-bold mb-1">{{ stat.value }}</div>
+            <small class="text-muted">{{ stat.subtitle }}</small>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-3">
+      <div class="col-12 col-lg-4">
+        <div class="card border-0 shadow-sm h-100">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <div>
+                <p class="text-muted text-uppercase small mb-1">Movimientos</p>
+                <h5 class="mb-0">Distribución por tipo</h5>
+              </div>
+              <span class="badge bg-light text-muted">{{ movementsByType.in + movementsByType.out + movementsByType.adjustment }} totales</span>
+            </div>
+
+            <div class="d-flex flex-column gap-3">
+              <div class="movement-summary" *ngFor="let item of movementSummary">
+                <div class="d-flex align-items-center gap-3">
+                  <div class="icon-wrapper" [ngClass]="item.textClass">
+                    <i class="bi" [ngClass]="item.icon"></i>
+                  </div>
+                  <div class="flex-grow-1">
+                    <div class="d-flex justify-content-between align-items-center">
+                      <span class="fw-semibold">{{ item.label }}</span>
+                      <span class="fw-bold">{{ item.value }}</span>
+                    </div>
+                    <div class="progress mt-2" style="height: 4px;">
+                      <div class="progress-bar" [ngClass]="item.progressClass" [style.width.%]="item.percentage"></div>
+                    </div>
+                  </div>
+                  <span class="text-muted small">{{ item.percentage }}%</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-12 col-lg-4">
+        <div class="card border-0 shadow-sm h-100">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <div>
+                <p class="text-muted text-uppercase small mb-1">Alertas</p>
+                <h5 class="mb-0">Bajo stock</h5>
+              </div>
+              <span class="badge" [ngClass]="lowStockProducts.length ? 'bg-warning text-dark' : 'bg-success'">
+                {{ lowStockProducts.length || 'Sin alertas' }}
+              </span>
+            </div>
+
+            <div *ngIf="lowStockProducts.length === 0" class="text-center py-4">
+              <i class="bi bi-check-circle text-success display-6"></i>
+              <p class="fw-semibold mt-2 mb-0">Todo bajo control</p>
+              <small class="text-muted">No se detectaron productos críticos</small>
+            </div>
+
+            <div *ngIf="lowStockProducts.length > 0" class="d-flex flex-column gap-2">
+              <div class="low-stock-item p-3 rounded" *ngFor="let product of lowStockProducts">
+                <div class="d-flex justify-content-between align-items-start">
+                  <div>
+                    <p class="fw-semibold mb-1">{{ product?.name || 'Producto sin nombre' }}</p>
+                    <small class="text-muted">{{ product?.code || 'Sin código' }}</small>
+                  </div>
+                  <span class="badge bg-light text-dark">{{ product?.current_stock || 0 }}/{{ product?.min_stock || 0 }}</span>
+                </div>
+                <div class="progress mt-2" style="height: 4px;">
+                  <div class="progress-bar bg-warning" [style.width.%]="(product?.current_stock || 0) * 100 / (product?.min_stock || 1)"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-12 col-lg-4">
+        <div class="card border-0 shadow-sm h-100">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <div>
+                <p class="text-muted text-uppercase small mb-1">Actividad</p>
+                <h5 class="mb-0">Últimos movimientos</h5>
+              </div>
+              <a class="btn btn-link p-0" href="/pages/modules/inventory-module/pages/inventory-movement">Ver historial</a>
+            </div>
+
+            <div *ngIf="recentMovements.length === 0" class="text-center py-4">
+              <i class="bi bi-inbox text-muted display-6"></i>
+              <p class="fw-semibold mt-2 mb-0">Sin registros recientes</p>
+              <small class="text-muted">Cuando haya actividad aparecerá aquí</small>
+            </div>
+
+            <div *ngIf="recentMovements.length > 0" class="timeline">
+              <div class="timeline-item" *ngFor="let movement of recentMovements">
+                <div class="timeline-point" [ngClass]="movement.uiBadgeClass"></div>
+                <div class="timeline-content">
+                  <div class="d-flex justify-content-between align-items-center">
+                    <span class="badge" [ngClass]="movement.uiBadgeClass">
+                      <i class="bi me-1" [ngClass]="movement.uiIcon"></i>
+                      {{ movement.uiType }}
+                    </span>
+                    <span class="fw-semibold" [ngClass]="movement.uiQuantityClass">
+                      {{ movement.uiQuantityPrefix }}{{ movement?.quantity || 0 }}
+                    </span>
+                  </div>
+                  <p class="mb-0 mt-2">ID materia prima: {{ movement?.raw_material_id || movement?.product_id || '-' }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+</div>
