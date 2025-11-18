@@ -11,7 +11,7 @@
             <button class="btn btn-primary" (click)="openCreate()">
                 <i class="bi bi-plus-circle me-2"></i>Nuevo
             </button>
-            <button class="btn btn-outline-secondary" (click)="loadList()">
+            <button class="btn btn-outline-secondary" (click)="forceReload()">
                 <i class="bi bi-arrow-clockwise me-2"></i>Recargar
             </button>
         </div>
@@ -92,10 +92,10 @@
                                     <th class="px-3 py-3">
                                         <small class="fw-bold text-uppercase text-muted">Nombre</small>
                                     </th>
-                                    <th class="px-3 py-3">
+                                    <th class="px-3 py-3 hide-sm">
                                         <small class="fw-bold text-uppercase text-muted">Código</small>
                                     </th>
-                                    <th class="px-3 py-3">
+                                    <th class="px-3 py-3 hide-sm">
                                         <small class="fw-bold text-uppercase text-muted">Unidad</small>
                                     </th>
                                     <th class="text-end px-3 py-3">
@@ -121,10 +121,10 @@
                                         <div class="fw-semibold text-muted">{{ m.name }}</div>
                                         <small class="text-muted" *ngIf="m.description">{{ m.description }}</small>
                                     </td>
-                                    <td class="px-3">
+                                    <td class="px-3 hide-sm">
                                         <span class="badge bg-light text-muted border">{{ m.code }}</span>
                                     </td>
-                                    <td class="px-3">
+                                    <td class="px-3 hide-sm">
                                         <span class="badge bg-info bg-opacity-10 text-info border border-info">
                                             {{ m.unit_of_measure }}
                                         </span>
@@ -151,7 +151,7 @@
                                         </span>
                                     </td>
                                     <td class="text-center px-3">
-                                        <div class="btn-group btn-group-sm" role="group">
+                                        <div class="btn-group btn-group-sm d-flex flex-wrap gap-1 justify-content-center" role="group">
                                             <button class="btn btn-outline-primary" 
                                                     (click)="select(m)"
                                                     title="Editar material">
@@ -196,7 +196,7 @@
                         <nav>
                             <ul class="pagination pagination-sm mb-0">
                                 <li class="page-item" [class.disabled]="meta$.current_page <= 1">
-                                    <a class="page-link" (click)="goToPage(meta$.current_page - 1)" href="#" tabindex="-1">
+                                    <a class="page-link" (click)="goToPage(meta$.current_page - 1, $event)" href="#" tabindex="-1">
                                         <i class="bi bi-chevron-double-left"></i>
                                         <span class="d-none d-md-inline ms-1">Anterior</span>
                                     </a>
@@ -207,7 +207,7 @@
                                     </span>
                                 </li>
                                 <li class="page-item" [class.disabled]="meta$.current_page >= meta$.last_page">
-                                    <a class="page-link" (click)="goToPage(meta$.current_page + 1)" href="#">
+                                    <a class="page-link" (click)="goToPage(meta$.current_page + 1, $event)" href="#">
                                         <span class="d-none d-md-inline me-1">Siguiente</span>
                                         <i class="bi bi-chevron-double-right"></i>
                                     </a>
@@ -219,140 +219,148 @@
             </div>
         </div>
 
-        <!-- Formulario lateral -->
-        <div class="col-lg-4">
-            <div *ngIf="showForm$" class="card shadow-sm border-0 position-sticky" style="top: 1rem;">
-                <div class="card-header border-0" 
-                     [ngClass]="form.get('id')?.value ? 'bg-primary' : 'bg-success'">
-                    <h5 class="card-title mb-0 text-white fw-bold">
-                        <i class="bi me-2" [ngClass]="form.get('id')?.value ? 'bi-pencil-square' : 'bi-plus-square-fill'"></i>
-                        {{ form.get('id')?.value ? 'Editar' : 'Nueva' }} Materia Prima
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <form [formGroup]="form" (ngSubmit)="save()">
-                        <div class="mb-3">
-                            <label class="form-label fw-semibold">
-                                <i class="bi bi-tag-fill text-primary me-1"></i>Nombre *
-                            </label>
-                            <input formControlName="name" 
-                                   class="form-control" 
-                                   placeholder="Ej: Harina de trigo"
-                                   [class.is-invalid]="form.get('name')?.invalid && form.get('name')?.touched" />
-                            <div class="form-text">Nombre identificativo del material</div>
-                        </div>
+        <!-- Formulario en modal: reemplaza la sidebar por un modal accesible y responsive -->
+        <div *ngIf="showForm$" class="raw-material-modal">
+            <!-- Backdrop (click to close) -->
+            <div class="modal-backdrop fade show" (click)="select(null)"></div>
 
-                        <div class="mb-3">
-                            <label class="form-label fw-semibold">
-                                <i class="bi bi-upc-scan text-primary me-1"></i>Código
-                            </label>
-                            <input formControlName="code" 
-                                   class="form-control" 
-                                   placeholder="Ej: MP-001"
-                                   [class.is-invalid]="form.get('code')?.invalid && form.get('code')?.touched" />
-                            <div *ngIf="form.get('code')?.hasError('maxlength')" class="invalid-feedback">
-                                <i class="bi bi-exclamation-circle-fill me-1"></i>
-                                El código no debe tener más de 100 caracteres.
-                            </div>
-                            <div *ngIf="form.get('code')?.hasError('server')" class="invalid-feedback">
-                                <i class="bi bi-exclamation-circle-fill me-1"></i>
-                                {{ form.get('code')?.getError('server') }}
-                            </div>
+            <!-- Modal dialog centered -->
+            <div class="modal d-block" tabindex="-1" role="dialog" aria-modal="true">
+                <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header border-0" [ngClass]="form.get('id')?.value ? 'bg-primary text-white' : 'bg-success text-white'">
+                            <h5 class="modal-title fw-bold mb-0">
+                                <i class="bi me-2" [ngClass]="form.get('id')?.value ? 'bi-pencil-square' : 'bi-plus-square-fill'"></i>
+                                {{ form.get('id')?.value ? 'Editar' : 'Nueva' }} Materia Prima
+                            </h5>
+                            <button type="button" class="btn-close btn-close-white" aria-label="Cerrar" (click)="select(null)"></button>
                         </div>
-
-                        <div class="mb-3">
-                            <label class="form-label fw-semibold">
-                                <i class="bi bi-text-paragraph text-primary me-1"></i>Descripción
-                            </label>
-                            <textarea formControlName="description" 
-                                      class="form-control" 
-                                      rows="3"
-                                      placeholder="Descripción detallada del material..."></textarea>
-                            <div class="form-text">Opcional: características adicionales</div>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label fw-semibold">
-                                <i class="bi bi-rulers text-primary me-1"></i>Unidad de medida
-                            </label>
-                            <input formControlName="unit_of_measure" 
-                                   class="form-control" 
-                                   placeholder="Ej: kg, litros, unidades" />
-                            <div class="form-text">Unidad para medir el inventario</div>
-                        </div>
-
-                        <div class="row g-3 mb-3">
-                            <div class="col-6">
-                                <label class="form-label fw-semibold">
-                                    <i class="bi bi-box-fill text-success me-1"></i>Existencias
-                                </label>
-                                <div class="input-group">
-                                    <input type="number" 
-                                           formControlName="stock" 
+                        <div class="modal-body">
+                            <form [formGroup]="form" (ngSubmit)="save()">
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold">
+                                        <i class="bi bi-tag-fill text-primary me-1"></i>Nombre *
+                                    </label>
+                                    <input formControlName="name" 
                                            class="form-control" 
-                                           placeholder="0" 
-                                           min="0" />
-                                    <span class="input-group-text">
-                                        <i class="bi bi-box"></i>
-                                    </span>
+                                           placeholder="Ej: Harina de trigo"
+                                           [class.is-invalid]="form.get('name')?.invalid && form.get('name')?.touched" />
+                                    <div class="form-text">Nombre identificativo del material</div>
                                 </div>
-                            </div>
-                            <div class="col-6">
-                                <label class="form-label fw-semibold">
-                                    <i class="bi bi-exclamation-triangle-fill text-warning me-1"></i>Mínima
-                                </label>
-                                <div class="input-group">
-                                    <input type="number" 
-                                           formControlName="min_stock" 
-                                           class="form-control" 
-                                           placeholder="0" 
-                                           min="0" />
-                                    <span class="input-group-text">
-                                        <i class="bi bi-dash-circle"></i>
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
 
-                        <div class="mb-4">
-                            <div class="card bg-light border-0">
-                                <div class="card-body py-2">
-                                    <div class="form-check form-switch">
-                                        <input class="form-check-input" 
-                                               type="checkbox" 
-                                               role="switch" 
-                                               formControlName="is_active"
-                                               id="isActive" />
-                                        <label class="form-check-label fw-semibold" for="isActive">
-                                            <i class="bi bi-power text-success me-1"></i>
-                                            Material activo en el sistema
-                                        </label>
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold">
+                                        <i class="bi bi-upc-scan text-primary me-1"></i>Código
+                                    </label>
+                                    <input formControlName="code" 
+                                           class="form-control" 
+                                           placeholder="Ej: MP-001"
+                                           [class.is-invalid]="form.get('code')?.invalid && form.get('code')?.touched" />
+                                    <div *ngIf="form.get('code')?.hasError('maxlength')" class="invalid-feedback">
+                                        <i class="bi bi-exclamation-circle-fill me-1"></i>
+                                        El código no debe tener más de 100 caracteres.
+                                    </div>
+                                    <div *ngIf="form.get('code')?.hasError('server')" class="invalid-feedback">
+                                        <i class="bi bi-exclamation-circle-fill me-1"></i>
+                                        {{ form.get('code')?.getError('server') }}
                                     </div>
                                 </div>
-                            </div>
-                            <div *ngIf="form.get('is_active')?.hasError('server')" class="text-danger small mt-2">
-                                <i class="bi bi-exclamation-circle-fill me-1"></i>
-                                {{ form.get('is_active')?.getError('server') }}
-                            </div>
-                        </div>
 
-                        <div class="d-grid gap-2">
-                            <button type="submit" 
-                                    class="btn btn-lg" 
-                                    [ngClass]="form.get('id')?.value ? 'btn-primary' : 'btn-success'"
-                                    [disabled]="loading$ || form.invalid">
-                                <span *ngIf="loading$" class="spinner-border spinner-border-sm me-2"></span>
-                                <i class="bi me-2" *ngIf="!loading$" [ngClass]="form.get('id')?.value ? 'bi-save-fill' : 'bi-plus-circle-fill'"></i>
-                                {{ loading$ ? 'Guardando...' : (form.get('id')?.value ? 'Actualizar' : 'Crear') }}
-                            </button>
-                            <button type="button" 
-                                    class="btn btn-outline-secondary" 
-                                    (click)="select(null)"
-                                    [disabled]="loading$">
-                                <i class="bi bi-x-circle me-2"></i>Cancelar
-                            </button>
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold">
+                                        <i class="bi bi-text-paragraph text-primary me-1"></i>Descripción
+                                    </label>
+                                    <textarea formControlName="description" 
+                                              class="form-control" 
+                                              rows="3"
+                                              placeholder="Descripción detallada del material..."></textarea>
+                                    <div class="form-text">Opcional: características adicionales</div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold">
+                                        <i class="bi bi-rulers text-primary me-1"></i>Unidad de medida
+                                    </label>
+                                    <input formControlName="unit_of_measure" 
+                                           class="form-control" 
+                                           placeholder="Ej: kg, litros, unidades" />
+                                    <div class="form-text">Unidad para medir el inventario</div>
+                                </div>
+
+                                <div class="row g-3 mb-3">
+                                    <div class="col-6">
+                                        <label class="form-label fw-semibold">
+                                            <i class="bi bi-box-fill text-success me-1"></i>Existencias
+                                        </label>
+                                        <div class="input-group">
+                                            <input type="number" 
+                                                   formControlName="stock" 
+                                                   class="form-control" 
+                                                   placeholder="0" 
+                                                   min="0" />
+                                            <span class="input-group-text">
+                                                <i class="bi bi-box"></i>
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label fw-semibold">
+                                            <i class="bi bi-exclamation-triangle-fill text-warning me-1"></i>Mínima
+                                        </label>
+                                        <div class="input-group">
+                                            <input type="number" 
+                                                   formControlName="min_stock" 
+                                                   class="form-control" 
+                                                   placeholder="0" 
+                                                   min="0" />
+                                            <span class="input-group-text">
+                                                <i class="bi bi-dash-circle"></i>
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="mb-4">
+                                    <div class="card bg-light border-0">
+                                        <div class="card-body py-2">
+                                            <div class="form-check form-switch">
+                                                <input class="form-check-input" 
+                                                       type="checkbox" 
+                                                       role="switch" 
+                                                       formControlName="is_active"
+                                                       id="isActive" />
+                                                <label class="form-check-label fw-semibold" for="isActive">
+                                                    <i class="bi bi-power text-success me-1"></i>
+                                                    Material activo en el sistema
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div *ngIf="form.get('is_active')?.hasError('server')" class="text-danger small mt-2">
+                                        <i class="bi bi-exclamation-circle-fill me-1"></i>
+                                        {{ form.get('is_active')?.getError('server') }}
+                                    </div>
+                                </div>
+
+                                <div class="d-grid gap-2">
+                                    <button type="submit" 
+                                            class="btn btn-lg" 
+                                            [ngClass]="form.get('id')?.value ? 'btn-primary' : 'btn-success'"
+                                            [disabled]="loading$ || form.invalid">
+                                        <span *ngIf="loading$" class="spinner-border spinner-border-sm me-2"></span>
+                                        <i class="bi me-2" *ngIf="!loading$" [ngClass]="form.get('id')?.value ? 'bi-save-fill' : 'bi-plus-circle-fill'"></i>
+                                        {{ loading$ ? 'Guardando...' : (form.get('id')?.value ? 'Actualizar' : 'Crear') }}
+                                    </button>
+                                    <button type="button" 
+                                            class="btn btn-outline-secondary" 
+                                            (click)="select(null)"
+                                            [disabled]="loading$">
+                                        <i class="bi bi-x-circle me-2"></i>Cancelar
+                                    </button>
+                                </div>
+                            </form>
                         </div>
-                    </form>
+                    </div>
                 </div>
             </div>
         </div>

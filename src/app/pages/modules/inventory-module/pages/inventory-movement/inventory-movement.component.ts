@@ -5,6 +5,7 @@ import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angula
 import { RawMaterialsService } from '../../services/raw-materials.service';
 import { Subject, Subscription, of, forkJoin } from 'rxjs';
 import { debounceTime, distinctUntilChanged, switchMap, catchError, map } from 'rxjs/operators';
+import { AlertService } from 'src/app/core/services/alert.service';
 
 
 @Component({
@@ -39,7 +40,8 @@ export class InventoryMovementComponent implements OnInit, OnDestroy {
   constructor(
     private invService: InventoryMovementService,
     private fb: FormBuilder,
-    private rawService: RawMaterialsService
+    private rawService: RawMaterialsService,
+    private alert: AlertService
   ) {
     this.form = this.fb.group({
       id: [null],
@@ -153,13 +155,9 @@ export class InventoryMovementComponent implements OnInit, OnDestroy {
       error: (err) => {
         this.loading = false;
         // Manejar errores del backend
-        if (err?.error?.message) {
-          this.error = err.error.message;
-        } else if (err?.message) {
-          this.error = err.message;
-        } else {
-          this.error = 'Error cargando movimientos de inventario';
-        }
+        const message = err?.error?.message || err?.message || 'Error cargando movimientos de inventario';
+        this.error = message;
+        try { this.alert.error('Error cargando movimientos', message); } catch (e) { /* noop */ }
       }
     });
   }
@@ -245,20 +243,19 @@ export class InventoryMovementComponent implements OnInit, OnDestroy {
   }
 
   deleteMovement(id: number): void {
-    if (!confirm('¿Eliminar movimiento de inventario?')) return;
-    this.invService.delete(id).subscribe({
-      next: (res) => {
-        // El backend devuelve { message } en caso de éxito
-        if (res?.message) {
-          alert('Movimiento eliminado: ' + res.message);
+    this.alert.confirm('Eliminar movimiento', '¿Eliminar movimiento de inventario?').then(result => {
+      if (!result.isConfirmed) return;
+      this.invService.delete(id).subscribe({
+        next: (res) => {
+          // El backend devuelve { message } en caso de éxito
+          this.loadMovements();
+          try { this.alert.success('Movimiento eliminado', res?.message || 'El movimiento fue eliminado'); } catch (e) { /* noop */ }
+        },
+        error: (err) => {
+          const errorMsg = err?.error?.message || err?.message || 'Error eliminando movimiento';
+          try { this.alert.error('Error eliminando', errorMsg); } catch (e) { /* noop */ }
         }
-        this.loadMovements();
-      },
-      error: (err) => {
-        // Manejar errores del backend
-        const errorMsg = err?.error?.message || err?.message || 'Error eliminando movimiento';
-        alert('Error eliminando: ' + errorMsg);
-      }
+      });
     });
   }
 
@@ -463,7 +460,9 @@ export class InventoryMovementComponent implements OnInit, OnDestroy {
           this.loadMovements();
           // Mostrar mensaje de éxito si está disponible
           if (res.message) {
-            alert(res.message);
+            try { this.alert.success('Éxito', res.message); } catch(e) { /* noop */ }
+          } else {
+            try { this.alert.success('Éxito', 'Movimiento procesado correctamente'); } catch(e) { /* noop */ }
           }
         } else {
           // El backend devolvió success: false
@@ -494,12 +493,16 @@ export class InventoryMovementComponent implements OnInit, OnDestroy {
           this.formError = errorMessages.length > 0 
             ? 'Errores de validación:\n' + errorMessages.join('\n')
             : 'Error de validación en el formulario';
+          try { this.alert.error('Error de validación', this.formError ?? undefined); } catch(e) { /* noop */ }
         } else if (err?.error?.message) {
           this.formError = err.error.message;
+          try { this.alert.error('Error', this.formError ?? undefined); } catch(e) { /* noop */ }
         } else if (err?.message) {
           this.formError = err.message;
+          try { this.alert.error('Error', this.formError ?? undefined); } catch(e) { /* noop */ }
         } else {
           this.formError = 'Error enviando datos al servidor';
+          try { this.alert.error('Error', this.formError ?? undefined); } catch(e) { /* noop */ }
         }
       }
     });

@@ -2,6 +2,7 @@ import { Component, effect, signal, Signal, OnInit, OnDestroy } from '@angular/c
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { RawMaterialsService } from '../../services/raw-materials.service';
+import { AlertService } from 'src/app/core/services/alert.service';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { RawMaterial, PaginationMeta } from '../../models/raw-material.model';
@@ -20,8 +21,9 @@ export class RawMaterialsComponent implements OnInit, OnDestroy {
   loading = signal(false);
   error = signal<string | null>(null);
   page = signal(1);
-  perPage = signal(15);
-  meta = signal<PaginationMeta>({ current_page: 1, last_page: 1, per_page: 15, total: 0 });
+  perPage = signal(10);
+  filters = signal<Record<string, any>>({});
+  meta = signal<PaginationMeta>({ current_page: 1, last_page: 1, per_page: 10, total: 0 });
   showForm = signal(false);
 
   // Formulario reactivo para crear/editar
@@ -30,25 +32,26 @@ export class RawMaterialsComponent implements OnInit, OnDestroy {
   filterForm: FormGroup;
 
   private service: RawMaterialsService;
+  private alert: AlertService;
   private destroy$ = new Subject<void>();
-  private effectDisposer?: any;
 
-  constructor(private fb: FormBuilder, rawMaterialsService: RawMaterialsService) {
+  constructor(private fb: FormBuilder, rawMaterialsService: RawMaterialsService, alertService: AlertService) {
     this.service = rawMaterialsService;
+    this.alert = alertService;
     this.form = this.buildForm();
     this.filterForm = this.buildFilterForm();
-    // Cargar lista inicialmente y cada vez que cambie page/perPage
-    this.effectDisposer = effect(() => {
-      // leer valores de signals para activar el effect
-      const _p = this.page();
-      const _pp = this.perPage();
-      this.loadList();
-    });
+    
+    // Cargar lista cada vez que cambie la página, el tamaño de página o los filtros.
+    effect(() => {
+      const p = this.page();
+      const pp = this.perPage();
+      const f = this.filters();
+      this.loadList(f, p, pp);
+    }, { allowSignalWrites: true });
   }
 
   ngOnInit(): void {
-    // Inicializar carga (el effect también la llamará) — redundante pero explícito
-    this.loadList();
+    // La carga inicial es manejada por el effect.
   }
 
   // trackBy para ngFor
@@ -62,45 +65,33 @@ export class RawMaterialsComponent implements OnInit, OnDestroy {
     this.showForm.set(true);
   }
 
+  forceReload() {
+    this.loadList(this.filters(), this.page(), this.perPage());
+  }
+
   private buildFilterForm(): FormGroup {
     return this.fb.group({
       name: [''],
       code: [''],
-      is_active: [null], // null = any, true = active, false = inactive
-      low_stock: [false], // true = stock <= min_stock
+      low_stock: [false],
     });
   }
 
   applyFilters() {
     const raw = this.filterForm.value as any;
-    const { name, code, is_active, low_stock } = raw;
     const filters: Record<string, any> = {};
-    if (name) filters['name'] = name;
-    if (code) filters['code'] = code;
-
-    // Normalize is_active: accept true/false, 'true'/'false', 1/0
-    let act: boolean | null = null;
-    if (is_active === true || is_active === 'true' || is_active === 1 || is_active === '1') {
-      act = true;
-    } else if (is_active === false || is_active === 'false' || is_active === 0 || is_active === '0') {
-      act = false;
-    } else {
-      act = null;
-    }
-    if (act !== null) filters['is_active'] = act;
-
-    // low_stock should be boolean
-    const lowStockBool = low_stock === true || low_stock === 'true' || low_stock === 1 || low_stock === '1';
-    if (lowStockBool) filters['low_stock'] = true;
-    // Reset to first page when applying filters
-    this.page.set(1);
-    this.loadList(filters);
+    if (raw.name) filters['name'] = raw.name;
+    if (raw.code) filters['code'] = raw.code;
+    if (raw.low_stock) filters['low_stock'] = true;
+    
+    this.page.set(1); // Reset to first page when applying filters
+    this.filters.set(filters);
   }
 
   clearFilters() {
-    this.filterForm.reset({ name: '', code: '', is_active: null, low_stock: false });
+    this.filterForm.reset();
     this.page.set(1);
-    this.loadList();
+    this.filters.set({});
   }
 
   private buildForm(): FormGroup {
@@ -117,21 +108,23 @@ export class RawMaterialsComponent implements OnInit, OnDestroy {
     });
   }
 
-  loadList(filters: Record<string, any> = {}) {
+  loadList(filters: Record<string, any> = {}, page: number, perPage: number) {
     this.loading.set(true);
     this.error.set(null);
 
     this.service
-      .list(filters, this.page(), this.perPage())
+      .list(filters, page, perPage)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (res) => {
           this.rawMaterials.set(res.data || []);
-          this.meta.set(res.meta || { current_page: 1, last_page: 1, per_page: this.perPage(), total: 0 });
+          this.meta.set(res.meta || { current_page: 1, last_page: 1, per_page: perPage, total: 0 });
           this.loading.set(false);
         },
         error: (err) => {
-          this.error.set(typeof err === 'string' ? err : JSON.stringify(err));
+          const message = err?.message || 'Ocurrió un error desconocido.';
+          this.error.set(message);
+          this.alert.error('Error cargando materiales', message);
           this.loading.set(false);
         }
       });
@@ -158,95 +151,86 @@ export class RawMaterialsComponent implements OnInit, OnDestroy {
     this.loading.set(true);
     this.error.set(null);
 
-    // Normalize and validate some fields client-side before sending
-    if (payload.code && typeof payload.code === 'string') {
-      payload.code = payload.code.trim().slice(0, 100);
-    }
-    // Ensure is_active is boolean
-    if (payload.hasOwnProperty('is_active')) {
-      const v: any = payload.is_active;
-      payload.is_active = v === 'true' || v === true ? true : v === 'false' || v === false ? false : Boolean(v);
-    }
+    const operation$ = payload.id 
+      ? this.service.update(payload.id, payload)
+      : this.service.create(payload);
 
-    if (payload.id) {
-      // update
-  this.service.update(payload.id as number, payload).pipe(takeUntil(this.destroy$)).subscribe({
-        next: (updated) => {
-          this.loadList();
-          this.select(null);
-          this.loading.set(false);
-        },
-        error: (err) => {
-          this.handleServerValidation(err);
-          this.loading.set(false);
-        }
-      });
-    } else {
-      // create
-  this.service.create(payload).pipe(takeUntil(this.destroy$)).subscribe({
-        next: (created) => {
-          this.loadList();
-          this.select(null);
-          this.loading.set(false);
-        },
-        error: (err) => {
-          this.handleServerValidation(err);
-          this.loading.set(false);
-        }
-      });
-    }
-  }
-
-  private handleServerValidation(err: any) {
-    // err may be a string or an object like { message: '', errors: { field: ['msg'] } }
-    if (!err) {
-      this.error.set('Error desconocido');
-      return;
-    }
-
-    const payloadErrors = (err && err.errors) ? err.errors : null;
-    if (payloadErrors && typeof payloadErrors === 'object') {
-      // Map backend field errors to form controls if present
-      Object.keys(payloadErrors).forEach((field) => {
-        const control = this.form.get(field);
-        const messages = Array.isArray(payloadErrors[field]) ? payloadErrors[field].join(' ') : String(payloadErrors[field]);
-        if (control) {
-          control.setErrors({ server: messages });
-        } else {
-          // if field not in form, append to global error
-          const prev = this.error() ?? '';
-          this.error.set((prev ? prev + ' ' : '') + `${field}: ${messages}`);
-        }
-      });
-    } else if (err.message) {
-      this.error.set(err.message);
-    } else {
-      this.error.set(typeof err === 'string' ? err : JSON.stringify(err));
-    }
-  }
-
-  remove(id?: number) {
-    if (!id) return;
-    this.loading.set(true);
-  this.service.delete(id).pipe(takeUntil(this.destroy$)).subscribe({
-      next: () => {
-        this.loadList();
+    operation$.pipe(takeUntil(this.destroy$)).subscribe({
+      next: (result) => {
+        this.alert.success(payload.id ? 'Actualizado' : 'Creado', `El material se ${payload.id ? 'actualizó' : 'creó'} correctamente.`);
+        this.select(null); // Cierra el modal y resetea el form
         this.loading.set(false);
+        // El effect se encargará de recargar la lista si es necesario,
+        // pero forzamos una recarga en la página actual para ver el cambio.
+        this.loadList(this.filters(), this.page(), this.perPage());
       },
       error: (err) => {
-        this.error.set(typeof err === 'string' ? err : JSON.stringify(err));
+        this.handleServerValidation(err);
         this.loading.set(false);
       }
     });
   }
 
+  private handleServerValidation(err: any) {
+    if (err?.errors && typeof err.errors === 'object') {
+      Object.keys(err.errors).forEach((field) => {
+        const control = this.form.get(field);
+        const messages = Array.isArray(err.errors[field]) ? err.errors[field].join(' ') : String(err.errors[field]);
+        if (control) {
+          control.setErrors({ server: messages });
+        }
+      });
+      this.alert.error('Error de validación', 'Por favor, corrige los campos marcados.');
+    } else {
+      const message = err?.message || 'Ocurrió un error al guardar.';
+      this.error.set(message);
+      this.alert.error('Error', message);
+    }
+  }
+
+  remove(id?: number) {
+    if (!id) return;
+
+    this.alert.confirm('¿Estás seguro?', 'Esta acción no se puede deshacer.').then(result => {
+      if (result.isConfirmed) {
+        this.loading.set(true);
+        this.service.delete(id).pipe(takeUntil(this.destroy$)).subscribe({
+          next: (res: any) => {
+            this.alert.success('Eliminado', res?.message || 'Material eliminado correctamente');
+            // Si la página queda vacía, retrocedemos una.
+            if (this.rawMaterials().length === 1 && this.page() > 1) {
+              this.page.update(p => p - 1);
+            } else {
+              this.loadList(this.filters(), this.page(), this.perPage());
+            }
+            this.loading.set(false);
+          },
+          error: (err) => {
+            const message = err?.message || 'Ocurrió un error al eliminar.';
+            this.error.set(message);
+            this.alert.error('Error eliminando', message);
+            this.loading.set(false);
+          }
+        });
+      }
+    });
+  }
+
   // Paginación
-  goToPage(p: number) {
-    this.page.set(p);
+  goToPage(p: number, event?: Event) {
+    event?.preventDefault();
+    const last = this.meta()?.last_page ?? 1;
+    const target = Math.max(1, Math.min(last, p));
+    if (this.page() !== target) {
+      this.page.set(target);
+    }
   }
 
   setPerPage(n: number) {
-    this.perPage.set(n);
+    if (this.perPage() !== n) {
+      this.page.set(1);
+      this.perPage.set(n);
+    }
   }
 
   // Helper: obtener snapshot de signals para el template
@@ -270,25 +254,11 @@ export class RawMaterialsComponent implements OnInit, OnDestroy {
     return this.meta();
   }
 
-  // helper to use Math.min in template (avoids template type-check issue)
   min(a: number, b: number): number {
     return Math.min(a ?? 0, b ?? 0);
   }
 
   ngOnDestroy(): void {
-    // Limpiar efecto de signals
-    if (this.effectDisposer) {
-      try {
-        if (typeof this.effectDisposer === 'function') {
-          this.effectDisposer();
-        } else if (typeof this.effectDisposer.destroy === 'function') {
-          this.effectDisposer.destroy();
-        }
-      } catch (e) {
-        // ignore
-      }
-    }
-    // Completar subject para cerrar subscripciones
     this.destroy$.next();
     this.destroy$.complete();
   }

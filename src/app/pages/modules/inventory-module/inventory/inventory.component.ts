@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RawMaterialsService } from '../services/raw-materials.service';
 import { InventoryMovementService } from '../services/inventory-movement.service';
 import { forkJoin, of } from 'rxjs';
-import { catchError } from 'rxjs/operators';
+import { catchError, tap } from 'rxjs/operators';
 
 interface StatCard {
   title: string;
@@ -107,13 +107,14 @@ export class InventoryComponent implements OnInit {
 
     // Cargar datos en paralelo
     forkJoin({
-      rawMaterials: this.rawMaterialsService.list({}, 1, 1000).pipe(
+      rawMaterials: this.rawMaterialsService.list({}).pipe(
         catchError(err => {
           console.error('Error loading raw materials:', err);
           return of({ data: [], meta: null });
-        })
+        }),
+        tap(() => console.log('Raw materials loaded'))
       ),
-      movements: this.inventoryMovementService.list({}, 100, 1).pipe(
+      movements: this.inventoryMovementService.list({}).pipe(
         catchError(err => {
           console.error('Error loading movements:', err);
           return of({ data: [], success: false });
@@ -182,15 +183,14 @@ export class InventoryComponent implements OnInit {
     // Actualizar estadísticas
     this.movementsByType = movementsByType;
     this.movementSummary = this.buildMovementSummary(movementsByType);
-    this.updateStatsCards(totalProducts, activeProducts, lowStockCount, totalMovements, totalInventoryValue);
+    this.updateStatsCards(totalProducts, activeProducts, lowStockCount, totalMovements);
   }
 
   private updateStatsCards(
     totalProducts: number, 
     activeProducts: number, 
     lowStockCount: number, 
-    totalMovements: number, 
-    totalInventoryValue: number
+    totalMovements: number
   ): void {
     this.statsCards = [
       {
@@ -199,13 +199,6 @@ export class InventoryComponent implements OnInit {
         icon: 'bi-box-seam',
         color: 'primary',
         subtitle: `${activeProducts} activos`
-      },
-      {
-        title: 'Valor Inventario',
-        value: `$${totalInventoryValue.toLocaleString('es-CO', { minimumFractionDigits: 2 })}`,
-        icon: 'bi-currency-dollar',
-        color: 'success',
-        subtitle: 'Valor total estimado'
       },
       {
         title: 'Bajo Stock',

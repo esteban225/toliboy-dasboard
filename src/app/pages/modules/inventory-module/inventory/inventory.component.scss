@@ -92,3 +92,24 @@
     }
   }
 }
+
+/* Additional responsive polish */
+@media (max-width: 991.98px) {
+  .inventory-dashboard {
+    .movement-summary .icon-wrapper { width: 2.5rem; height: 2.5rem; }
+    .fs-3 { font-size: 1.5rem; }
+    .card-body { padding: 0.9rem; }
+  }
+}
+
+@media (max-width: 575.98px) {
+  .inventory-dashboard {
+    .row.g-3 { gap: 0.75rem; }
+    .card { border-radius: 0.65rem; }
+    .movement-summary { gap: .5rem; }
+    /* Stack stat cards full width */
+    .col-12.col-md-6.col-xl-3 { flex: 0 0 100%; max-width: 100%; }
+    /* Reduce timeline spacing */
+    .timeline .timeline-content { padding: .6rem; }
+  }
+}
