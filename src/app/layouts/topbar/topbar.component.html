@@ -330,8 +330,8 @@
                                     <div dropdown [container]="'body'" class="col-auto dropdown">
                                         <a dropdownToggle href="javascript:void(0);" data-bs-toggle="dropdown" class="link-secondary fs-md"><i class="bi bi-three-dots-vertical"></i></a>
                                         <ul *dropdownMenu class="dropdown-menu">
-                                            <li><a class="dropdown-item" href="javascript:void(0);">Todo claro</a></li>
-                                            <li><a class="dropdown-item" href="javascript:void(0);">Marcar todo como leído</a></li>
+                                            <li><a class="dropdown-item" href="javascript:void(0);" (click)="clearAll()">Todo claro</a></li>
+                                            <li><a class="dropdown-item" href="javascript:void(0);" (click)="markAllAsRead()">Marcar todo como leído</a></li>
                                             <li><a class="dropdown-item" href="javascript:void(0);">Archivar todo</a></li>
                                         </ul>
                                     </div>
@@ -347,35 +347,35 @@
                                     @if(data.items.length > 0){
                                     <h6 class="text-overflow text-muted fs-sm my-2 text-uppercase notification-title">{{data.title}}</h6>}
                                     @for (item of data.items; track $index) {
-                                    <div class="text-reset notification-item d-block dropdown-item position-relative" [ngClass]="data.title == 'New'?'unread-message':''">
+                                    <div class="text-reset notification-item d-block dropdown-item position-relative" [ngClass]="!item.isRead ? 'unread-message' : ''">
                                         <div class="d-flex">
 
                                             @if(item.avatar){
                                             <div class="position-relative me-3 flex-shrink-0">
                                                 <img src="{{item.avatar}}" class="rounded-circle avatar-xs" alt="user-pic">
                                                 <span class="active-badge position-absolute start-100 translate-middle p-1 bg-success rounded-circle">
-                                                    <span class="visually-hidden">{{item.activeBadge}}</span>
+                                                    <span class="visually-hidden">activo</span>
                                                 </span>
                                             </div>
                                             }@else {
                                             <div class="avatar-xs me-3 flex-shrink-0">
-                                                <span class="avatar-title {{item.background}} rounded-circle fs-lg">
+                                                <span class="avatar-title bg-{{item.type}}-subtle text-{{item.type}} rounded-circle fs-lg">
                                                     <i class='{{item.icon}}'></i>
                                                 </span>
                                             </div>
                                             }
                                             <div class="flex-grow-1">
                                                 <a href="javascript:void(0);" class="stretched-link">
-                                                    @if(item.name){
+                                                    @if(item.title){
                                                     <a href="javascript:void(0);" class="stretched-link">
-                                                        <h6 class="mt-0 mb-1 fs-md fw-semibold">{{item.name}}</h6>
+                                                        <h6 class="mt-0 mb-1 fs-md fw-semibold">{{item.title}}</h6>
                                                     </a>}@else{
-                                                    <h6 class="mt-0 fs-md mb-2 lh-base">{{item.text}}</h6>
+                                                    <h6 class="mt-0 fs-md mb-2 lh-base">{{item.message}}</h6>
                                                     }
                                                 </a>
-                                                @if(item.name){
+                                                @if(item.title){
                                                 <div class="fs-sm text-muted">
-                                                    <p class="mb-1">{{item.text}}</p>
+                                                    <p class="mb-1">{{item.message}}</p>
                                                 </div>
                                                 }
                                                 <p class="mb-0 fs-xs fw-medium text-uppercase text-muted">
@@ -384,8 +384,8 @@
                                             </div>
                                             <div class="px-2 fs-base">
                                                 <div class="form-check notification-check">
-                                                    <input class="form-check-input" type="checkbox" value="{{item.id}}" [(ngModel)]="item.state" (change)="onCheckboxChange($event,$index)" id="{{item.checkboxId}}">
-                                                    <label class="form-check-label" for="{{item.checkboxId}}"></label>
+                                                    <input class="form-check-input" type="checkbox" value="{{item.id}}" [(ngModel)]="item.selected" (change)="toggleNotificationSelection(item.id)" id="notification-{{item.id}}">
+                                                    <label class="form-check-label" for="notification-{{item.id}}"></label>
                                                 </div>
                                             </div>
                                         </div>
@@ -424,7 +424,7 @@
         </div>
     </div>
 </header>
-<div class="wrapper"></div>
+<div class="wrapper z-n1"></div>
 
 <!-- removeNotificationModal -->
 <div bsModal #removeNotificationModal="bs-modal" id="removeNotificationModal" class="modal fade zoomIn" tabindex="-1" aria-hidden="true">

@@ -1,15 +1,13 @@
-import { Component, ViewChild } from '@angular/core';
-import { UntypedFormBuilder, UntypedFormGroup, UntypedFormArray, Validators, UntypedFormControl } from '@angular/forms';
+import { Component, ViewChild, OnDestroy, OnInit } from '@angular/core';
+import { UntypedFormBuilder, UntypedFormGroup, Validators } from '@angular/forms';
 import { DatePipe } from '@angular/common';
-import { cloneDeep } from 'lodash';
+import { Subject, takeUntil } from 'rxjs';
 
 import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
-import { todoList, AssignedData, projectList } from '../../../core/data/to-do';
+import { AssignedData, projectList } from '../../../core/data/to-do';
 import { ModalDirective } from 'ngx-bootstrap/modal';
-import { RootReducerState } from 'src/app/store/reducers';
-import { Store } from '@ngrx/store';
-import { addTodoData, deleteTodoData, fetchTodoData, updateTodoData } from 'src/app/store/actions/to-do-action';
-import { selectData, selectDataLoading } from 'src/app/store/selectors/to-do.selector';
+import { TodoStorageService, TodoItem, AssignedMember } from '../../../core/services/todo-storage.service';
+import { NotificationService } from '../../../core/services/notification.service';
 
 @Component({
   selector: 'app-to-do',
@@ -18,137 +16,233 @@ import { selectData, selectDataLoading } from 'src/app/store/selectors/to-do.sel
 })
 
 // To Do Component
-export class ToDoComponent {
+export class ToDoComponent implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
 
-  todoDatas: any;
-  deleteId: any;
-  assignList: any;
+  todoDatas: TodoItem[] = [];
+  deleteId: string = '';
+  // Ya no se usa asignación de personas
   todoForm!: UntypedFormGroup;
   submitted = false;
   projectData: any;
-  term: any;
+  term: string = '';
+  isLoading = false;
+
+  // Notificaciones de fechas límite
+  dueTasks: TodoItem[] = [];
+  showDueBanner = true;
+
+  // ya no hay asignaciones de miembros
 
   @ViewChild('createProjectModal', { static: false }) createProjectModal?: ModalDirective;
   @ViewChild('createTask', { static: false }) createTask?: ModalDirective;
   @ViewChild('removeTaskItemModal', { static: false }) removeTaskItemModal?: ModalDirective;
-  alltodoDatas: any;
 
-  constructor(private formBuilder: UntypedFormBuilder, private datePipe: DatePipe, private store: Store<{ data: RootReducerState }>) { }
+  constructor(
+    private formBuilder: UntypedFormBuilder, 
+    private datePipe: DatePipe, 
+    private todoStorageService: TodoStorageService,
+    private notificationService: NotificationService
+  ) { }
 
 
   ngOnInit(): void {
+    this.initializeComponent();
+    this.setupForm();
+    this.subscribeToTodoUpdates();
+  }
 
+  private initializeComponent(): void {
     this.projectData = projectList;
-    // Fetch Data
-    this.store.dispatch(fetchTodoData());
-    this.store.select(selectDataLoading).subscribe(data => {
-      if (data == false) {
-        document.getElementById('elmLoader')?.classList.add('d-none')
-      }
-    })
-    this.store.select(selectData).subscribe(data => {
-      this.alltodoDatas = data
-      this.todoDatas = cloneDeep(data)
-    });
+  }
 
-    setTimeout(() => {
-      this.assignList = AssignedData;
-      document.getElementById('elmLoader')?.classList.add('d-none')
-    }, 1000);
-
-    /**
-    * Form Validation
-    */
+  private setupForm(): void {
     this.todoForm = this.formBuilder.group({
       id: [''],
       task: ['', [Validators.required]],
-      status: ['', [Validators.required]],
-      priority: ['', [Validators.required]],
+      status: ['New', [Validators.required]],
+      priority: ['Medium', [Validators.required]],
       dueDate: ['', [Validators.required]],
-      subItem: [''],
       checked: [false],
     });
+  }
 
+  private subscribeToTodoUpdates(): void {
+    // Suscribirse a los datos del servicio
+    this.todoStorageService.getTodos()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((data: TodoItem[]) => {
+        this.todoDatas = [...data]; // Crear copia simple
+        // Actualizar tareas vencidas/hoy
+        this.dueTasks = this.todoStorageService.getDueTasks();
+        // Si no hay tareas vencidas, ocultar banner
+        if (!this.dueTasks || this.dueTasks.length === 0) this.showDueBanner = false;
+      });
+
+    // Suscribirse al estado de carga
+    this.todoStorageService.getLoadingState()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((loading: boolean) => {
+        this.isLoading = loading;
+        const loader = document.getElementById('elmLoader');
+        if (loader) {
+          if (loading) {
+            loader.classList.remove('d-none');
+          } else {
+            loader.classList.add('d-none');
+          }
+        }
+      });
   }
 
   /**
- * Form data get
- */
+   * Open create task modal
+   */
+  openCreateTask(): void {
+    this.resetForm();
+    this.createTask?.show();
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  /**
+   * Form data get
+   */
   get form() {
     return this.todoForm.controls;
   }
 
-  collapse(collapse: any) {
-    document.getElementById(collapse)?.classList.toggle('show')
-  }
-
-  drop(event: CdkDragDrop<any[]>) {
-    moveItemInArray(this.todoDatas, event.previousIndex, event.currentIndex);
-  }
-
-  // Checked Selected
-  checkUncheckAll(e: any, id: any, i: any) {
-    console.log(e.target.checked)
-    if (e.target.checked == true) {
-      this.todoDatas[i].checked = e.target.checked
-      this.todoDatas[i].status = 'Completed'
-    } else {
-      console.log(this.todoDatas[i])
-      this.todoDatas[i].checked = e.target.checked
-      this.todoDatas[i].status = 'Inprogress'
-    }
-  }
-
-  // Add Member
-  assignmember: any = [];
-  slectMember(id: any) {
-    this.assignmember.push(this.assignList[id])
-  }
-
-  // Edit Data
-  econtent?: any;
-  editData(id: any) {
-    this.submitted = false;
-    this.createTask?.show()
-    this.econtent = this.todoDatas[id];
-    this.assignmember = this.econtent.subItem
-    this.todoForm.controls['task'].setValue(this.econtent.task);
-    this.todoForm.controls['dueDate'].setValue(this.econtent.dueDate);
-    this.todoForm.controls['status'].setValue(this.econtent.status);
-    this.todoForm.controls['priority'].setValue(this.econtent.priority);
-    this.todoForm.controls['subItem'].setValue(this.econtent.subItem);
-    this.todoForm.controls['id'].setValue(this.econtent.id);
+  /**
+   * Collapse sidebar sections
+   */
+  collapse(collapse: string): void {
+    document.getElementById(collapse)?.classList.toggle('show');
   }
 
   /**
-  * Save Todo data
-  */
-  saveTodo() {
-    if (this.todoForm.valid) {
-      if (this.todoForm.get('id')?.value) {
-        if (this.todoForm.get('status')?.value == 'Completed') {
-          this.todoForm.controls['checked'].setValue(true);
-        }
-        this.todoForm.controls['dueDate'].setValue(this.datePipe.transform(this.todoForm.get('dueDate')?.value, 'dd MMM, yyyy'));
-        const updatedData = this.todoForm.value;
-        this.store.dispatch(updateTodoData({ updatedData }));
-      } else {
-        const subItem = this.assignmember;
-        this.todoForm.controls['checked'].setValue(false);
-        this.todoForm.controls['id'].setValue((this.todoDatas.length + 1).toString());
-        this.todoForm.controls['dueDate'].setValue(this.datePipe.transform(this.todoForm.get('dueDate')?.value, 'dd MMM, yyyy'));
-        const newData = {
-          ...this.todoForm.value,
-          subItem
-        }
-        this.store.dispatch(addTodoData({ newData }));
+   * Handle drag and drop reordering
+   */
+  drop(event: CdkDragDrop<TodoItem[]>): void {
+    if (event.previousIndex !== event.currentIndex) {
+      const updatedTodos = [...this.todoDatas];
+      moveItemInArray(updatedTodos, event.previousIndex, event.currentIndex);
+      this.todoStorageService.updateTodosOrder(updatedTodos);
+    }
+  }
+
+  /**
+   * Toggle todo completion status
+   */
+  checkUncheckAll(event: any, id: string, index: number): void {
+    const isChecked = event.target.checked;
+    const todo = this.todoDatas[index];
+    
+    if (todo) {
+      const updatedTodo: TodoItem = {
+        ...todo,
+        checked: isChecked,
+        status: isChecked ? 'Completed' : 'Inprogress'
+      };
+      
+      this.todoStorageService.updateTodo(updatedTodo);
+      
+      // Enviar notificación de actualización
+      if (isChecked) {
+        this.notificationService.success(`Tarea "${todo.task}" completada`, '✅ ¡Bien hecho!');
       }
     }
-    setTimeout(() => {
-      this.todoForm.reset();
-    }, 2000);
-    this.createTask?.hide()
-    this.submitted = true
+  }
+
+  // Ya no hay gestión de miembros asignados
+
+  /**
+   * Edit existing todo
+   */
+  editData(index: number): void {
+    if (index >= 0 && index < this.todoDatas.length) {
+      const todo = this.todoDatas[index];
+      this.submitted = false;
+      // Llenar formulario
+      this.todoForm.patchValue({
+        id: todo.id,
+        task: todo.task,
+        status: todo.status,
+        priority: todo.priority,
+        dueDate: todo.dueDate,
+        checked: todo.checked
+      });
+      
+      this.createTask?.show();
+    }
+  }
+
+  /**
+   * Save Todo data
+   */
+  saveTodo(): void {
+    if (!this.todoForm.valid) {
+      this.submitted = true;
+      return;
+    }
+
+    const formValue = this.todoForm.value;
+    const formattedDate = this.datePipe.transform(formValue.dueDate, 'dd MMM, yyyy') || formValue.dueDate;
+    // intentar obtener ISO para comparaciones
+    let dueIso: string | undefined = undefined;
+    try {
+      const d = new Date(formValue.dueDate);
+      if (!isNaN(d.getTime())) dueIso = d.toISOString();
+    } catch (err) {
+      dueIso = undefined;
+    }
+
+    if (formValue.id) {
+      // Actualizar todo existente
+      const updatedTodo: TodoItem = {
+        id: formValue.id,
+        task: formValue.task,
+        status: formValue.status,
+        priority: formValue.priority,
+        dueDate: formattedDate,
+        checked: formValue.status === 'Completed',
+        dueDateISO: dueIso
+      };
+      
+      this.todoStorageService.updateTodo(updatedTodo);
+    } else {
+      // Crear nuevo todo
+      const newTodo = {
+        task: formValue.task,
+        status: formValue.status || 'New',
+        priority: formValue.priority || 'Medium',
+        dueDate: formattedDate,
+        checked: formValue.status === 'Completed',
+        dueDateISO: dueIso
+      };
+      
+      this.todoStorageService.addTodo(newTodo);
+      
+      // Enviar notificación de éxito
+      this.notificationService.success(`Nueva tarea "${newTodo.task}" creada exitosamente`, '📝 Tarea Creada');
+    }
+
+    this.resetForm();
+  }
+
+  /**
+   * Reset form and close modal
+   */
+  private resetForm(): void {
+    this.todoForm.reset({
+      status: 'New',
+      priority: 'Medium',
+      checked: false
+    });
+    this.submitted = false;
+    this.createTask?.hide();
   }
 
 
@@ -157,54 +251,82 @@ export class ToDoComponent {
   /**
    * Delete Model Open
    */
-  removeData(id: any) {
+  removeData(id: string): void {
     this.deleteId = id;
-    this.removeTaskItemModal?.show()
+    this.removeTaskItemModal?.show();
   }
 
-  // Delete Data
-  confirmDelete() {
-    this.store.dispatch(deleteTodoData({ id: this.deleteId }));
-    this.removeTaskItemModal?.hide()
+  /**
+   * Confirm delete action
+   */
+  confirmDelete(): void {
+    if (this.deleteId) {
+      // Obtener el nombre de la tarea antes de eliminarla
+      const todoToDelete = this.todoDatas.find(todo => todo.id === this.deleteId);
+      const taskName = todoToDelete?.task || 'Tarea';
+      
+      this.todoStorageService.deleteTodo(this.deleteId);
+      this.removeTaskItemModal?.hide();
+      this.deleteId = '';
+      
+      // Enviar notificación de eliminación
+      this.notificationService.warning(`Tarea "${taskName}" eliminada`, '🗑️ Tarea Eliminada');
+    }
   }
 
-  // Location Filter
-  taskFilter() {
-    var status = (document.getElementById("choices-select-status") as HTMLInputElement).value;
+  /**
+   * Filter todos by status
+   */
+  taskFilter(): void {
+    const statusElement = document.getElementById("choices-select-status") as HTMLInputElement;
+    const status = statusElement?.value || '';
+    
     if (status) {
-      this.todoDatas = cloneDeep(todoList.filter((data: any) => {
-        return data.status === status;
-      }));
-    }
-    else {
-      this.todoDatas = cloneDeep(this.alltodoDatas)
-    }
-  }
-
-  // Sort filter
-  direction: any = 'asc';
-  SortFilter(event: any) {
-    if (this.direction == 'asc') {
-      this.direction = 'desc'
+      this.todoDatas = this.todoStorageService.filterTodosByStatus(status);
     } else {
-      this.direction = 'asc'
+      this.todoDatas = [...this.todoStorageService.getTodosSync()];
     }
-    this.todoDatas.sort((a: any, b: any) => {
-      const res = this.compare(a[event.target.value], b[event.target.value]);
-      return this.direction === 'asc' ? res : -res;
-    });
   }
 
-  compare(v1: string | number, v2: string | number) {
+  /**
+   * Sort filter
+   */
+  direction: 'asc' | 'desc' = 'asc';
+  
+  SortFilter(event: any): void {
+    this.direction = this.direction === 'asc' ? 'desc' : 'asc';
+    const field = event.target.value;
+    
+    if (field) {
+      this.todoDatas.sort((a: any, b: any) => {
+        const res = this.compare(a[field], b[field]);
+        return this.direction === 'asc' ? res : -res;
+      });
+    }
+  }
+
+  /**
+   * Compare function for sorting
+   */
+  compare(v1: string | number, v2: string | number): number {
     return v1 < v2 ? -1 : v1 > v2 ? 1 : 0;
   }
 
-  // Search Data
-  searchTerm() {
-    if (this.term) {
-      this.todoDatas = cloneDeep(todoList.filter((el: any) => el.task.toLowerCase().includes(this.term.toLowerCase())));
+  /**
+   * Search todos by term
+   */
+  searchTerm(): void {
+    if (this.term?.trim()) {
+      this.todoDatas = this.todoStorageService.searchTodos(this.term.trim());
     } else {
-      this.todoDatas = cloneDeep(this.alltodoDatas)
+      this.todoDatas = [...this.todoStorageService.getTodosSync()];
     }
+  }
+
+  /**
+   * Ocultar banner de tareas vencidas
+   */
+  dismissDueBanner(): void {
+    this.showDueBanner = false;
   }
 }

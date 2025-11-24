@@ -1,0 +1,100 @@
+// ===================================
+// ESTILOS MÍNIMOS - SOLO LAYOUT Y POSICIONAMIENTO
+// ===================================
+
+// Solo animaciones y transiciones básicas
+.btn {
+  transition: all 0.3s ease;
+  
+  &:hover {
+    transform: translateY(-2px);
+  }
+  
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+// ===================================
+// ANIMACIONES PARA ENTRADA DE ELEMENTOS
+// ===================================
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// Aplicar animaciones secuenciales a los elementos
+.row .col-12:nth-child(1) { animation: fadeInUp 0.6s ease-out 0.1s both; }
+.row .col-12:nth-child(2) { animation: fadeInUp 0.6s ease-out 0.2s both; }
+.row .col-12:nth-child(3) { animation: fadeInUp 0.6s ease-out 0.3s both; }
+.row .col-12:nth-child(4) { animation: fadeInUp 0.6s ease-out 0.4s both; }
+.row .col-sm-6:nth-child(5) { animation: fadeInUp 0.6s ease-out 0.5s both; }
+.row .col-sm-6:nth-child(6) { animation: fadeInUp 0.6s ease-out 0.6s both; }
+
+// ===================================
+// MEJORAS PARA MODAL (solo layout)
+// ===================================
+.modal {
+  backdrop-filter: blur(5px);
+  
+  .modal-dialog {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  &.show .modal-dialog {
+    transform: scale(1) translateY(0);
+  }
+}
+
+// ===================================
+// MEJORAS PARA FORMULARIOS (solo layout y focus)
+// ===================================
+.form-control, .form-select {
+  transition: all 0.3s ease;
+  
+  &:focus {
+    transform: translateY(-1px);
+  }
+}
+
+// ===================================
+// RESPONSIVE ADJUSTMENTS
+// ===================================
+
+// Extra small devices (portrait phones, less than 576px)
+@media (max-width: 575.98px) {
+  .modal-dialog {
+    margin: 0.5rem;
+  }
+  
+  .modal-body {
+    padding: 1rem;
+  }
+}
+
+// Medium devices (tablets, 768px and up)
+@media (min-width: 768px) {
+  .modal-lg {
+    max-width: 700px;
+  }
+}
+
+// Large devices (desktops, 992px and up)
+@media (min-width: 992px) {
+  .modal-lg {
+    max-width: 900px;
+  }
+}
+
+// Extra large devices (large desktops, 1200px and up)
+@media (min-width: 1200px) {
+  .container-xl {
+    max-width: 1140px;
+  }
+}

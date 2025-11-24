@@ -49,7 +49,7 @@ export class MenuService {
         link: '/apps/calendar',
         parentId: 8
       },
-      {
+      /*{
         id: 10,
         label: 'MENUITEMS.APPS.LIST.CHAT',
         icon: 'ti ti-messages',
@@ -69,7 +69,7 @@ export class MenuService {
         icon: 'ti ti-folders',
         link: '/apps/file-manager',
         parentId: 8,
-      },
+      },*/
       {
         id: 24,
         label: 'MENUITEMS.APPS.LIST.TODO',
@@ -77,13 +77,13 @@ export class MenuService {
         link: '/apps/to-do',
         parentId: 8,
       },
-      {
+      /*{
         id: 25,
         label: 'MENUITEMS.APPS.LIST.CONTACTS',
         icon: 'ti ti-address-book',
         link: '/apps/contacts',
         parentId: 8,
-      },
+      },*/
       {
         id: 26,
         label: 'MENUITEMS.APPS.LIST.KANBANBOARD',
@@ -106,18 +106,77 @@ export class MenuService {
             label: 'MENUITEMS.USERMANAGEMENT.LIST.USERMANAGEMENT',
             link: '/modules/users',
             parentId: 101
+          },
+          {
+            id: 103,
+            label: 'MENUITEMS.USERMANAGEMENT.LIST.WORKLOGUSERS',
+            link: '/modules/worklog-users',
+            parentId: 101
           }
         ],
         parentId: 100
       },
       {
         id: 103,
-        label: 'MENUITEMS.MODULES.LIST.INVENTORY',
+        label: 'MENUITEMS.FORMMANAGER.TEXT',
         icon: 'ti ti-box',
-        link: '/modules/inventory',
+        subItems: [
+          {
+            id: 104,
+            label: 'MENUITEMS.FORMMANAGER.LIST.FORMRESPONSES',
+            link: '/modules/forms',
+            parentId: 103
+          },
+          {
+            id: 105,
+            label: 'MENUITEMS.FORMMANAGER.LIST.FORMMANAGER',
+            link: '/modules/forms/forms-manager',
+            parentId: 103
+          },
+          {
+            id: 106,
+            label: 'MENUITEMS.FORMMANAGER.LIST.FORMSTRAZABILITY',
+            link: '/modules/forms/forms-trazability',
+            parentId: 103
+          },
+          {
+            id: 107,
+            label: 'MENUITEMS.FORMMANAGER.LIST.FORMRESPONSESDETAIL',
+            link: '/modules/forms/forms-responses',
+            parentId: 103
+          }
+        ],
         parentId: 100 
-      },/*
+
+      },
       {
+        id: 200,
+        label: 'MENUITEMS.INVENTORY.TEXT',
+        icon: 'ti ti-box',
+        subItems: [
+          {
+            id: 201,
+            label: 'MENUITEMS.INVENTORY.LIST.GESTIONINVENTORY',
+            link: '/modules/inventory',
+            parentId: 200
+          },
+          {
+            id: 202,
+            label: 'MENUITEMS.INVENTORY.LIST.INVENTORYMOVEMENT',
+            link: '/modules/inventory/inventoryMovement',
+            parentId: 200
+          },
+          {
+            id: 203,
+            label: 'MENUITEMS.INVENTORY.LIST.RAWMATERIALS',
+            link: '/modules/inventory/rawMaterial',
+            parentId: 200
+          }
+        ],
+        parentId: 100
+      }
+      /*
+      {INVENTORY
         id: 200,
         label: 'MENUITEMS.ADMIN.TEXT',
         isTitle: true

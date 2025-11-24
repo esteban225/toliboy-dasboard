@@ -38,7 +38,27 @@
     "USERMANAGEMENT":{
       "TEXT": "Gestión de Usuarios",
       "LIST": {
-        "USERMANAGEMENT": "Gestión de Usuarios"
+        "USERMANAGEMENT": "Gestión de Usuarios",
+        "WORKLOGUSERS": "Registro de Trabajo de Usuarios"
+      }
+    },
+    "FORMMANAGER": {
+      "TEXT": "Gestor de Formularios",
+      "LIST": {
+        "FORMRESPONSES":"Respuestas de Formularios",
+        "FORMMANAGER": "Gestor de Formularios",
+        "FORMSTRAZABILITY": "Trazabilidad de Formularios",
+        "FORMRESPONSESDETAIL":"Detalle de Respuestas de Formularios"
+      }
+    },
+    "INVENTORY": {
+      "TEXT": "Inventario",
+      "LIST": {
+
+        "GESTIONINVENTORY": "Gestión de Inventario",
+        "PRODUCTS": "Productos e Inventario",
+        "INVENTORYMOVEMENT": "Movimiento de Inventario",
+        "RAWMATERIALS": "Materias Primas"
       }
     },
     "ADMIN": {

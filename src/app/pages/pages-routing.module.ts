@@ -68,6 +68,16 @@ const routes: Routes = [
     loadChildren: () => import('./modules/user-module/user-module.module').then(m => m.UserModuleModule),
     canActivate: [RoleGuard]
   },
+  {
+    path: 'modules/forms',
+    loadChildren: () => import('./modules/forms-module/forms-module.module').then(m => m.FormsModuleModule),
+    canActivate: [RoleGuard]
+  },
+  {
+    path: 'modules/inventory',
+    loadChildren: () => import('./modules/inventory-module/inventory-module.module').then(m => m.InventoryModuleModule),
+    canActivate: [RoleGuard]
+  }
 ];
 
 @NgModule({

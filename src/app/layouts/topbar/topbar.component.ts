@@ -5,8 +5,9 @@ import { CookieService } from 'ngx-cookie-service';
 import { AuthenticationService } from 'src/app/core/services/auth.service';
 import { EventService } from 'src/app/core/services/event.service';
 import { LanguageService } from 'src/app/core/services/language.service';
+import { NotificationService, NotificationGroup } from 'src/app/core/services/notification.service';
 // Get Cart Data
-import { cartList, notification } from './data';
+import { cartList } from './data';
 import { ModalDirective } from 'ngx-bootstrap/modal';
 import { RootReducerState, getLayoutMode } from 'src/app/store/reducers';
 import { Store } from '@ngrx/store';
@@ -46,7 +47,7 @@ export class TopbarComponent {
   tax: any;
   fullscreenicon: any = 'arrows-maximize';
 
-  notificationList: any;
+  notificationList: NotificationGroup[] = [];
   totalNotify: number = 0;
   newNotify: number = 0;
   readNotify: number = 0;
@@ -63,7 +64,8 @@ export class TopbarComponent {
     private router: Router,
     private store: Store<RootReducerState>,
     public _cookiesService: CookieService,
-    private alertService: AlertService) { }
+    private alertService: AlertService,
+    private notificationService: NotificationService) { }
 
   ngOnInit(): void {
     this.element = document.documentElement;
@@ -92,15 +94,20 @@ export class TopbarComponent {
     this.countryName = 'Español (Colombia)';
     this.flagvalue = 'assets/images/flags/co.svg';
 
-    this.notificationList = notification
-    this.notificationList.forEach((element: any) => {
-      this.totalNotify += element.items.length
-      if (element.title == 'New') {
-        this.newNotify = element.items.length
-      } else {
-        this.readNotify = element.items.length
-      }
+    // Suscribirse a las notificaciones
+    this.notificationService.getNotifications().subscribe(notifications => {
+      this.notificationList = notifications;
+      this.updateNotificationCounts();
     });
+  }
+
+  /**
+   * Actualiza los contadores de notificaciones
+   */
+  updateNotificationCounts(): void {
+    this.totalNotify = this.notificationService.getTotalCount();
+    this.newNotify = this.notificationService.getUnreadCount();
+    this.readNotify = this.notificationService.getReadCount();
   }
 
   /***
@@ -288,48 +295,62 @@ export class TopbarComponent {
   // Remove Notification
   checkedValGet: any[] = [];
   onCheckboxChange(event: any, id: any) {
-    var checkedVal: any[] = [];
-    var result
-    for (var i = 0; i < this.notificationList.length; i++) {
-      for (var x = 0; x < this.notificationList[i].items.length; x++) {
-        if (this.notificationList[i].items[x].state == true) {
-          result = this.notificationList[i].items[x].id;
-          checkedVal.push(result);
-        }
-      }
+    // Usar el nuevo servicio para manejar la selección
+    const selectedNotifications = this.notificationService.getSelectedNotifications();
+    this.checkedValGet = selectedNotifications.map(n => n.id);
+    
+    const actionsElement = document.getElementById("notification-actions") as HTMLElement;
+    if (actionsElement) {
+      actionsElement.style.display = this.checkedValGet.length > 0 ? 'block' : 'none';
     }
-    this.checkedValGet = checkedVal
-    checkedVal.length > 0 ? (document.getElementById("notification-actions") as HTMLElement).style.display = 'block' : (document.getElementById("notification-actions") as HTMLElement).style.display = 'none';
   }
 
   notificationDelete() {
-    for (var i = 0; i < this.checkedValGet.length; i++) {
-      for (var j = 0; j < this.notificationList.length; j++) {
-        for (var x = 0; x < this.notificationList[j].items.length; x++) {
-          if (this.notificationList[j].items[x].id == this.checkedValGet[i]) {
-            this.notificationList[j].items.splice(x, 1)
-          }
-        }
-      }
-    }
-    this.calculatenotification()
+    this.notificationService.removeSelectedNotifications();
+    this.checkedValGet = [];
     this.removeNotificationModal?.hide();
   }
 
   calculatenotification() {
-    this.totalNotify = 0;
-    this.checkedValGet = []
-    this.notificationList.forEach((element: any) => {
-      this.totalNotify += element.items.length
-      if (element.title == 'New') {
-        this.newNotify = element.items.length
-      } else {
-        this.readNotify = element.items.length
-      }
-    });
-    this.checkedValGet.length > 0 ? (document.getElementById("notification-actions") as HTMLElement).style.display = 'block' : (document.getElementById("notification-actions") as HTMLElement).style.display = 'none';
+    this.updateNotificationCounts();
+    this.checkedValGet = [];
+    
+    const actionsElement = document.getElementById("notification-actions") as HTMLElement;
+    if (actionsElement) {
+      actionsElement.style.display = 'none';
+    }
+    
     if (this.totalNotify == 0) {
-      document.querySelector('.empty-notification-elem')?.classList.remove('d-none')
+      document.querySelector('.empty-notification-elem')?.classList.remove('d-none');
+    }
+  }
+
+  /**
+   * Marca todas las notificaciones como leídas
+   */
+  markAllAsRead() {
+    this.notificationService.markAllAsRead();
+  }
+
+  /**
+   * Limpia todas las notificaciones
+   */
+  clearAll() {
+    this.notificationService.clearAll();
+  }
+
+  /**
+   * Maneja el toggle de selección de notificación
+   */
+  toggleNotificationSelection(notificationId: string | number) {
+    this.notificationService.toggleNotificationSelection(notificationId);
+    // Actualizar el array de seleccionados
+    const selectedNotifications = this.notificationService.getSelectedNotifications();
+    this.checkedValGet = selectedNotifications.map(n => n.id);
+    
+    const actionsElement = document.getElementById("notification-actions") as HTMLElement;
+    if (actionsElement) {
+      actionsElement.style.display = this.checkedValGet.length > 0 ? 'block' : 'none';
     }
   }
 

@@ -1,0 +1,458 @@
+<div class="container-fluid py-4">
+    <!-- Header Section -->
+    <div class="row mb-4">
+        <div class="col">
+            <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
+                <div>
+                    <h2 class="fw-bold mb-1">
+                        <i class="bi bi-arrow-left-right text-primary me-2"></i>
+                        Movimientos de Inventario
+                    </h2>
+                    <p class="text-muted mb-0">
+                        <i class="bi bi-info-circle me-1"></i>
+                        Gestiona entradas y salidas de productos
+                    </p>
+                </div>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-outline-secondary" (click)="loadMovements()" [disabled]="loading">
+                        <i class="bi bi-arrow-clockwise me-2"></i>
+                        <span class="d-none d-sm-inline">Recargar</span>
+                    </button>
+                    <button class="btn btn-primary" (click)="createQuick()">
+                        <i class="bi bi-plus-circle-fill me-2"></i>
+                        <span class="d-none d-sm-inline">Nuevo</span> Movimiento
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alert Section -->
+    <div *ngIf="error" class="alert alert-danger alert-dismissible fade show d-flex align-items-center" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-3 fs-5"></i>
+        <div class="flex-grow-1">
+            <strong>Error:</strong> {{ error }}
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="loading" class="card border-0 shadow-sm">
+        <div class="card-body text-center py-5">
+            <div class="spinner-border text-primary mb-3" role="status" style="width: 3rem; height: 3rem;">
+                <span class="visually-hidden">Cargando...</span>
+            </div>
+            <p class="text-muted mb-0">Cargando movimientos...</p>
+        </div>
+    </div>
+
+    <!-- Table Section -->
+    <div *ngIf="!loading" class="card border-0 shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light border-bottom">
+                        <tr>
+                            <th class="px-4 py-3 text-center" style="width: 80px">
+                                <small class="text-uppercase fw-bold text-muted">ID</small>
+                            </th>
+                            <th class="px-4 py-3" style="width: 150px">
+                                <small class="text-uppercase fw-bold text-muted">
+                                    <i class="bi bi-arrow-left-right me-1"></i>Tipo
+                                </small>
+                            </th>
+                            <th class="px-4 py-3" style="min-width: 250px">
+                                <small class="text-uppercase fw-bold text-muted">
+                                    <i class="bi bi-box-seam me-1"></i>Producto
+                                </small>
+                            </th>
+                            <th class="px-4 py-3 text-end" style="width: 140px">
+                                <small class="text-uppercase fw-bold text-muted">
+                                    <i class="bi bi-hash me-1"></i>Cantidad
+                                </small>
+                            </th>
+                            <!--
+                            <th class="px-4 py-3 text-end" style="width: 140px">
+                                <small class="text-uppercase fw-bold text-muted">
+                                    <i class="bi bi-currency-dollar me-1"></i>Costo Unit.
+                                </small>
+                            </th>
+                            -->
+
+                            <th class="px-4 py-3" style="width: 200px">
+                                <small class="text-uppercase fw-bold text-muted">
+                                    <i class="bi bi-sticky me-1"></i>Notas
+                                </small>
+                            </th>
+                            <th class="px-4 py-3 text-center" style="width: 180px">
+                                <small class="text-uppercase fw-bold text-muted">Acciones</small>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr *ngFor="let m of movements" class="border-bottom">
+                            <td class="px-4 py-3 text-center">
+                                <span class="badge bg-light text-muted border">{{ m?.id ?? '-' }}</span>
+                            </td>
+                            <td class="px-4 py-3">
+                                <span class="badge px-3 py-2 fw-bold d-inline-flex align-items-center" [ngClass]="{
+                                        'bg-success text-white': (m?.type || m?.movement_type)?.toLowerCase() === 'in',
+                                        'bg-danger text-white': (m?.type || m?.movement_type)?.toLowerCase() === 'out',
+                                        'bg-warning text-dark': (m?.type || m?.movement_type)?.toLowerCase() === 'adjustment',
+                                        'bg-secondary text-white': !(m?.type || m?.movement_type) || !['in', 'out', 'adjustment'].includes((m?.type || m?.movement_type)?.toLowerCase())
+                                    }" style="min-width: 90px; font-size: 0.85rem;">
+                                    <i class="bi me-2" [ngClass]="{
+                                        'bi-arrow-down-circle-fill': (m?.type || m?.movement_type)?.toLowerCase() === 'in',
+                                        'bi-arrow-up-circle-fill': (m?.type || m?.movement_type)?.toLowerCase() === 'out',
+                                        'bi-gear-fill': (m?.type || m?.movement_type)?.toLowerCase() === 'adjustment',
+                                        'bi-question-circle-fill': !(m?.type || m?.movement_type) || !['in', 'out', 'adjustment'].includes((m?.type || m?.movement_type)?.toLowerCase())
+                                    }"></i>
+                                    <span>
+                                        {{
+                                        (m?.type || m?.movement_type)?.toLowerCase() === 'in' ? 'Entrada' :
+                                        (m?.type || m?.movement_type)?.toLowerCase() === 'out' ? 'Salida' :
+                                        (m?.type || m?.movement_type)?.toLowerCase() === 'adjustment' ? 'Ajuste' :
+                                        'N/D'
+                                        }}
+                                    </span>
+                                </span>
+                            </td>
+                            <td class="px-4 py-3">
+                                <div class="d-flex align-items-center">
+                                    <div class="bg-primary bg-opacity-10 rounded-circle p-2 me-2">
+                                        <i class="bi bi-box text-primary"></i>
+                                    </div>
+                                    <div>
+                                        <div class="fw-semibold text-muted">
+                                            {{ m?.product_name ?? m?.raw_material_name ?? 'Producto sin nombre' }}
+                                        </div>
+                                        <small class="text-muted d-flex align-items-center">
+                                            <span *ngIf="m?.product_code ?? m?.raw_material_code" class="me-2">
+                                                <i class="bi bi-upc me-1"></i>{{ m?.product_code ?? m?.raw_material_code
+                                                }}
+                                            </span>
+                                            <span>
+                                                <i class="bi bi-tag me-1"></i>ID: {{ m?.product_id ?? m?.raw_material_id
+                                                ?? '-' }}
+                                            </span>
+                                        </small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-4 py-3 text-end">
+                                <span class="fs-5 fw-bold" [ngClass]="{
+                                    'text-success': (m?.type || m?.movement_type)?.toLowerCase() === 'in',
+                                    'text-danger': (m?.type || m?.movement_type)?.toLowerCase() === 'out',
+                                    'text-warning': (m?.type || m?.movement_type)?.toLowerCase() === 'adjustment'
+                                }">
+                                    {{
+                                    (m?.type || m?.movement_type)?.toLowerCase() === 'in' ? '+' :
+                                    (m?.type || m?.movement_type)?.toLowerCase() === 'out' ? '-' :
+                                    (m?.type || m?.movement_type)?.toLowerCase() === 'adjustment' ? '±' : ''
+                                    }}{{ m?.quantity ?? '0' }}
+                                </span>
+                            </td>
+                            <!--
+                            <td class="px-4 py-3 text-end">
+                                <span class="fw-semibold">
+                                    ${{ (m?.unit_cost ?? 0) | number:'1.2-2' }}
+                                </span>
+                            </td>
+                            -->
+
+                            <td class="px-4 py-3">
+                                <div class="text-muted small"
+                                    style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                    <i class="bi bi-chat-left-text me-1"></i>
+                                    {{ m?.notes ?? 'Sin notas' }}
+                                </div>
+                            </td>
+                            <td class="px-4 py-3 text-center">
+                                <div class="btn-group btn-group-sm" role="group">
+                                    <button class="btn btn-outline-primary" (click)="openEdit(m)"
+                                        title="Editar movimiento">
+                                        <i class="bi bi-pencil-fill"></i>
+                                    </button>
+                                    <button class="btn btn-outline-danger" (click)="deleteMovement(m.id)"
+                                        title="Eliminar movimiento">
+                                        <i class="bi bi-trash-fill"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr *ngIf="!movements || movements.length === 0">
+                            <td colspan="7" class="text-center py-5">
+                                <div class="py-4">
+                                    <i class="bi bi-inbox display-1 text-muted d-block mb-3"></i>
+                                    <h5 class="text-muted mb-2">No hay movimientos registrados</h5>
+                                    <p class="text-muted mb-3">Comienza creando tu primer movimiento de inventario</p>
+                                    <button class="btn btn-primary" (click)="createQuick()">
+                                        <i class="bi bi-plus-circle-fill me-2"></i>Crear primer movimiento
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Pagination Footer -->
+        <div class="card-footer border-top">
+            <div class="row align-items-center g-3">
+                <div class="col-md-6">
+                    <div class="d-flex align-items-center text-muted">
+                        <i class="bi bi-list-check me-2"></i>
+                        <span>Mostrando <strong class="text-dark">{{ movements?.length ?? 0 }}</strong>
+                            registro(s)</span>
+                        <span *ngIf="meta?.total" class="ms-2">de <strong class="text-dark">{{ meta.total }}</strong>
+                            totales</span>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <nav class="d-flex justify-content-md-end">
+                        <ul class="pagination pagination-sm mb-0">
+                            <li class="page-item" [class.disabled]="page <= 1">
+                                <a class="page-link" (click)="prevPage()" [attr.tabindex]="page <= 1 ? -1 : null">
+                                    <i class="bi bi-chevron-double-left"></i>
+                                    <span class="d-none d-sm-inline ms-1">Anterior</span>
+                                </a>
+                            </li>
+                            <li class="page-item active">
+                                <span class="page-link">
+                                    Página <strong>{{ page }}</strong>
+                                    <span *ngIf="meta?.last_page"> de {{ meta.last_page }}</span>
+                                </span>
+                            </li>
+                            <li class="page-item" [class.disabled]="meta?.last_page && page >= meta.last_page">
+                                <a class="page-link" (click)="nextPage()"
+                                    [attr.tabindex]="meta?.last_page && page >= meta.last_page ? -1 : null">
+                                    <span class="d-none d-sm-inline me-1">Siguiente</span>
+                                    <i class="bi bi-chevron-double-right"></i>
+                                </a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div *ngIf="showModal" class="modal fade show d-block" tabindex="-1" role="dialog"
+        style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header border-0 pb-0"
+                    [ngClass]="isEditing ? 'bg-primary bg-opacity-10' : 'bg-success bg-opacity-10'">
+                    <div>
+                        <h4 class="modal-title fw-bold mb-1" [ngClass]="isEditing ? 'text-primary' : 'text-success'">
+                            <i class="bi me-2" [ngClass]="isEditing ? 'bi-pencil-square' : 'bi-plus-square-fill'"></i>
+                            {{ isEditing ? 'Editar' : 'Crear' }} Movimiento
+                        </h4>
+                        <p class="text-muted small mb-0">
+                            {{ isEditing ? 'Modifica los datos del movimiento' : 'Registra una entrada, salida o ajuste
+                            de inventario' }}
+                        </p>
+                    </div>
+                    <button type="button" class="btn-close" aria-label="Close" (click)="cancelModal()"></button>
+                </div>
+                <div class="modal-body px-4 py-4">
+                    <form [formGroup]="form" (ngSubmit)="submit()">
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">
+                                <i class="bi bi-arrow-left-right text-primary me-2"></i>
+                                Tipo de movimiento *
+                            </label>
+                            <div class="row g-2">
+                                <div class="col-4">
+                                    <div class="form-check form-check-inline w-100">
+                                        <input class="btn-check" type="radio" formControlName="type" value="in"
+                                            id="typeIn">
+                                        <label class="btn btn-outline-success w-100 py-3" for="typeIn">
+                                            <i class="bi bi-arrow-down-circle-fill d-block fs-4 mb-2"></i>
+                                            <strong>Entrada</strong>
+                                            <div class="small text-muted">Ingreso de stock</div>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="form-check form-check-inline w-100">
+                                        <input class="btn-check" type="radio" formControlName="type" value="out"
+                                            id="typeOut">
+                                        <label class="btn btn-outline-danger w-100 py-3" for="typeOut">
+                                            <i class="bi bi-arrow-up-circle-fill d-block fs-4 mb-2"></i>
+                                            <strong>Salida</strong>
+                                            <div class="small text-muted">Salida de stock</div>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="form-check form-check-inline w-100">
+                                        <input class="btn-check" type="radio" formControlName="type" value="adjustment"
+                                            id="typeAdjustment">
+                                        <label class="btn btn-outline-warning w-100 py-3" for="typeAdjustment">
+                                            <i class="bi bi-gear-fill d-block fs-4 mb-2"></i>
+                                            <strong>Ajuste</strong>
+                                            <div class="small text-muted">Corrección</div>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div *ngIf="form.controls['type'].invalid && form.controls['type'].touched"
+                                class="text-danger small mt-2">
+                                <i class="bi bi-exclamation-circle-fill me-1"></i>Debes seleccionar un tipo de
+                                movimiento
+                            </div>
+                        </div>
+
+                        <div class="mb-4 position-relative">
+                            <label class="form-label fw-semibold">
+                                <i class="bi bi-box-seam text-primary me-2"></i>
+                                Producto (buscar por código o nombre) *
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light">
+                                    <i class="bi bi-upc-scan"></i>
+                                </span>
+                                <input class="form-control" formControlName="product_search"
+                                    placeholder="Busca por código o nombre" autocomplete="off"
+                                    [class.is-invalid]="form.controls['product_id'].invalid && form.controls['product_id'].touched"
+                                    [disabled]="loadingProductDetails">
+                                <input type="hidden" formControlName="product_id">
+                                <span *ngIf="loadingProductDetails" class="input-group-text bg-light">
+                                    <div class="spinner-border spinner-border-sm" role="status">
+                                        <span class="visually-hidden">Cargando...</span>
+                                    </div>
+                                </span>
+                            </div>
+                            <!-- Suggestions -->
+                            <ul *ngIf="productSuggestions?.length" class="list-group position-absolute mt-1 shadow"
+                                style="z-index:1055; max-height:240px; overflow:auto; left:0; right:0;">
+                                <li *ngFor="let p of productSuggestions" class="list-group-item list-group-item-action"
+                                    (click)="selectProduct(p)">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div class="flex-grow-1">
+                                            <div class="fw-semibold">
+                                                <span *ngIf="p?.code ?? p?.product_code" class="text-primary me-2">
+                                                    {{ p?.code ?? p?.product_code }}
+                                                </span>
+                                                {{ p?.name ?? p?.product_name ?? 'Sin nombre' }}
+                                            </div>
+                                            <small class="text-muted">{{ p?.presentation ?? p?.unit ?? 'Sin
+                                                presentación' }}</small>
+                                        </div>
+                                        <small class="text-success fw-semibold"
+                                            *ngIf="p?.unit_cost ?? p?.price ?? p?.cost">
+                                            ${{ (p?.unit_cost ?? p?.price ?? p?.cost) | number:'1.2-2' }}
+                                        </small>
+                                    </div>
+                                </li>
+                            </ul>
+                            <div *ngIf="form.controls['product_id'].invalid && form.controls['product_id'].touched"
+                                class="text-danger small mt-2">
+                                <i class="bi bi-exclamation-circle-fill me-1"></i>Debes seleccionar un producto
+                            </div>
+                            <div class="form-text">
+                                <i class="bi bi-info-circle me-1"></i>
+                                <span *ngIf="!loadingProductDetails">Escribe para buscar productos por nombre o código
+                                    en el catálogo de materias primas</span>
+                                <span *ngIf="loadingProductDetails" class="text-primary">
+                                    <i class="bi bi-clock me-1"></i>Cargando detalles del producto...
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">
+                                <i class="bi bi-hash text-primary me-2"></i>
+                                Cantidad *
+                            </label>
+                            <div class="input-group input-group-lg">
+                                <span class="input-group-text bg-light">
+                                    <i class="bi bi-123"></i>
+                                </span>
+                                <input type="number" class="form-control" formControlName="quantity"
+                                    [min]="form.get('type')?.value === 'adjustment' ? null : '1'" placeholder="0"
+                                    [class.is-invalid]="form.controls['quantity'].invalid && form.controls['quantity'].touched">
+                                <span class="input-group-text bg-light">unidades</span>
+                            </div>
+                            <div *ngIf="form.controls['quantity'].invalid && form.controls['quantity'].touched"
+                                class="text-danger small mt-2">
+                                <i class="bi bi-exclamation-circle-fill me-1"></i>
+                                <span *ngIf="form.get('type')?.value === 'adjustment'">La cantidad es obligatoria (puede
+                                    ser negativa para ajustes)</span>
+                                <span *ngIf="form.get('type')?.value !== 'adjustment'">La cantidad debe ser mayor a
+                                    0</span>
+                            </div>
+                            <div class="form-text" *ngIf="form.get('type')?.value === 'adjustment'">
+                                <i class="bi bi-info-circle me-1"></i>
+                                Para ajustes: usa valores negativos para reducir stock, positivos para aumentar
+                            </div>
+                            <div class="form-text" *ngIf="form.get('type')?.value !== 'adjustment'">
+                                <i class="bi bi-info-circle me-1"></i>
+                                Cantidad de unidades a {{ form.get('type')?.value === 'in' ? 'ingresar' : 'sacar' }}
+                            </div>
+                        </div>
+                        <!--
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">
+                                <i class="bi bi-currency-dollar text-primary me-2"></i>
+                                Costo unitario *
+                            </label>
+                            <div class="input-group input-group-lg">
+                                <span class="input-group-text bg-light">
+                                    <i class="bi bi-currency-exchange"></i>
+                                </span>
+                                <input type="number" class="form-control" formControlName="unit_cost" min="0" step="0.01"
+                                    placeholder="0.00"
+                                    [class.is-invalid]="form.controls['unit_cost'].invalid && form.controls['unit_cost'].touched">
+                                <span class="input-group-text bg-light">$</span>
+                            </div>
+                            <div *ngIf="form.controls['unit_cost'].invalid && form.controls['unit_cost'].touched"
+                                class="text-danger small mt-2">
+                                <i class="bi bi-exclamation-circle-fill me-1"></i>El costo unitario debe ser mayor o igual a 0
+                            </div>
+                            <div class="form-text">
+                                <i class="bi bi-info-circle me-1"></i>
+                                Costo por unidad del producto en el momento del movimiento
+                            </div>
+                        </div>
+                            -->
+
+
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">
+                                <i class="bi bi-chat-left-text text-primary me-2"></i>
+                                Notas adicionales
+                            </label>
+                            <textarea class="form-control" rows="4" formControlName="notes"
+                                placeholder="Agrega comentarios, motivo del movimiento, referencias, etc."></textarea>
+                            <div class="form-text">
+                                <i class="bi bi-info-circle me-1"></i>
+                                Opcional: información adicional sobre este movimiento
+                            </div>
+                        </div>
+
+                        <div *ngIf="formError" class="alert alert-danger d-flex align-items-start" role="alert">
+                            <i class="bi bi-exclamation-triangle-fill me-3 fs-5 mt-1"></i>
+                            <div style="white-space: pre-line;">{{ formError }}</div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer border-0 bg-light">
+                    <button class="btn btn-outline-secondary" (click)="cancelModal()" [disabled]="loading">
+                        <i class="bi bi-x-circle me-2"></i>Cancelar
+                    </button>
+                    <button class="btn" [ngClass]="isEditing ? 'btn-primary' : 'btn-success'" (click)="submit()"
+                        [disabled]="loading || form.invalid">
+                        <span *ngIf="loading" class="spinner-border spinner-border-sm me-2"></span>
+                        <i *ngIf="!loading" class="bi me-2"
+                            [ngClass]="isEditing ? 'bi-save-fill' : 'bi-plus-circle-fill'"></i>
+                        {{ loading ? 'Procesando...' : (isEditing ? 'Guardar Cambios' : 'Crear Movimiento') }}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
