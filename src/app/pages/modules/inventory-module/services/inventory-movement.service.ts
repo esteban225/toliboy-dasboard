@@ -12,6 +12,7 @@ export class InventoryMovementService {
 
 	constructor(private http: HttpClient) {}
 
+	// para filtar los datos se usa esta funcion pero se pasa por paramtro lo que quiere filtrar ejmplo: {filters: { movement_type: 'in' }}
 	list(filters: Record<string, any> = {}, perPage = 100, page = 1): Observable<any> {
 		let params = new HttpParams()
 			.set('per_page', String(perPage))

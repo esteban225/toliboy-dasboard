@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { InventoryMovementService } from '../../services/inventory-movement.service';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormsModule } from '@angular/forms';
 import { RawMaterialsService } from '../../services/raw-materials.service';
 import { Subject, Subscription, of, forkJoin } from 'rxjs';
 import { debounceTime, distinctUntilChanged, switchMap, catchError, map } from 'rxjs/operators';
@@ -11,10 +11,13 @@ import { AlertService } from 'src/app/core/services/alert.service';
 @Component({
   selector: 'app-inventory-movement',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule],
   templateUrl: './inventory-movement.component.html',
   styleUrls: ['./inventory-movement.component.scss']
 })
+
+// envial los filtros por parametro ejmplo: { movement_type: 'in' }
+
 export class InventoryMovementComponent implements OnInit, OnDestroy {
   movements: any[] = [];
   loading = false;
@@ -22,6 +25,18 @@ export class InventoryMovementComponent implements OnInit, OnDestroy {
   page = 1;
   perPage = 15;
   meta: any = null;
+
+  filters = {
+  type: '',
+  date: '',
+  product: '',
+  general: ''
+};
+
+onFilterChange() {
+  this.applyFilters();
+}
+
 
   // Modal & form
   showModal = false;
@@ -77,7 +92,7 @@ export class InventoryMovementComponent implements OnInit, OnDestroy {
         switchMap((q) => {
           const term = (q || '').trim();
           if (!term) return of({ data: [], meta: null });
-          
+
           // Si ya tenemos productos en caché, filtrarlos
           if (this.productsCached && this.cachedProducts.length > 0) {
             const filteredData = this.cachedProducts.filter((item: any) => {
@@ -88,14 +103,14 @@ export class InventoryMovementComponent implements OnInit, OnDestroy {
             });
             return of({ data: filteredData.slice(0, 10), meta: null });
           }
-          
+
           // Si no hay caché, obtener productos del servidor
           return this.rawService.list({}, 1, 100).pipe(
             map((res: any) => {
               // Guardar en caché
               this.cachedProducts = res?.data || [];
               this.productsCached = true;
-              
+
               // Filtrar manualmente los resultados que contengan el término
               const filteredData = this.cachedProducts.filter((item: any) => {
                 const name = (item?.name || '').toLowerCase();
@@ -142,7 +157,7 @@ export class InventoryMovementComponent implements OnInit, OnDestroy {
         if (res?.success && Array.isArray(res?.data)) {
           this.movements = res.data;
           this.meta = res.meta || null;
-          
+
           // Cargar nombres y códigos de productos para cada movimiento
           this.loadProductDetailsForMovements();
         } else {
@@ -161,6 +176,28 @@ export class InventoryMovementComponent implements OnInit, OnDestroy {
       }
     });
   }
+applyFilters(): void {
+  const filters: any = {};
+
+  if (this.filters.type) filters.movement_type = this.filters.type;
+  if (this.filters.date) filters.date = this.filters.date;
+  if (this.filters.product) filters.raw_material_id = this.filters.product;
+  if (this.filters.general) filters.search = this.filters.general;
+
+  this.loading = true;
+
+  this.invService.list(filters, this.perPage, this.page).subscribe({
+    next: (res) => {
+      this.movements = res.data || [];
+      this.meta = res.meta || null;
+      this.loading = false;
+    },
+    error: (err) => {
+      this.loading = false;
+      this.error = err?.error?.message || 'Error cargando movimientos';
+    }
+  });
+}
 
   private loadProductDetailsForMovements(): void {
     if (!this.movements || this.movements.length === 0) {
@@ -183,7 +220,7 @@ export class InventoryMovementComponent implements OnInit, OnDestroy {
     }
 
     // Cargar detalles de productos en paralelo usando forkJoin
-    const productCalls = productIds.map(id => 
+    const productCalls = productIds.map(id =>
       this.rawService.getById(id).pipe(
         map((response: any) => {
           const product = response?.data ?? response;
@@ -210,15 +247,15 @@ export class InventoryMovementComponent implements OnInit, OnDestroy {
     forkJoin(productCalls).subscribe({
       next: (products) => {
         console.log('Detalles de productos cargados:', products);
-        
+
         // Crear un mapa para búsqueda rápida
         const productMap = new Map(products.map(p => [p.id, p]));
-        
+
         // Actualizar movimientos con detalles de productos
         this.movements = this.movements.map(movement => {
           const productId = movement?.raw_material_id ?? movement?.product_id;
           const productDetails = productMap.get(productId);
-          
+
           if (productDetails) {
             return {
               ...movement,
@@ -228,10 +265,10 @@ export class InventoryMovementComponent implements OnInit, OnDestroy {
               raw_material_code: productDetails.code
             };
           }
-          
+
           return movement;
         });
-        
+
         console.log('Movimientos actualizados con detalles de productos:', this.movements);
         this.loading = false;
       },
@@ -270,16 +307,16 @@ export class InventoryMovementComponent implements OnInit, OnDestroy {
 
   openEdit(m: any): void {
     console.log('Datos del movimiento recibido:', m);
-    
+
     this.isEditing = true;
     // Normalizar el tipo de movimiento a minúsculas
     let movementType = m?.type ?? m?.movement_type ?? 'in';
     movementType = movementType.toLowerCase();
-    
+
     // Obtener el ID del producto/materia prima
     const productId = m?.product_id ?? m?.raw_material_id;
     console.log('ID del producto extraído:', productId);
-    
+
     // Cargar datos básicos del movimiento
     this.form.patchValue({
       id: m?.id ?? null,
@@ -290,31 +327,31 @@ export class InventoryMovementComponent implements OnInit, OnDestroy {
       unit_cost: m?.unit_cost ?? 0,
       notes: m?.notes ?? ''
     });
-    
+
     this.formError = null;
     this.productSuggestions = [];
-    
+
     // Si hay un ID de producto, obtener los detalles completos del servicio
     if (productId) {
       this.loadingProductDetails = true;
       console.log('Cargando producto con ID:', productId);
-      
+
       this.rawService.getById(productId).subscribe({
         next: (response: any) => {
           this.loadingProductDetails = false;
           console.log('Respuesta del servicio de materias primas:', response);
-          
+
           // El servicio puede devolver { success, data } o directamente el objeto
           const product = response?.data ?? response;
           console.log('Datos del producto extraídos:', product);
-          
+
           // Construir el texto de visualización profesional
           let displayText = '';
           const productName = product?.name;
           const productCode = product?.code;
-          
+
           console.log('Nombre:', productName, 'Código:', productCode);
-          
+
           if (productCode && productName) {
             displayText = `${productCode} - ${productName}`;
           } else if (productName) {
@@ -324,14 +361,14 @@ export class InventoryMovementComponent implements OnInit, OnDestroy {
           } else {
             displayText = `Producto ID: ${productId}`;
           }
-          
+
           console.log('Texto a mostrar:', displayText);
-          
+
           // Actualizar el campo de búsqueda con los datos reales
           this.form.patchValue({
             product_search: displayText
           });
-          
+
           // Actualizar el costo unitario si está disponible en el producto
           const unitCost = product?.unit_cost ?? product?.price ?? product?.cost;
           if (unitCost) {
@@ -343,14 +380,14 @@ export class InventoryMovementComponent implements OnInit, OnDestroy {
         error: (err) => {
           this.loadingProductDetails = false;
           console.error('Error cargando detalles del producto:', err);
-          
+
           // Fallback: usar los datos disponibles en el movimiento
           const fallbackName = m?.product_name ?? m?.raw_material_name ?? '';
           const fallbackCode = m?.product_code ?? m?.raw_material_code ?? '';
           let fallbackText = '';
-          
+
           console.log('Usando fallback - Nombre:', fallbackName, 'Código:', fallbackCode);
-          
+
           if (fallbackCode && fallbackName) {
             fallbackText = `${fallbackCode} - ${fallbackName}`;
           } else if (fallbackName) {
@@ -360,7 +397,7 @@ export class InventoryMovementComponent implements OnInit, OnDestroy {
           } else {
             fallbackText = `Producto ID: ${productId}`;
           }
-          
+
           this.form.patchValue({
             product_search: fallbackText
           });
@@ -372,9 +409,9 @@ export class InventoryMovementComponent implements OnInit, OnDestroy {
       const fallbackName = m?.product_name ?? m?.raw_material_name ?? '';
       const fallbackCode = m?.product_code ?? m?.raw_material_code ?? '';
       let fallbackText = '';
-      
+
       console.log('Datos directos - Nombre:', fallbackName, 'Código:', fallbackCode);
-      
+
       if (fallbackCode && fallbackName) {
         fallbackText = `${fallbackCode} - ${fallbackName}`;
       } else if (fallbackName) {
@@ -384,14 +421,14 @@ export class InventoryMovementComponent implements OnInit, OnDestroy {
       } else {
         fallbackText = 'Producto sin identificar';
       }
-      
+
       console.log('Texto fallback:', fallbackText);
-      
+
       this.form.patchValue({
         product_search: fallbackText
       });
     }
-    
+
     this.showModal = true;
   }
 
@@ -402,7 +439,7 @@ export class InventoryMovementComponent implements OnInit, OnDestroy {
     const productName = p.name ?? p.product_name ?? '';
     const productCode = p.code ?? p.product_code ?? '';
     const unitCost = p.unit_cost ?? p.price ?? p.cost ?? 0;
-    
+
     // Crear el texto de visualización con código y nombre
     let displayText = '';
     if (productCode && productName) {
@@ -412,9 +449,9 @@ export class InventoryMovementComponent implements OnInit, OnDestroy {
     } else if (productCode) {
       displayText = productCode;
     }
-    
-    this.form.patchValue({ 
-      product_id: productId, 
+
+    this.form.patchValue({
+      product_id: productId,
       product_search: displayText,
       unit_cost: unitCost
     });
@@ -438,7 +475,7 @@ export class InventoryMovementComponent implements OnInit, OnDestroy {
 
     const formValue = { ...this.form.value };
     const id = formValue.id;
-    
+
     // Preparar payload eliminando campos innecesarios
     const payload = {
       movement_type: formValue.type,
@@ -453,16 +490,16 @@ export class InventoryMovementComponent implements OnInit, OnDestroy {
     obs.subscribe({
       next: (res) => {
         this.loading = false;
-        
+
         // Verificar éxito del backend
         if (res?.success) {
           this.showModal = false;
           this.loadMovements();
           // Mostrar mensaje de éxito si está disponible
           if (res.message) {
-            try { this.alert.success('Éxito', res.message); } catch(e) { /* noop */ }
+            try { this.alert.success('Éxito', res.message); } catch (e) { /* noop */ }
           } else {
-            try { this.alert.success('Éxito', 'Movimiento procesado correctamente'); } catch(e) { /* noop */ }
+            try { this.alert.success('Éxito', 'Movimiento procesado correctamente'); } catch (e) { /* noop */ }
           }
         } else {
           // El backend devolvió success: false
@@ -476,7 +513,7 @@ export class InventoryMovementComponent implements OnInit, OnDestroy {
           // Manejar errores de validación específicos
           const errors = err.error.errors;
           const errorMessages = [];
-          
+
           if (errors.raw_material_id) {
             errorMessages.push('• ' + errors.raw_material_id[0]);
           }
@@ -489,20 +526,20 @@ export class InventoryMovementComponent implements OnInit, OnDestroy {
           if (errors.quantity) {
             errorMessages.push('• ' + errors.quantity[0]);
           }
-          
-          this.formError = errorMessages.length > 0 
+
+          this.formError = errorMessages.length > 0
             ? 'Errores de validación:\n' + errorMessages.join('\n')
             : 'Error de validación en el formulario';
-          try { this.alert.error('Error de validación', this.formError ?? undefined); } catch(e) { /* noop */ }
+          try { this.alert.error('Error de validación', this.formError ?? undefined); } catch (e) { /* noop */ }
         } else if (err?.error?.message) {
           this.formError = err.error.message;
-          try { this.alert.error('Error', this.formError ?? undefined); } catch(e) { /* noop */ }
+          try { this.alert.error('Error', this.formError ?? undefined); } catch (e) { /* noop */ }
         } else if (err?.message) {
           this.formError = err.message;
-          try { this.alert.error('Error', this.formError ?? undefined); } catch(e) { /* noop */ }
+          try { this.alert.error('Error', this.formError ?? undefined); } catch (e) { /* noop */ }
         } else {
           this.formError = 'Error enviando datos al servidor';
-          try { this.alert.error('Error', this.formError ?? undefined); } catch(e) { /* noop */ }
+          try { this.alert.error('Error', this.formError ?? undefined); } catch (e) { /* noop */ }
         }
       }
     });
@@ -523,4 +560,14 @@ export class InventoryMovementComponent implements OnInit, OnDestroy {
       this.loadMovements();
     }
   }
+
+
+  // metodo para filtrar los movimientos de inventario segun
+  // filterMovements(filters: Record<string, any>): void {
+  //   // usar el metodo list del servicio pasando los filtros por parametro
+  //   // ejemplo: { movement_type: 'in' | 'out' | 'adjustment' }
+  //   // ejemplo materia prima por id: { raw_material_id: '1' }
+  // }}
+
+
 }

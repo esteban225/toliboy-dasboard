@@ -46,6 +46,64 @@
         </div>
     </div>
 
+
+   <!-- Search Filters Section -->
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+
+        <div class="row g-3">
+
+            <!-- Filtro por Tipo de Movimiento -->
+            <div class="col-md-3">
+                <label class="form-label fw-semibold">
+                    <i class="bi bi-arrow-left-right me-1 text-primary"></i>
+                    Tipo de Movimiento
+                </label>
+                <select class="form-select" [(ngModel)]="filters.type" (change)="applyFilters()">
+                    <option value="">Todos</option>
+                    <option value="in">Entrada</option>
+                    <option value="out">Salida</option>
+                    <option value="adjustment">Ajuste</option>
+                </select>
+            </div>
+
+            <!-- Filtro por Fecha -->
+            <div class="col-md-3">
+                <label class="form-label fw-semibold">
+                    <i class="bi bi-calendar-date me-1 text-primary"></i>
+                    Fecha
+                </label>
+                <input type="date" class="form-control"
+                       [(ngModel)]="filters.date" (change)="applyFilters()">
+            </div>
+
+            <!-- Filtro por Materia Prima / Producto -->
+            <div class="col-md-3">
+                <label class="form-label fw-semibold">
+                    <i class="bi bi-box-seam me-1 text-primary"></i>
+                    Materia Prima / Producto
+                </label>
+                <input type="text" class="form-control" placeholder="Buscar producto..."
+                       [(ngModel)]="filters.product" (input)="applyFilters()">
+            </div>
+
+            <!-- Buscador General -->
+            <div class="col-md-3">
+                <label class="form-label fw-semibold">
+                    <i class="bi bi-search me-1 text-primary"></i>
+                    Búsqueda General
+                </label>
+                <input type="text" class="form-control" placeholder="Buscar en todo..."
+                       [(ngModel)]="filters.general" (input)="applyFilters()">
+            </div>
+
+        </div>
+
+    </div>
+</div>
+
+
+
     <!-- Table Section -->
     <div *ngIf="!loading" class="card border-0 shadow-sm">
         <div class="card-body p-0">
