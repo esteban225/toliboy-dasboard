@@ -18,6 +18,33 @@
                         <i class="bi bi-arrow-clockwise me-2"></i>
                         <span class="d-none d-sm-inline">Recargar</span>
                     </button>
+
+                    <!-- Botones de Reportes -->
+                    <button type="button" class="btn btn-outline-danger" (click)="generateReport('pdf')"
+                        [disabled]="loading || movements.length === 0 || generatingReport">
+                        <span *ngIf="generatingReport" class="spinner-border spinner-border-sm me-2"
+                            role="status"></span>
+                        <i *ngIf="!generatingReport" class="bi bi-filetype-pdf me-2"></i>
+                        <span class="d-none d-sm-inline">PDF</span>
+                    </button>
+
+                    <!---
+                    <button type="button" class="btn btn-outline-success" (click)="generateReport('excel')"
+                        [disabled]="loading || movements.length === 0 || generatingReport">
+                        <span *ngIf="generatingReport" class="spinner-border spinner-border-sm me-2"
+                            role="status"></span>
+                        <i *ngIf="!generatingReport" class="bi bi-filetype-xlsx me-2"></i>
+                        <span class="d-none d-sm-inline">Excel</span>
+                    </button>
+                    <button type="button" class="btn btn-outline-primary" (click)="generateReport('csv')"
+                        [disabled]="loading || movements.length === 0 || generatingReport">
+                        <span *ngIf="generatingReport" class="spinner-border spinner-border-sm me-2"
+                            role="status"></span>
+                        <i *ngIf="!generatingReport" class="bi bi-filetype-csv me-2"></i>
+                        <span class="d-none d-sm-inline">CSV</span>
+                    </button>
+                    -->
+
                     <button class="btn btn-primary" (click)="createQuick()">
                         <i class="bi bi-plus-circle-fill me-2"></i>
                         <span class="d-none d-sm-inline">Nuevo</span> Movimiento
@@ -47,60 +74,74 @@
     </div>
 
 
-   <!-- Search Filters Section -->
-<div class="card border-0 shadow-sm mb-4">
-    <div class="card-body">
+    <!-- Search Filters Section -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
 
-        <div class="row g-3">
+            <div class="row g-3 align-items-end">
 
-            <!-- Filtro por Tipo de Movimiento -->
-            <div class="col-md-3">
-                <label class="form-label fw-semibold">
-                    <i class="bi bi-arrow-left-right me-1 text-primary"></i>
-                    Tipo de Movimiento
-                </label>
-                <select class="form-select" [(ngModel)]="filters.type" (change)="applyFilters()">
-                    <option value="">Todos</option>
-                    <option value="in">Entrada</option>
-                    <option value="out">Salida</option>
-                    <option value="adjustment">Ajuste</option>
-                </select>
-            </div>
+                <!-- Filtro por Tipo de Movimiento -->
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold">
+                        <i class="bi bi-arrow-left-right me-1 text-primary"></i>
+                        Tipo de Movimiento
+                    </label>
+                    <select class="form-select" [(ngModel)]="filters.type">
+                        <option value="">Todos</option>
+                        <option value="in">Entrada</option>
+                        <option value="out">Salida</option>
+                        <option value="adjustment">Ajuste</option>
+                    </select>
+                </div>
 
-            <!-- Filtro por Fecha -->
-            <div class="col-md-3">
-                <label class="form-label fw-semibold">
-                    <i class="bi bi-calendar-date me-1 text-primary"></i>
-                    Fecha
-                </label>
-                <input type="date" class="form-control"
-                       [(ngModel)]="filters.date" (change)="applyFilters()">
-            </div>
+                <!-- Filtro por Fecha -->
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold">
+                        <i class="bi bi-calendar-date me-1 text-primary"></i>
+                        Fecha
+                    </label>
+                    <input type="date" class="form-control" [(ngModel)]="filters.date">
+                </div>
 
-            <!-- Filtro por Materia Prima / Producto -->
+                <!-- Filtro por Materia Prima / Producto -->
+                <!---
             <div class="col-md-3">
                 <label class="form-label fw-semibold">
                     <i class="bi bi-box-seam me-1 text-primary"></i>
                     Materia Prima / Producto
                 </label>
                 <input type="text" class="form-control" placeholder="Buscar producto..."
-                       [(ngModel)]="filters.product" (input)="applyFilters()">
+                       [(ngModel)]="filters.product">
+            </div>
+            -->
+
+                <!-- Buscador General -->
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold">
+                        <i class="bi bi-search me-1 text-primary"></i>
+                        Búsqueda General
+                    </label>
+                    <input type="text" class="form-control" placeholder="Buscar en todo..."
+                        [(ngModel)]="filters.general">
+                </div>
+
             </div>
 
-            <!-- Buscador General -->
-            <div class="col-md-3">
-                <label class="form-label fw-semibold">
-                    <i class="bi bi-search me-1 text-primary"></i>
-                    Búsqueda General
-                </label>
-                <input type="text" class="form-control" placeholder="Buscar en todo..."
-                       [(ngModel)]="filters.general" (input)="applyFilters()">
+            <div class="row mt-3">
+                <div class="col-12 d-flex justify-content-end gap-2">
+                    <button class="btn btn-outline-secondary" (click)="resetFilters()">
+                        <i class="bi bi-eraser me-1"></i>
+                        Limpiar Filtros
+                    </button>
+                    <button class="btn btn-primary" (click)="applyFilters()">
+                        <i class="bi bi-search me-1"></i>
+                        Buscar
+                    </button>
+                </div>
             </div>
 
         </div>
-
     </div>
-</div>
 
 
 
@@ -137,7 +178,7 @@
                             </th>
                             -->
 
-                            <th class="px-4 py-3" style="width: 200px">
+                            <th class="px-4 py-3" style="width: 450px">
                                 <small class="text-uppercase fw-bold text-muted">
                                     <i class="bi bi-sticky me-1"></i>Notas
                                 </small>
@@ -219,8 +260,7 @@
                             -->
 
                             <td class="px-4 py-3">
-                                <div class="text-muted small"
-                                    style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                <div class="text-muted small">
                                     <i class="bi bi-chat-left-text me-1"></i>
                                     {{ m?.notes ?? 'Sin notas' }}
                                 </div>
@@ -271,10 +311,10 @@
                     <nav class="d-flex justify-content-md-end">
                         <ul class="pagination pagination-sm mb-0">
                             <li class="page-item" [class.disabled]="page <= 1">
-                                <a class="page-link" (click)="prevPage()" [attr.tabindex]="page <= 1 ? -1 : null">
+                                <button class="page-link" (click)="prevPage()" [attr.tabindex]="page <= 1 ? -1 : null">
                                     <i class="bi bi-chevron-double-left"></i>
                                     <span class="d-none d-sm-inline ms-1">Anterior</span>
-                                </a>
+                                </button>
                             </li>
                             <li class="page-item active">
                                 <span class="page-link">
@@ -283,11 +323,11 @@
                                 </span>
                             </li>
                             <li class="page-item" [class.disabled]="meta?.last_page && page >= meta.last_page">
-                                <a class="page-link" (click)="nextPage()"
+                                <button class="page-link" (click)="nextPage()"
                                     [attr.tabindex]="meta?.last_page && page >= meta.last_page ? -1 : null">
                                     <span class="d-none d-sm-inline me-1">Siguiente</span>
                                     <i class="bi bi-chevron-double-right"></i>
-                                </a>
+                                </button>
                             </li>
                         </ul>
                     </nav>
@@ -330,7 +370,6 @@
                                         <label class="btn btn-outline-success w-100 py-3" for="typeIn">
                                             <i class="bi bi-arrow-down-circle-fill d-block fs-4 mb-2"></i>
                                             <strong>Entrada</strong>
-                                            <div class="small text-muted">Ingreso de stock</div>
                                         </label>
                                     </div>
                                 </div>
@@ -341,7 +380,6 @@
                                         <label class="btn btn-outline-danger w-100 py-3" for="typeOut">
                                             <i class="bi bi-arrow-up-circle-fill d-block fs-4 mb-2"></i>
                                             <strong>Salida</strong>
-                                            <div class="small text-muted">Salida de stock</div>
                                         </label>
                                     </div>
                                 </div>
@@ -352,7 +390,6 @@
                                         <label class="btn btn-outline-warning w-100 py-3" for="typeAdjustment">
                                             <i class="bi bi-gear-fill d-block fs-4 mb-2"></i>
                                             <strong>Ajuste</strong>
-                                            <div class="small text-muted">Corrección</div>
                                         </label>
                                     </div>
                                 </div>
@@ -479,18 +516,137 @@
                             -->
 
 
-                        <div class="mb-4">
+                        <!-- Campos de Detalles de Notas - ENTRADAS -->
+                        <div class="mb-4" *ngIf="form.get('type')?.value === 'in'">
                             <label class="form-label fw-semibold">
-                                <i class="bi bi-chat-left-text text-primary me-2"></i>
-                                Notas adicionales
+                                <i class="bi bi-receipt text-primary me-2"></i>
+                                Información de Entrada
                             </label>
-                            <textarea class="form-control" rows="4" formControlName="notes"
-                                placeholder="Agrega comentarios, motivo del movimiento, referencias, etc."></textarea>
-                            <div class="form-text">
-                                <i class="bi bi-info-circle me-1"></i>
-                                Opcional: información adicional sobre este movimiento
+                            
+                            <div class="row g-3 mb-3">
+                                <!-- Fecha de Vencimiento -->
+                                <div class="col-md-6">
+                                    <label class="form-label small">
+                                        <i class="bi bi-calendar-x me-1 text-danger"></i>Fecha de Vencimiento
+                                    </label>
+                                    <input type="date" class="form-control" id="expiryDate" 
+                                        (change)="updateNotesSummary()"
+                                        placeholder="Selecciona fecha de vencimiento">
+                                </div>
+                                
+                                <!-- Proveedor -->
+                                <div class="col-md-6">
+                                    <label class="form-label small">
+                                        <i class="bi bi-truck me-1 text-info"></i>Proveedor
+                                    </label>
+                                    <input type="text" class="form-control" id="supplier" 
+                                        (input)="updateNotesSummary()"
+                                        placeholder="Nombre del proveedor">
+                                </div>
+                            </div>
+                            
+                            <div class="row g-3 mb-3">
+                                <!-- Lote -->
+                                <div class="col-md-6">
+                                    <label class="form-label small">
+                                        <i class="bi bi-barcode me-1 text-success"></i>Lote
+                                    </label>
+                                    <input type="text" class="form-control" id="batch" 
+                                        (input)="updateNotesSummary()"
+                                        placeholder="Número de lote o referencia">
+                                </div>
+                                
+                                <!-- Referencia de Compra -->
+                                <div class="col-md-6">
+                                    <label class="form-label small">
+                                        <i class="bi bi-receipt me-1 text-warning"></i>Referencia de Compra
+                                    </label>
+                                    <input type="text" class="form-control" id="purchaseRef" 
+                                        (input)="updateNotesSummary()"
+                                        placeholder="Ej: OC-2024-001, Factura #">
+                                </div>
+                            </div>
+                            
+                            <!-- Notas Adicionales -->
+                            <div class="mb-3">
+                                <label class="form-label small">
+                                    <i class="bi bi-chat-left-text me-1 text-secondary"></i>Notas Adicionales
+                                </label>
+                                <textarea class="form-control" rows="3" id="additionalNotes"
+                                    (input)="updateNotesSummary()"
+                                    placeholder="Comentarios o detalles adicionales..."></textarea>
                             </div>
                         </div>
+
+                        <!-- Campos de Detalles de Notas - SALIDAS -->
+                        <div class="mb-4" *ngIf="form.get('type')?.value === 'out'">
+                            <label class="form-label fw-semibold">
+                                <i class="bi bi-arrow-up-circle text-danger me-2"></i>
+                                Información de Salida
+                            </label>
+                            
+                            <div class="mb-3">
+                                <label class="form-label small">
+                                    <i class="bi bi-person-check me-1 text-info"></i>Quién Recibió
+                                </label>
+                                <input type="text" class="form-control" id="receivedBy" 
+                                    (input)="updateNotesSummary()"
+                                    placeholder="Nombre de la persona que recibió">
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label small">
+                                    <i class="bi bi-chat-left-text me-1 text-secondary"></i>Detalles de la Salida
+                                </label>
+                                <textarea class="form-control" rows="4" id="outDetails"
+                                    (input)="updateNotesSummary()"
+                                    placeholder="Motivo de la salida, destino, observaciones, etc."></textarea>
+                            </div>
+                        </div>
+
+                        <!-- Campos de Detalles de Notas - AJUSTES -->
+                        <div class="mb-4" *ngIf="form.get('type')?.value === 'adjustment'">
+                            <label class="form-label fw-semibold">
+                                <i class="bi bi-gear text-warning me-2"></i>
+                                Información del Ajuste
+                            </label>
+                            
+                            <div class="mb-3">
+                                <label class="form-label small">
+                                    <i class="bi bi-question-circle me-1 text-danger"></i>¿Por qué el Ajuste?
+                                </label>
+                                <textarea class="form-control" rows="4" id="adjustmentReason"
+                                    (input)="updateNotesSummary()"
+                                    placeholder="Explica el motivo del ajuste: error en conteo, pérdida, daño, etc."></textarea>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label small">
+                                    <i class="bi bi-info-circle me-1 text-secondary"></i>¿Qué Sucedió?
+                                </label>
+                                <textarea class="form-control" rows="3" id="adjustmentWhat"
+                                    (input)="updateNotesSummary()"
+                                    placeholder="Describe qué sucedió: hallazgo, situación, circunstancias..."></textarea>
+                            </div>
+                        </div>
+                            
+                            <!-- Campo Oculto para Guardar Datos Formateados -->
+                            <input type="hidden" formControlName="notes" id="formattedNotes">
+                            
+                            <!-- Resumen Formateado -->
+                            <div class="alert alert-light border">
+                                <small class="fw-semibold d-block mb-2">
+                                    <i class="bi bi-info-circle me-1"></i>Resumen de información que se guardará:
+                                </small>
+                                <small class="text-muted" style="white-space: pre-line; word-break: break-word;" id="notesSummary">
+                                    Los datos aparecerán aquí organizados...
+                                </small>
+                            </div>
+                            
+                            <div class="form-text">
+                                <i class="bi bi-info-circle me-1"></i>
+                                Todos los campos se guardarán organizados y separados por guiones en las notas del movimiento
+                            </div>
 
                         <div *ngIf="formError" class="alert alert-danger d-flex align-items-start" role="alert">
                             <i class="bi bi-exclamation-triangle-fill me-3 fs-5 mt-1"></i>

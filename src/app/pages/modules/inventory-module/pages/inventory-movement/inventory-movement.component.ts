@@ -6,6 +6,7 @@ import { RawMaterialsService } from '../../services/raw-materials.service';
 import { Subject, Subscription, of, forkJoin } from 'rxjs';
 import { debounceTime, distinctUntilChanged, switchMap, catchError, map } from 'rxjs/operators';
 import { AlertService } from 'src/app/core/services/alert.service';
+import { ReportService } from 'src/app/core/services/report.service';
 
 
 @Component({
@@ -25,6 +26,7 @@ export class InventoryMovementComponent implements OnInit, OnDestroy {
   page = 1;
   perPage = 15;
   meta: any = null;
+  hasActiveFilters = false;
 
   filters = {
   type: '',
@@ -44,6 +46,7 @@ onFilterChange() {
   form: FormGroup;
   formError: string | null = null;
   loadingProductDetails = false;
+  generatingReport = false;
   // Product search
   productSuggestions: any[] = [];
   private productSearch$ = new Subject<string>();
@@ -56,7 +59,8 @@ onFilterChange() {
     private invService: InventoryMovementService,
     private fb: FormBuilder,
     private rawService: RawMaterialsService,
-    private alert: AlertService
+    private alert: AlertService,
+    private reportService: ReportService
   ) {
     this.form = this.fb.group({
       id: [null],
@@ -151,6 +155,13 @@ onFilterChange() {
   loadMovements(): void {
     this.loading = true;
     this.error = null;
+
+    // Si hay filtros activos, usar applyFilters en su lugar
+    if (this.hasActiveFilters) {
+      this.applyFilters();
+      return;
+    }
+
     this.invService.list({}, this.perPage, this.page).subscribe({
       next: (res) => {
         // El backend devuelve { success, message, data, meta }
@@ -180,10 +191,14 @@ applyFilters(): void {
   const filters: any = {};
 
   if (this.filters.type) filters.movement_type = this.filters.type;
-  if (this.filters.date) filters.date = this.filters.date;
+  if (this.filters.date) filters.created_at = this.filters.date;
   if (this.filters.product) filters.raw_material_id = this.filters.product;
-  if (this.filters.general) filters.search = this.filters.general;
+  if (this.filters.general) filters.notes = this.filters.general;
 
+  // Marcar si hay filtros activos
+  this.hasActiveFilters = Object.keys(filters).length > 0;
+
+  this.page = 1; // Reset page to 1 on new filter application
   this.loading = true;
 
   this.invService.list(filters, this.perPage, this.page).subscribe({
@@ -191,12 +206,26 @@ applyFilters(): void {
       this.movements = res.data || [];
       this.meta = res.meta || null;
       this.loading = false;
+      // Cargar detalles de productos para los movimientos filtrados
+      this.loadProductDetailsForMovements();
     },
     error: (err) => {
       this.loading = false;
       this.error = err?.error?.message || 'Error cargando movimientos';
     }
   });
+}
+
+resetFilters(): void {
+  this.filters = {
+    type: '',
+    date: '',
+    product: '',
+    general: ''
+  };
+  this.hasActiveFilters = false;
+  this.page = 1;
+  this.loadMovements();
 }
 
   private loadProductDetailsForMovements(): void {
@@ -302,6 +331,10 @@ applyFilters(): void {
     this.form.reset({ type: 'in', quantity: 1, product_id: null, product_search: '', unit_cost: 0, notes: '' });
     this.formError = null;
     this.productSuggestions = [];
+    
+    // Limpiar campos de notas
+    this.parseAndLoadNotes('');
+    
     this.showModal = true;
   }
 
@@ -429,6 +462,10 @@ applyFilters(): void {
       });
     }
 
+    // Cargar las notas en los campos correspondientes
+    const notes = m?.notes ?? '';
+    this.parseAndLoadNotes(notes);
+
     this.showModal = true;
   }
 
@@ -463,6 +500,132 @@ applyFilters(): void {
     this.productSuggestions = [];
     this.formError = null;
     this.loadingProductDetails = false;
+  }
+
+  /**
+   * Parsea las notas guardadas y carga los datos en los campos
+   */
+  parseAndLoadNotes(notesText: string): void {
+    const movementType = this.form.get('type')?.value;
+    
+    // Limpiar todos los campos primero
+    setTimeout(() => {
+      // Campos de ENTRADA
+      const expiryDateEl = document.getElementById('expiryDate') as HTMLInputElement;
+      const supplierEl = document.getElementById('supplier') as HTMLInputElement;
+      const batchEl = document.getElementById('batch') as HTMLInputElement;
+      const purchaseRefEl = document.getElementById('purchaseRef') as HTMLInputElement;
+      const additionalNotesEl = document.getElementById('additionalNotes') as HTMLTextAreaElement;
+
+      // Campos de SALIDA
+      const receivedByEl = document.getElementById('receivedBy') as HTMLInputElement;
+      const outDetailsEl = document.getElementById('outDetails') as HTMLTextAreaElement;
+
+      // Campos de AJUSTE
+      const adjustmentReasonEl = document.getElementById('adjustmentReason') as HTMLTextAreaElement;
+      const adjustmentWhatEl = document.getElementById('adjustmentWhat') as HTMLTextAreaElement;
+
+      // Limpiar todos
+      if (expiryDateEl) expiryDateEl.value = '';
+      if (supplierEl) supplierEl.value = '';
+      if (batchEl) batchEl.value = '';
+      if (purchaseRefEl) purchaseRefEl.value = '';
+      if (additionalNotesEl) additionalNotesEl.value = '';
+      if (receivedByEl) receivedByEl.value = '';
+      if (outDetailsEl) outDetailsEl.value = '';
+      if (adjustmentReasonEl) adjustmentReasonEl.value = '';
+      if (adjustmentWhatEl) adjustmentWhatEl.value = '';
+
+      if (!notesText) return;
+
+      // Parsear el texto separado por pipes
+      const parts = notesText.split(' | ');
+      
+      parts.forEach(part => {
+        if (part.startsWith('Vencimiento:')) {
+          if (expiryDateEl) expiryDateEl.value = part.replace('Vencimiento:', '').trim();
+        } else if (part.startsWith('Proveedor:')) {
+          if (supplierEl) supplierEl.value = part.replace('Proveedor:', '').trim();
+        } else if (part.startsWith('Lote:')) {
+          if (batchEl) batchEl.value = part.replace('Lote:', '').trim();
+        } else if (part.startsWith('Referencia:')) {
+          if (purchaseRefEl) purchaseRefEl.value = part.replace('Referencia:', '').trim();
+        } else if (part.startsWith('Notas:')) {
+          if (additionalNotesEl) additionalNotesEl.value = part.replace('Notas:', '').trim();
+        } else if (part.startsWith('Recibido por:')) {
+          if (receivedByEl) receivedByEl.value = part.replace('Recibido por:', '').trim();
+        } else if (part.startsWith('Detalles:')) {
+          if (outDetailsEl) outDetailsEl.value = part.replace('Detalles:', '').trim();
+        } else if (part.startsWith('Motivo:')) {
+          if (adjustmentReasonEl) adjustmentReasonEl.value = part.replace('Motivo:', '').trim();
+        } else if (part.startsWith('Qué sucedió:')) {
+          if (adjustmentWhatEl) adjustmentWhatEl.value = part.replace('Qué sucedió:', '').trim();
+        }
+      });
+
+      this.updateNotesSummary();
+    }, 100);
+  }
+
+  /**
+   * Formatea los datos de los campos de notas en un texto organizado con guiones
+   */
+  formatNotesData(): string {
+    const movementType = this.form.get('type')?.value;
+    const parts: string[] = [];
+
+    if (movementType === 'in') {
+      // ENTRADA: Vencimiento, Proveedor, Lote, Referencia
+      const expiryDate = (document.getElementById('expiryDate') as HTMLInputElement)?.value || '';
+      const supplier = (document.getElementById('supplier') as HTMLInputElement)?.value || '';
+      const batch = (document.getElementById('batch') as HTMLInputElement)?.value || '';
+      const purchaseRef = (document.getElementById('purchaseRef') as HTMLInputElement)?.value || '';
+      const additionalNotes = (document.getElementById('additionalNotes') as HTMLTextAreaElement)?.value || '';
+
+      if (expiryDate) parts.push(`Vencimiento: ${expiryDate}`);
+      if (supplier) parts.push(`Proveedor: ${supplier}`);
+      if (batch) parts.push(`Lote: ${batch}`);
+      if (purchaseRef) parts.push(`Referencia: ${purchaseRef}`);
+      if (additionalNotes) parts.push(`Notas: ${additionalNotes}`);
+
+    } else if (movementType === 'out') {
+      // SALIDA: Quién recibió y detalles
+      const receivedBy = (document.getElementById('receivedBy') as HTMLInputElement)?.value || '';
+      const outDetails = (document.getElementById('outDetails') as HTMLTextAreaElement)?.value || '';
+
+      if (receivedBy) parts.push(`Recibido por: ${receivedBy}`);
+      if (outDetails) parts.push(`Detalles: ${outDetails}`);
+
+    } else if (movementType === 'adjustment') {
+      // AJUSTE: Por qué y qué sucedió
+      const adjustmentReason = (document.getElementById('adjustmentReason') as HTMLTextAreaElement)?.value || '';
+      const adjustmentWhat = (document.getElementById('adjustmentWhat') as HTMLTextAreaElement)?.value || '';
+
+      if (adjustmentReason) parts.push(`Motivo: ${adjustmentReason}`);
+      if (adjustmentWhat) parts.push(`Qué sucedió: ${adjustmentWhat}`);
+    }
+
+    return parts.length > 0 ? parts.join(' | ') : '';
+  }
+
+  /**
+   * Actualiza el resumen visual de las notas
+   */
+  updateNotesSummary(): void {
+    const formattedNotes = this.formatNotesData();
+    const summaryElement = document.getElementById('notesSummary');
+    const formattedNotesInput = document.getElementById('formattedNotes') as HTMLInputElement;
+
+    if (summaryElement) {
+      summaryElement.textContent = formattedNotes || 'Los datos aparecerán aquí organizados...';
+    }
+
+    if (formattedNotesInput) {
+      formattedNotesInput.value = formattedNotes;
+    }
+
+    // Actualizar el valor en el formulario
+    this.form.patchValue({ notes: formattedNotes });
   }
 
   submit(): void {
@@ -561,13 +724,107 @@ applyFilters(): void {
     }
   }
 
+  /**
+   * Genera un reporte de movimientos de inventario
+   * @param format Formato del reporte: pdf, csv, excel o html
+   */
+  generateReport(format: 'pdf' | 'csv' | 'excel' | 'html'): void {
+    console.log('generateReport llamado con formato:', format);
+    console.log('Movimientos disponibles:', this.movements?.length || 0);
+    
+    if (!this.movements || this.movements.length === 0) {
+      console.warn('No hay movimientos para generar reporte');
+      this.alert.warning('Sin datos', 'No hay movimientos para generar el reporte.');
+      return;
+    }
 
-  // metodo para filtrar los movimientos de inventario segun
-  // filterMovements(filters: Record<string, any>): void {
-  //   // usar el metodo list del servicio pasando los filtros por parametro
-  //   // ejemplo: { movement_type: 'in' | 'out' | 'adjustment' }
-  //   // ejemplo materia prima por id: { raw_material_id: '1' }
-  // }}
+    this.generatingReport = true;
+    console.log('generatingReport set to true');
 
+    // Preparar datos según la especificación del endpoint
+    const reportData = {
+      title: 'Reporte de Movimientos de Inventario',
+      headings: [
+        'ID',
+        'Tipo de Movimiento',
+        'Producto/Materia Prima',
+        'Cantidad',
+        'Notas',
+        'Fecha'
+      ],
+      rows: this.movements.map(movement => [
+        movement.id?.toString() || '',
+        this.getMovementTypeText(movement),
+        movement.product_name || movement.raw_material_name || 'Sin especificar',
+        movement.quantity?.toString() || '0',
+        movement.notes || 'Sin notas',
+        movement.created_at ? new Date(movement.created_at).toLocaleDateString('es-ES') : 'Sin fecha'
+      ]),
+      format: format
+    };
+    
+    console.log('Report data prepared:', reportData);
+
+    this.reportService.generateReport(reportData).subscribe({
+      next: (blob) => {
+        console.log('Reporte recibido, tamaño:', blob.size);
+        this.generatingReport = false;
+        
+        // Generar nombre de archivo con timestamp
+        const timestamp = new Date().toISOString().slice(0, 16).replace(/[:T]/g, '_');
+        const filename = `movimientos_inventario_${timestamp}.${format === 'excel' ? 'xlsx' : format}`;
+        
+        console.log('Descargando archivo:', filename);
+        // Descargar archivo
+        this.reportService.downloadFile(blob, filename);
+        
+        this.alert.success(
+          'Reporte generado',
+          `El reporte en formato ${format.toUpperCase()} se ha descargado correctamente.`
+        );
+      },
+      error: (error) => {
+        console.error('Error en generateReport:', error);
+        this.generatingReport = false;
+        
+        let errorMessage = 'Error desconocido al generar el reporte.';
+        
+        // Manejo de errores específicos
+        if (error.status === 401) {
+          errorMessage = 'Tu sesión ha expirado. Por favor, inicia sesión nuevamente.';
+        } else if (error.status === 403) {
+          errorMessage = 'No tienes permisos para generar reportes. Contacta al administrador.';
+        } else if (error.status === 422) {
+          errorMessage = 'Los datos enviados no son válidos para generar el reporte.';
+        } else if (error.status === 0) {
+          errorMessage = 'No se puede conectar al servidor. Verifica tu conexión a internet.';
+        } else if (error.message) {
+          errorMessage = error.message;
+        }
+        
+        console.error('Mensaje de error:', errorMessage);
+        this.alert.error('Error al generar reporte', errorMessage);
+      }
+    });
+  }
+
+  /**
+   * Convierte el tipo de movimiento a texto legible
+   * @param movement Objeto del movimiento
+   * @returns Texto descriptivo del tipo de movimiento
+   */
+  private getMovementTypeText(movement: any): string {
+    const type = (movement?.type || movement?.movement_type)?.toLowerCase();
+    switch (type) {
+      case 'in':
+        return 'Entrada';
+      case 'out':
+        return 'Salida';
+      case 'adjustment':
+        return 'Ajuste';
+      default:
+        return 'No definido';
+    }
+  }
 
 }
