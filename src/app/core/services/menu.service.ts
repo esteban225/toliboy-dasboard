@@ -146,7 +146,7 @@ export class MenuService {
             parentId: 103
           }
         ],
-        parentId: 100 
+        parentId: 100
 
       },
       {
@@ -171,6 +171,52 @@ export class MenuService {
             label: 'MENUITEMS.INVENTORY.LIST.RAWMATERIALS',
             link: '/modules/inventory/rawMaterial',
             parentId: 200
+          }
+        ],
+        parentId: 100
+      },
+      {
+        id: 300,
+        label: 'MENUITEMS.PRODUCT.TEXT',
+        icon: 'ti ti-package',
+        subItems: [
+          {
+            id: 301,
+            label: 'MENUITEMS.PRODUCT.LIST.PRODUCTSANALYTICS',
+            link: '/modules/product/analytics',
+            parentId: 300
+          },
+          {
+            id: 302,
+            label: 'MENUITEMS.PRODUCT.LIST.PRODUCTSLIST',
+            link: '/modules/product',
+            parentId: 300
+          }
+        ],
+        parentId: 100
+      },
+      {
+        id: 400,
+        label: 'MENUITEMS.BATCHES.TEXT',
+        icon: 'ti ti-box-seam',
+        subItems: [
+          {
+            id: 401,
+            label: 'MENUITEMS.BATCHES.LIST.BATCHLIST',
+            link: '/modules/batches',
+            parentId: 400
+          },
+          {
+            id: 402,
+            label: 'MENUITEMS.BATCHES.LIST.ANALYTICS',
+            link: '/modules/batches/analytics',
+            parentId: 400
+          },
+          {
+            id: 403,
+            label: 'MENUITEMS.BATCHES.LIST.BATCHTRACKING',
+            link: '/modules/batches/batch-tracking',
+            parentId: 400
           }
         ],
         parentId: 100

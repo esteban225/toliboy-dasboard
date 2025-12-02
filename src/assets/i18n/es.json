@@ -35,7 +35,7 @@
     "MODULES": {
       "TEXT": "Módulos"
     },
-    "USERMANAGEMENT":{
+    "USERMANAGEMENT": {
       "TEXT": "Gestión de Usuarios",
       "LIST": {
         "USERMANAGEMENT": "Gestión de Usuarios",
@@ -45,20 +45,34 @@
     "FORMMANAGER": {
       "TEXT": "Gestor de Formularios",
       "LIST": {
-        "FORMRESPONSES":"Respuestas de Formularios",
+        "FORMRESPONSES": "Respuestas de Formularios",
         "FORMMANAGER": "Gestor de Formularios",
         "FORMSTRAZABILITY": "Trazabilidad de Formularios",
-        "FORMRESPONSESDETAIL":"Detalle de Respuestas de Formularios"
+        "FORMRESPONSESDETAIL": "Detalle de Respuestas de Formularios"
       }
     },
     "INVENTORY": {
       "TEXT": "Inventario",
       "LIST": {
-
         "GESTIONINVENTORY": "Gestión de Inventario",
-        "PRODUCTS": "Productos e Inventario",
+        "PRODUCTS": "Inventario Materia Prima",
         "INVENTORYMOVEMENT": "Movimiento de Inventario",
         "RAWMATERIALS": "Materias Primas"
+      }
+    },
+    "PRODUCT": {
+      "TEXT": "Productos",
+      "LIST": {
+        "PRODUCTSLIST": "Lista de Productos",
+        "PRODUCTSANALYTICS": "Análisis de Productos"
+      }
+    },
+    "BATCHES": {
+      "TEXT": "Lotes",
+      "LIST": {
+        "BATCHLIST": "Lista de Lotes",
+        "BATCHTRACKING": "Seguimiento de Lotes",
+        "ANALYTICS": "Análisis de Lotes"
       }
     },
     "ADMIN": {

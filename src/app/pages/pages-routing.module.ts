@@ -77,6 +77,16 @@ const routes: Routes = [
     path: 'modules/inventory',
     loadChildren: () => import('./modules/inventory-module/inventory-module.module').then(m => m.InventoryModuleModule),
     canActivate: [RoleGuard]
+  },
+  {
+    path: 'modules/product',
+    loadChildren: () => import('./modules/product-module/product-module.module').then(m => m.ProductModuleModule),
+    canActivate: [RoleGuard]
+  },
+  {
+    path:'modules/batches',
+    loadChildren: () => import('./modules/batches-module/batches-module.module').then(m => m.BatchesModuleModule),
+    canActivate: [RoleGuard]
   }
 ];
 
