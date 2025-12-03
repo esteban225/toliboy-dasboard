@@ -3,6 +3,7 @@ import { RouterModule, Routes } from '@angular/router';
 import { InventoryComponent } from './inventory/inventory.component';
 import { InventoryMovementComponent } from './pages/inventory-movement/inventory-movement.component';
 import { RawMaterialsComponent } from './pages/raw-materials/raw-materials.component';
+import { InventoryExpenseReportComponent } from './pages/inventory-expense-report/inventory-expense-report.component';
 
 const routes: Routes = [
   {
@@ -16,6 +17,10 @@ const routes: Routes = [
   {
     path:'rawMaterial',
     component:RawMaterialsComponent
+  },
+  {
+    path: 'inventoryExpenseReport',
+    component: InventoryExpenseReportComponent
   }
 ];
 

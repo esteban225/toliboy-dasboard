@@ -32,6 +32,7 @@ export class InventoryMovementComponent implements OnInit, OnDestroy {
   type: '',
   date: '',
   product: '',
+  production_line: '',
   general: ''
 };
 
@@ -54,6 +55,9 @@ onFilterChange() {
   private productSearchControlSub: Subscription | null = null;
   private cachedProducts: any[] = [];
   private productsCached = false;
+  // Batches
+  availableBatches: any[] = [];
+  loadingBatches = false;
 
   constructor(
     private invService: InventoryMovementService,
@@ -67,8 +71,10 @@ onFilterChange() {
       type: ['in', [Validators.required]],
       product_id: [null, [Validators.required]],
       product_search: [''],
+      batch_id: [null],
       quantity: [1, [Validators.required, Validators.min(1)]],
       unit_cost: [0, [Validators.required, Validators.min(0)]],
+      production_line: [''],
       notes: ['']
     });
 
@@ -192,6 +198,7 @@ applyFilters(): void {
 
   if (this.filters.type) filters.movement_type = this.filters.type;
   if (this.filters.date) filters.created_at = this.filters.date;
+  if (this.filters.production_line) filters.production_line = this.filters.production_line;
   if (this.filters.product) filters.raw_material_id = this.filters.product;
   if (this.filters.general) filters.notes = this.filters.general;
 
@@ -221,6 +228,7 @@ resetFilters(): void {
     type: '',
     date: '',
     product: '',
+    production_line: '',
     general: ''
   };
   this.hasActiveFilters = false;
@@ -328,9 +336,10 @@ resetFilters(): void {
   createQuick(): void {
     // Abrir modal en modo crear
     this.isEditing = false;
-    this.form.reset({ type: 'in', quantity: 1, product_id: null, product_search: '', unit_cost: 0, notes: '' });
+    this.form.reset({ type: 'in', quantity: 1, product_id: null, product_search: '', batch_id: null, unit_cost: 0, production_line: '', notes: '' });
     this.formError = null;
     this.productSuggestions = [];
+    this.availableBatches = [];
     
     // Limpiar campos de notas
     this.parseAndLoadNotes('');
@@ -356,8 +365,10 @@ resetFilters(): void {
       type: movementType,
       product_id: productId,
       product_search: '', // Se cargará después con los datos del servicio
+      batch_id: m?.batch_id ?? null,
       quantity: m?.quantity ?? 1,
       unit_cost: m?.unit_cost ?? 0,
+      production_line: m?.production_line ?? '',
       notes: m?.notes ?? ''
     });
 
@@ -490,9 +501,37 @@ resetFilters(): void {
     this.form.patchValue({
       product_id: productId,
       product_search: displayText,
-      unit_cost: unitCost
+      unit_cost: unitCost,
+      batch_id: null
     });
     this.productSuggestions = [];
+    
+    // Cargar batches disponibles si es una salida
+    if (this.form.get('type')?.value === 'out') {
+      this.loadBatchesForProduct(productId);
+    }
+  }
+
+  private loadBatchesForProduct(productId: number): void {
+    if (!productId) {
+      this.availableBatches = [];
+      return;
+    }
+
+    this.loadingBatches = true;
+    
+    // Usar el método del servicio para obtener batches del material
+    this.invService.getBatchesByMaterial(productId).subscribe({
+      next: (res: any) => {
+        this.loadingBatches = false;
+        this.availableBatches = res?.data ?? res ?? [];
+      },
+      error: (err) => {
+        this.loadingBatches = false;
+        console.error('Error cargando batches:', err);
+        this.availableBatches = [];
+      }
+    });
   }
 
   cancelModal(): void {
@@ -639,14 +678,18 @@ resetFilters(): void {
     const formValue = { ...this.form.value };
     const id = formValue.id;
 
-    // Preparar payload eliminando campos innecesarios
-    const payload = {
-      movement_type: formValue.type,
+    // Preparar payload con la estructura esperada por el backend
+    const payload: any = {
       raw_material_id: formValue.product_id,
+      batch_id: formValue.batch_id || null,
+      movement_type: formValue.type,
       quantity: formValue.quantity,
       unit_cost: formValue.unit_cost,
-      notes: formValue.notes || ''
+      notes: formValue.notes || '',
+      production_line: formValue.production_line || null
     };
+
+    console.log('Payload enviado:', payload);
 
     this.loading = true;
     const obs = this.isEditing && id ? this.invService.update(id, payload) : this.invService.create(payload);

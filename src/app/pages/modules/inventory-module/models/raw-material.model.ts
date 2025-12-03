@@ -4,6 +4,7 @@ export interface RawMaterial {
   code?: string;
   description?: string;
   unit_of_measure?: string;
+  cost_per_unit?: number; // Costo unitario para cálculos de egreso
   stock: number;
   min_stock: number;
   is_active?: boolean;

@@ -4,6 +4,7 @@ import { InventoryModuleRoutingModule } from './inventory-module-routing.module'
 import { InventoryComponent } from './inventory/inventory.component';
 import { RawMaterialsComponent } from './pages/raw-materials/raw-materials.component';
 import { InventoryMovementComponent } from './pages/inventory-movement/inventory-movement.component';
+import { InventoryExpenseReportComponent } from './pages/inventory-expense-report/inventory-expense-report.component';
 
 @NgModule({
   declarations: [],
@@ -12,7 +13,8 @@ import { InventoryMovementComponent } from './pages/inventory-movement/inventory
     InventoryModuleRoutingModule,
     InventoryComponent,
     InventoryMovementComponent,
-    RawMaterialsComponent
+    RawMaterialsComponent,
+    InventoryExpenseReportComponent
   ]
 })
 export class InventoryModuleModule { }

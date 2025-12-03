@@ -94,8 +94,22 @@
                     </select>
                 </div>
 
-                <!-- Filtro por Fecha -->
+                <!-- Filtro por Línea de Producción -->
                 <div class="col-md-3">
+                    <label class="form-label fw-semibold">
+                        <i class="bi bi-gear me-1 text-primary"></i>
+                        Línea de Producción
+                    </label>
+                    <select class="form-select" [(ngModel)]="filters.production_line">
+                        <option value="">Todas</option>
+                        <option value="richard">Richard</option>
+                        <option value="panaderia">Panadería</option>
+                        <option value="pasteleria">Pastelería</option>
+                    </select>
+                </div>
+
+                <!-- Filtro por Fecha -->
+                <div class="col-md-2">
                     <label class="form-label fw-semibold">
                         <i class="bi bi-calendar-date me-1 text-primary"></i>
                         Fecha
@@ -103,25 +117,13 @@
                     <input type="date" class="form-control" [(ngModel)]="filters.date">
                 </div>
 
-                <!-- Filtro por Materia Prima / Producto -->
-                <!---
-            <div class="col-md-3">
-                <label class="form-label fw-semibold">
-                    <i class="bi bi-box-seam me-1 text-primary"></i>
-                    Materia Prima / Producto
-                </label>
-                <input type="text" class="form-control" placeholder="Buscar producto..."
-                       [(ngModel)]="filters.product">
-            </div>
-            -->
-
                 <!-- Buscador General -->
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <label class="form-label fw-semibold">
                         <i class="bi bi-search me-1 text-primary"></i>
-                        Búsqueda General
+                        Búsqueda
                     </label>
-                    <input type="text" class="form-control" placeholder="Buscar en todo..."
+                    <input type="text" class="form-control" placeholder="Buscar..."
                         [(ngModel)]="filters.general">
                 </div>
 
@@ -168,6 +170,11 @@
                             <th class="px-4 py-3 text-end" style="width: 140px">
                                 <small class="text-uppercase fw-bold text-muted">
                                     <i class="bi bi-hash me-1"></i>Cantidad
+                                </small>
+                            </th>
+                            <th class="px-4 py-3" style="width: 180px">
+                                <small class="text-uppercase fw-bold text-muted">
+                                    <i class="bi bi-gear me-1"></i>Línea
                                 </small>
                             </th>
                             <!--
@@ -251,6 +258,23 @@
                                     }}{{ m?.quantity ?? '0' }}
                                 </span>
                             </td>
+                            <td class="px-4 py-3">
+                                <span *ngIf="m?.production_line" class="badge" [ngClass]="{
+                                    'bg-primary': m?.production_line?.toLowerCase() === 'richard',
+                                    'bg-success': m?.production_line?.toLowerCase() === 'panaderia',
+                                    'bg-warning text-dark': m?.production_line?.toLowerCase() === 'pasteleria',
+                                    'bg-secondary': !['richard', 'panaderia', 'pasteleria'].includes(m?.production_line?.toLowerCase())
+                                }">
+                                    <i class="bi bi-gear me-1"></i>
+                                    {{
+                                    m?.production_line?.toLowerCase() === 'richard' ? 'Richard' :
+                                    m?.production_line?.toLowerCase() === 'panaderia' ? 'Panadería' :
+                                    m?.production_line?.toLowerCase() === 'pasteleria' ? 'Pastelería' :
+                                    m?.production_line
+                                    }}
+                                </span>
+                                <span *ngIf="!m?.production_line" class="text-muted small">—</span>
+                            </td>
                             <!--
                             <td class="px-4 py-3 text-end">
                                 <span class="fw-semibold">
@@ -279,7 +303,7 @@
                             </td>
                         </tr>
                         <tr *ngIf="!movements || movements.length === 0">
-                            <td colspan="7" class="text-center py-5">
+                            <td colspan="8" class="text-center py-5">
                                 <div class="py-4">
                                     <i class="bi bi-inbox display-1 text-muted d-block mb-3"></i>
                                     <h5 class="text-muted mb-2">No hay movimientos registrados</h5>
@@ -584,6 +608,45 @@
                                 <i class="bi bi-arrow-up-circle text-danger me-2"></i>
                                 Información de Salida
                             </label>
+
+                            <!-- Selección de Lote -->
+                            <div class="mb-3">
+                                <label class="form-label small">
+                                    <i class="bi bi-barcode me-1 text-success"></i>Lote (Opcional)
+                                </label>
+                                <select class="form-select" formControlName="batch_id" [disabled]="!form.get('product_id')?.value || loadingBatches">
+                                    <option [value]="null">Sin lote específico</option>
+                                    <option *ngFor="let batch of availableBatches" [value]="batch.id ?? batch.batch_id">
+                                        {{ batch.batch_code ?? batch.code ?? ('Lote #' + (batch.id ?? '')) }}
+                                        <span *ngIf="batch.expiry_date || batch.vencimiento"> - Vencimiento: {{ batch.expiry_date ?? batch.vencimiento | date:'short' }}</span>
+                                    </option>
+                                </select>
+                                <small class="form-text text-muted" *ngIf="!form.get('product_id')?.value">
+                                    <i class="bi bi-info-circle me-1"></i>Selecciona un producto primero
+                                </small>
+                                <small class="form-text text-muted" *ngIf="loadingBatches">
+                                    <i class="bi bi-clock me-1"></i>Cargando lotes disponibles...
+                                </small>
+                                <small class="form-text text-muted" *ngIf="form.get('product_id')?.value && !loadingBatches && availableBatches.length === 0">
+                                    <i class="bi bi-info-circle me-1"></i>No hay lotes disponibles para este producto
+                                </small>
+                            </div>
+
+                            <!-- Línea de Producción -->
+                            <div class="mb-3">
+                                <label class="form-label small">
+                                    <i class="bi bi-gear me-1 text-info"></i>Línea de Producción
+                                </label>
+                                <select class="form-select" formControlName="production_line">
+                                    <option value="">Selecciona una línea...</option>
+                                    <option value="richard">Línea Richard</option>
+                                    <option value="panaderia">Línea Panadería</option>
+                                    <option value="pasteleria">Línea Pastelería</option>
+                                </select>
+                                <small class="form-text text-muted">
+                                    <i class="bi bi-info-circle me-1"></i>Selecciona a qué línea de producción va el material
+                                </small>
+                            </div>
                             
                             <div class="mb-3">
                                 <label class="form-label small">
@@ -610,6 +673,22 @@
                                 <i class="bi bi-gear text-warning me-2"></i>
                                 Información del Ajuste
                             </label>
+
+                            <!-- Línea de Producción (opcional para ajustes) -->
+                            <div class="mb-3">
+                                <label class="form-label small">
+                                    <i class="bi bi-gear me-1 text-info"></i>Línea de Producción (Opcional)
+                                </label>
+                                <select class="form-select" formControlName="production_line">
+                                    <option value="">Sin línea específica</option>
+                                    <option value="richard">Línea Richard</option>
+                                    <option value="panaderia">Línea Panadería</option>
+                                    <option value="pasteleria">Línea Pastelería</option>
+                                </select>
+                                <small class="form-text text-muted">
+                                    <i class="bi bi-info-circle me-1"></i>Si el ajuste afecta a una línea específica, selecciónala
+                                </small>
+                            </div>
                             
                             <div class="mb-3">
                                 <label class="form-label small">

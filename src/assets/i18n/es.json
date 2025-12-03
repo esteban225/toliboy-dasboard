@@ -57,7 +57,8 @@
         "GESTIONINVENTORY": "Gestión de Inventario",
         "PRODUCTS": "Inventario Materia Prima",
         "INVENTORYMOVEMENT": "Movimiento de Inventario",
-        "RAWMATERIALS": "Materias Primas"
+        "RAWMATERIALS": "Materias Primas",
+        "INVENTORYEXPENSEREPORT": "Reporte de Gastos de Inventario"
       }
     },
     "PRODUCT": {
