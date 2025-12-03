@@ -34,7 +34,7 @@
             <div class="card-body d-flex flex-column">
               <div class="d-flex align-items-center mb-3">
                 <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-3" style="width:48px;height:48px;font-weight:600">
-                  {{ user.name?.charAt(0)?.toUpperCase() || '?' }}
+                  {{ user.name.charAt(0).toUpperCase() || '?' }}
                 </div>
                 <div class="flex-grow-1">
                   <h5 class="card-title mb-0">{{ user.name || 'Sin nombre' }}</h5>

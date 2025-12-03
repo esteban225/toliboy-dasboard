@@ -15,7 +15,6 @@ import { BatchesTrackingComponent } from './pages/batches-tracking/batches-track
     BatchesListComponent,
     BatchesAnalyticsComponent,
     BatchesTrackingComponent
-
   ]
 })
 export class BatchesModuleModule { }

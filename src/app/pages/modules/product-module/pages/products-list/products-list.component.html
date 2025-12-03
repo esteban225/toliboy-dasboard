@@ -95,11 +95,8 @@
                                     <th class="px-3 py-3 d-none d-lg-table-cell">
                                         <small class="fw-bold text-uppercase text-muted">Categoría</small>
                                     </th>
-                                    <th class="px-3 py-3 d-none d-xl-table-cell">
+                                    <th class="px-3 py-3">
                                         <small class="fw-bold text-uppercase text-muted">Especificaciones</small>
-                                    </th>
-                                    <th class="text-end px-3 py-3">
-                                        <small class="fw-bold text-uppercase text-muted">Precio Unit.</small>
                                     </th>
                                     <th class="text-center px-3 py-3">
                                         <small class="fw-bold text-uppercase text-muted">Estado</small>
@@ -126,16 +123,13 @@
                                             {{ p.category }}
                                         </span>
                                     </td>
-                                    <td class="px-3 d-none d-xl-table-cell">
-                                        <small class="text-muted" *ngIf="p.specifications && p.specifications.length > 0">
-                                            <span *ngFor="let spec of p.specifications; let last = last" class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary me-1">{{ spec }}</span>
-                                        </small>
+                                    <td class="px-3">
+                                        <div *ngIf="p.specifications && p.specifications.length > 0" class="d-flex flex-wrap gap-2">
+                                            <span *ngFor="let spec of p.specifications; let last = last" class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-2 fw-semibold">{{ spec }}</span>
+                                        </div>
                                         <small class="text-muted" *ngIf="!p.specifications || p.specifications.length === 0">
-                                            <em class="text-muted">—</em>
+                                            <em class="text-muted">Sin especificaciones</em>
                                         </small>
-                                    </td>
-                                    <td class="text-end px-3">
-                                        <span class="fw-bold text-success">${{ (p.unit_price ?? 0).toFixed(2) }}</span>
                                     </td>
                                     <td class="text-center px-3">
                                         <span class="badge rounded-pill px-3 py-2"
@@ -160,7 +154,7 @@
                                     </td>
                                 </tr>
                                 <tr *ngIf="!products$ || products$.length === 0">
-                                    <td colspan="8" class="text-center py-5">
+                                    <td colspan="7" class="text-center py-5">
                                         <div class="py-4">
                                             <i class="bi bi-inbox display-1 text-muted d-block mb-3"></i>
                                             <h5 class="text-muted mb-2">No hay productos</h5>
@@ -218,12 +212,13 @@
         </div>
 
         <!-- Formulario en modal: reemplaza la sidebar por un modal accesible y responsive -->
-        <div *ngIf="showForm$" class="product-modal">
-            <!-- Backdrop (click to close) -->
-            <div class="modal-backdrop fade show" (click)="select(null)"></div>
+        <div *ngIf="showForm$" class="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center"
+             style="z-index: 9999; background: rgba(0,0,0,0.5);">
+            <!-- Backdrop -->
+            <div class="position-absolute top-0 start-0 w-100 h-100" (click)="select(null)"></div>
 
-            <!-- Modal dialog centered -->
-            <div class="modal d-block" tabindex="-1" role="dialog" aria-modal="true">
+            <!-- Modal -->
+            <div class="modal d-block position-relative" tabindex="-1" role="dialog" aria-modal="true">
                 <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
                     <div class="modal-content">
                         <div class="modal-header border-0"

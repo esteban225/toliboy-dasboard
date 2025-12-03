@@ -3,6 +3,7 @@ import { RouterModule, Routes } from "@angular/router";
 import {BatchesListComponent} from './pages/batches-list/batches-list.component';
 import{BatchesAnalyticsComponent} from './pages/batches-analytics/batches-analytics.component';
 
+import{BatchesTrackingComponent} from './pages/batches-tracking/batches-tracking.component';
 const routes: Routes = [
   { 
      path: '',
@@ -14,7 +15,7 @@ const routes: Routes = [
     },
     {
         path: 'batch-tracking',  
-        component: BatchesAnalyticsComponent
+        component: BatchesTrackingComponent
     }
 ];
 
