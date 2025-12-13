@@ -59,6 +59,16 @@ onFilterChange() {
   availableBatches: any[] = [];
   loadingBatches = false;
 
+  /**
+   * Parsea las notas formateadas y extrae campos específicos
+   */
+  parseNotesField(notes: string, field: string): string {
+    if (!notes) return '';
+    const regex = new RegExp(`${field}:\\s*([^|]+)`, 'i');
+    const match = notes.match(regex);
+    return match ? match[1].trim() : '';
+  }
+
   constructor(
     private invService: InventoryMovementService,
     private fb: FormBuilder,
@@ -677,16 +687,20 @@ resetFilters(): void {
 
     const formValue = { ...this.form.value };
     const id = formValue.id;
+    const movementType = formValue.type;
+
+    // Generar las notas formateadas
+    const formattedNotes = this.formatNotesData();
 
     // Preparar payload con la estructura esperada por el backend
     const payload: any = {
       raw_material_id: formValue.product_id,
       batch_id: formValue.batch_id || null,
-      movement_type: formValue.type,
+      movement_type: movementType,
       quantity: formValue.quantity,
       unit_cost: formValue.unit_cost,
-      notes: formValue.notes || '',
-      production_line: formValue.production_line || null
+      production_line: formValue.production_line || null,
+      notes: formattedNotes // Incluir las notas formateadas
     };
 
     console.log('Payload enviado:', payload);
@@ -784,7 +798,7 @@ resetFilters(): void {
     this.generatingReport = true;
     console.log('generatingReport set to true');
 
-    // Preparar datos según la especificación del endpoint
+    // Preparar datos con columnas expandidas para los campos de notas parseados
     const reportData = {
       title: 'Reporte de Movimientos de Inventario',
       headings: [
@@ -792,7 +806,13 @@ resetFilters(): void {
         'Tipo de Movimiento',
         'Producto/Materia Prima',
         'Cantidad',
-        'Notas',
+        'Línea de Producción',
+        'Vencimiento',
+        'Proveedor',
+        'Lote',
+        'Referencia',
+        'Recibido por',
+        'Detalles',
         'Fecha'
       ],
       rows: this.movements.map(movement => [
@@ -800,7 +820,13 @@ resetFilters(): void {
         this.getMovementTypeText(movement),
         movement.product_name || movement.raw_material_name || 'Sin especificar',
         movement.quantity?.toString() || '0',
-        movement.notes || 'Sin notas',
+        movement.production_line || '—',
+        this.parseNotesField(movement.notes, 'Vencimiento') || '—',
+        this.parseNotesField(movement.notes, 'Proveedor') || '—',
+        this.parseNotesField(movement.notes, 'Lote') || '—',
+        this.parseNotesField(movement.notes, 'Referencia') || '—',
+        this.parseNotesField(movement.notes, 'Recibido por') || '—',
+        this.parseNotesField(movement.notes, 'Detalles') || '—',
         movement.created_at ? new Date(movement.created_at).toLocaleDateString('es-ES') : 'Sin fecha'
       ]),
       format: format

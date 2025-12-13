@@ -157,153 +157,189 @@
                             <th class="px-4 py-3 text-center" style="width: 80px">
                                 <small class="text-uppercase fw-bold text-muted">ID</small>
                             </th>
-                            <th class="px-4 py-3" style="width: 150px">
+                            <th class="px-4 py-3" style="width: 120px">
                                 <small class="text-uppercase fw-bold text-muted">
                                     <i class="bi bi-arrow-left-right me-1"></i>Tipo
                                 </small>
                             </th>
-                            <th class="px-4 py-3" style="min-width: 250px">
+                            <th class="px-4 py-3" style="min-width: 200px">
                                 <small class="text-uppercase fw-bold text-muted">
                                     <i class="bi bi-box-seam me-1"></i>Producto
                                 </small>
                             </th>
-                            <th class="px-4 py-3 text-end" style="width: 140px">
+                            <th class="px-4 py-3 text-end" style="width: 100px">
                                 <small class="text-uppercase fw-bold text-muted">
                                     <i class="bi bi-hash me-1"></i>Cantidad
                                 </small>
                             </th>
-                            <th class="px-4 py-3" style="width: 180px">
+                            <th class="px-4 py-3" style="width: 140px">
                                 <small class="text-uppercase fw-bold text-muted">
                                     <i class="bi bi-gear me-1"></i>Línea
                                 </small>
                             </th>
-                            <!--
-                            <th class="px-4 py-3 text-end" style="width: 140px">
+                            <th class="px-4 py-3" style="width: 120px">
                                 <small class="text-uppercase fw-bold text-muted">
-                                    <i class="bi bi-currency-dollar me-1"></i>Costo Unit.
+                                    <i class="bi bi-calendar-x me-1"></i>Vencimiento
                                 </small>
                             </th>
-                            -->
-
-                            <th class="px-4 py-3" style="width: 450px">
+                            <th class="px-4 py-3" style="width: 120px">
                                 <small class="text-uppercase fw-bold text-muted">
-                                    <i class="bi bi-sticky me-1"></i>Notas
+                                    <i class="bi bi-truck me-1"></i>Proveedor
                                 </small>
                             </th>
-                            <th class="px-4 py-3 text-center" style="width: 180px">
+                            <th class="px-4 py-3" style="width: 120px">
+                                <small class="text-uppercase fw-bold text-muted">
+                                    <i class="bi bi-barcode me-1"></i>Lote
+                                </small>
+                            </th>
+                            <th class="px-4 py-3" style="width: 120px">
+                                <small class="text-uppercase fw-bold text-muted">
+                                    <i class="bi bi-receipt me-1"></i>Referencia
+                                </small>
+                            </th>
+                            <th class="px-4 py-3" style="width: 120px">
+                                <small class="text-uppercase fw-bold text-muted">
+                                    <i class="bi bi-person-check me-1"></i>Recibido por
+                                </small>
+                            </th>
+                            <th class="px-4 py-3" style="width: 140px">
+                                <small class="text-uppercase fw-bold text-muted">
+                                    <i class="bi bi-info-circle me-1"></i>Detalles
+                                </small>
+                            </th>
+                            <th class="px-4 py-3 text-center" style="width: 140px">
                                 <small class="text-uppercase fw-bold text-muted">Acciones</small>
                             </th>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr *ngFor="let m of movements" class="border-bottom">
-                            <td class="px-4 py-3 text-center">
-                                <span class="badge bg-light text-muted border">{{ m?.id ?? '-' }}</span>
-                            </td>
-                            <td class="px-4 py-3">
-                                <span class="badge px-3 py-2 fw-bold d-inline-flex align-items-center" [ngClass]="{
-                                        'bg-success text-white': (m?.type || m?.movement_type)?.toLowerCase() === 'in',
-                                        'bg-danger text-white': (m?.type || m?.movement_type)?.toLowerCase() === 'out',
-                                        'bg-warning text-dark': (m?.type || m?.movement_type)?.toLowerCase() === 'adjustment',
-                                        'bg-secondary text-white': !(m?.type || m?.movement_type) || !['in', 'out', 'adjustment'].includes((m?.type || m?.movement_type)?.toLowerCase())
-                                    }" style="min-width: 90px; font-size: 0.85rem;">
-                                    <i class="bi me-2" [ngClass]="{
-                                        'bi-arrow-down-circle-fill': (m?.type || m?.movement_type)?.toLowerCase() === 'in',
-                                        'bi-arrow-up-circle-fill': (m?.type || m?.movement_type)?.toLowerCase() === 'out',
-                                        'bi-gear-fill': (m?.type || m?.movement_type)?.toLowerCase() === 'adjustment',
-                                        'bi-question-circle-fill': !(m?.type || m?.movement_type) || !['in', 'out', 'adjustment'].includes((m?.type || m?.movement_type)?.toLowerCase())
-                                    }"></i>
-                                    <span>
+                        <!-- Una fila por cada movimiento con todas las columnas -->
+                        <ng-container *ngFor="let m of movements; let idx = index">
+                            <tr class="border-bottom" [id]="'movement-' + m?.id">
+                                <td class="px-4 py-3 text-center">
+                                    <span class="badge bg-light text-muted border">{{ m?.id ?? '-' }}</span>
+                                </td>
+                                <td class="px-4 py-3">
+                                    <span class="badge px-2 py-1 fw-bold d-inline-flex align-items-center" [ngClass]="{
+                                            'bg-success text-white': (m?.type || m?.movement_type)?.toLowerCase() === 'in',
+                                            'bg-danger text-white': (m?.type || m?.movement_type)?.toLowerCase() === 'out',
+                                            'bg-warning text-dark': (m?.type || m?.movement_type)?.toLowerCase() === 'adjustment',
+                                            'bg-secondary text-white': !(m?.type || m?.movement_type) || !['in', 'out', 'adjustment'].includes((m?.type || m?.movement_type)?.toLowerCase())
+                                        }" style="min-width: 80px; font-size: 0.8rem;">
+                                        <i class="bi me-1" [ngClass]="{
+                                            'bi-arrow-down-circle-fill': (m?.type || m?.movement_type)?.toLowerCase() === 'in',
+                                            'bi-arrow-up-circle-fill': (m?.type || m?.movement_type)?.toLowerCase() === 'out',
+                                            'bi-gear-fill': (m?.type || m?.movement_type)?.toLowerCase() === 'adjustment',
+                                            'bi-question-circle-fill': !(m?.type || m?.movement_type) || !['in', 'out', 'adjustment'].includes((m?.type || m?.movement_type)?.toLowerCase())
+                                        }"></i>
+                                        <span>
+                                            {{
+                                            (m?.type || m?.movement_type)?.toLowerCase() === 'in' ? 'Ent.' :
+                                            (m?.type || m?.movement_type)?.toLowerCase() === 'out' ? 'Sal.' :
+                                            (m?.type || m?.movement_type)?.toLowerCase() === 'adjustment' ? 'Aju.' :
+                                            'N/D'
+                                            }}
+                                        </span>
+                                    </span>
+                                </td>
+                                <td class="px-4 py-3">
+                                    <small class="text-muted">
+                                        <div class="fw-semibold" style="font-size: 0.9rem;">
+                                            {{ m?.product_name ?? m?.raw_material_name ?? 'N/A' }}
+                                        </div>
+                                        <span *ngIf="m?.product_code ?? m?.raw_material_code" class="text-muted" style="font-size: 0.8rem;">
+                                            {{ m?.product_code ?? m?.raw_material_code }}
+                                        </span>
+                                    </small>
+                                </td>
+                                <td class="px-4 py-3 text-end">
+                                    <span class="fw-bold" [ngClass]="{
+                                        'text-success': (m?.type || m?.movement_type)?.toLowerCase() === 'in',
+                                        'text-danger': (m?.type || m?.movement_type)?.toLowerCase() === 'out',
+                                        'text-warning': (m?.type || m?.movement_type)?.toLowerCase() === 'adjustment'
+                                    }">
                                         {{
-                                        (m?.type || m?.movement_type)?.toLowerCase() === 'in' ? 'Entrada' :
-                                        (m?.type || m?.movement_type)?.toLowerCase() === 'out' ? 'Salida' :
-                                        (m?.type || m?.movement_type)?.toLowerCase() === 'adjustment' ? 'Ajuste' :
-                                        'N/D'
+                                        (m?.type || m?.movement_type)?.toLowerCase() === 'in' ? '+' :
+                                        (m?.type || m?.movement_type)?.toLowerCase() === 'out' ? '-' :
+                                        (m?.type || m?.movement_type)?.toLowerCase() === 'adjustment' ? '±' : ''
+                                        }}{{ m?.quantity ?? '0' }}
+                                    </span>
+                                </td>
+                                <td class="px-4 py-3">
+                                    <span *ngIf="m?.production_line" class="badge" [ngClass]="{
+                                        'bg-primary': m?.production_line?.toLowerCase() === 'richard',
+                                        'bg-success': m?.production_line?.toLowerCase() === 'panaderia',
+                                        'bg-warning text-dark': m?.production_line?.toLowerCase() === 'pasteleria',
+                                        'bg-secondary': !['richard', 'panaderia', 'pasteleria'].includes(m?.production_line?.toLowerCase())
+                                    }" style="font-size: 0.8rem;">
+                                        {{
+                                        m?.production_line?.toLowerCase() === 'richard' ? 'Richard' :
+                                        m?.production_line?.toLowerCase() === 'panaderia' ? 'Panadería' :
+                                        m?.production_line?.toLowerCase() === 'pasteleria' ? 'Pastelería' :
+                                        m?.production_line
                                         }}
                                     </span>
-                                </span>
-                            </td>
-                            <td class="px-4 py-3">
-                                <div class="d-flex align-items-center">
-                                    <div class="bg-primary bg-opacity-10 rounded-circle p-2 me-2">
-                                        <i class="bi bi-box text-primary"></i>
-                                    </div>
-                                    <div>
-                                        <div class="fw-semibold text-muted">
-                                            {{ m?.product_name ?? m?.raw_material_name ?? 'Producto sin nombre' }}
-                                        </div>
-                                        <small class="text-muted d-flex align-items-center">
-                                            <span *ngIf="m?.product_code ?? m?.raw_material_code" class="me-2">
-                                                <i class="bi bi-upc me-1"></i>{{ m?.product_code ?? m?.raw_material_code
-                                                }}
-                                            </span>
-                                            <span>
-                                                <i class="bi bi-tag me-1"></i>ID: {{ m?.product_id ?? m?.raw_material_id
-                                                ?? '-' }}
-                                            </span>
+                                    <span *ngIf="!m?.production_line" class="text-muted small">—</span>
+                                </td>
+                                <!-- Vencimiento -->
+                                <td class="px-4 py-3">
+                                    <small class="text-muted">
+                                        {{ parseNotesField(m.notes, 'Vencimiento') || '—' }}
+                                    </small>
+                                </td>
+                                <!-- Proveedor -->
+                                <td class="px-4 py-3">
+                                    <small class="text-muted">
+                                        {{ parseNotesField(m.notes, 'Proveedor') || '—' }}
+                                    </small>
+                                </td>
+                                <!-- Lote -->
+                                <td class="px-4 py-3">
+                                    <small class="text-muted">
+                                        {{ parseNotesField(m.notes, 'Lote') || '—' }}
+                                    </small>
+                                </td>
+                                <!-- Referencia -->
+                                <td class="px-4 py-3">
+                                    <small class="text-muted">
+                                        {{ parseNotesField(m.notes, 'Referencia') || '—' }}
+                                    </small>
+                                </td>
+                                <!-- Recibido por -->
+                                <td class="px-4 py-3">
+                                    <small class="text-muted">
+                                        {{ parseNotesField(m.notes, 'Recibido por') || '—' }}
+                                    </small>
+                                </td>
+                                <!-- Detalles -->
+                                <td class="px-4 py-3">
+                                    <ng-container *ngIf="parseNotesField(m.notes, 'Detalles') as detalle">
+                                        <small class="text-muted" [title]="detalle || '—'">
+                                            {{ (detalle || '—') | slice:0:15 }}{{ detalle && detalle.length > 15 ? '...' : '' }}
                                         </small>
+                                    </ng-container>
+                                    <ng-container *ngIf="!parseNotesField(m.notes, 'Detalles')">
+                                        <small class="text-muted">—</small>
+                                    </ng-container>
+                                </td>
+                                <!-- Acciones -->
+                                <td class="px-4 py-3 text-center">
+                                    <div class="btn-group btn-group-sm" role="group">
+                                        <button class="btn btn-outline-primary btn-sm" (click)="openEdit(m)"
+                                            title="Editar movimiento">
+                                            <i class="bi bi-pencil-fill"></i>
+                                        </button>
+                                        <button class="btn btn-outline-danger btn-sm" (click)="deleteMovement(m.id)"
+                                            title="Eliminar movimiento">
+                                            <i class="bi bi-trash-fill"></i>
+                                        </button>
                                     </div>
-                                </div>
-                            </td>
-                            <td class="px-4 py-3 text-end">
-                                <span class="fs-5 fw-bold" [ngClass]="{
-                                    'text-success': (m?.type || m?.movement_type)?.toLowerCase() === 'in',
-                                    'text-danger': (m?.type || m?.movement_type)?.toLowerCase() === 'out',
-                                    'text-warning': (m?.type || m?.movement_type)?.toLowerCase() === 'adjustment'
-                                }">
-                                    {{
-                                    (m?.type || m?.movement_type)?.toLowerCase() === 'in' ? '+' :
-                                    (m?.type || m?.movement_type)?.toLowerCase() === 'out' ? '-' :
-                                    (m?.type || m?.movement_type)?.toLowerCase() === 'adjustment' ? '±' : ''
-                                    }}{{ m?.quantity ?? '0' }}
-                                </span>
-                            </td>
-                            <td class="px-4 py-3">
-                                <span *ngIf="m?.production_line" class="badge" [ngClass]="{
-                                    'bg-primary': m?.production_line?.toLowerCase() === 'richard',
-                                    'bg-success': m?.production_line?.toLowerCase() === 'panaderia',
-                                    'bg-warning text-dark': m?.production_line?.toLowerCase() === 'pasteleria',
-                                    'bg-secondary': !['richard', 'panaderia', 'pasteleria'].includes(m?.production_line?.toLowerCase())
-                                }">
-                                    <i class="bi bi-gear me-1"></i>
-                                    {{
-                                    m?.production_line?.toLowerCase() === 'richard' ? 'Richard' :
-                                    m?.production_line?.toLowerCase() === 'panaderia' ? 'Panadería' :
-                                    m?.production_line?.toLowerCase() === 'pasteleria' ? 'Pastelería' :
-                                    m?.production_line
-                                    }}
-                                </span>
-                                <span *ngIf="!m?.production_line" class="text-muted small">—</span>
-                            </td>
-                            <!--
-                            <td class="px-4 py-3 text-end">
-                                <span class="fw-semibold">
-                                    ${{ (m?.unit_cost ?? 0) | number:'1.2-2' }}
-                                </span>
-                            </td>
-                            -->
+                                </td>
+                            </tr>
+                        </ng-container>
 
-                            <td class="px-4 py-3">
-                                <div class="text-muted small">
-                                    <i class="bi bi-chat-left-text me-1"></i>
-                                    {{ m?.notes ?? 'Sin notas' }}
-                                </div>
-                            </td>
-                            <td class="px-4 py-3 text-center">
-                                <div class="btn-group btn-group-sm" role="group">
-                                    <button class="btn btn-outline-primary" (click)="openEdit(m)"
-                                        title="Editar movimiento">
-                                        <i class="bi bi-pencil-fill"></i>
-                                    </button>
-                                    <button class="btn btn-outline-danger" (click)="deleteMovement(m.id)"
-                                        title="Eliminar movimiento">
-                                        <i class="bi bi-trash-fill"></i>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
                         <tr *ngIf="!movements || movements.length === 0">
-                            <td colspan="8" class="text-center py-5">
+                            <td colspan="12" class="text-center py-5">
                                 <div class="py-4">
                                     <i class="bi bi-inbox display-1 text-muted d-block mb-3"></i>
                                     <h5 class="text-muted mb-2">No hay movimientos registrados</h5>
