@@ -123,8 +123,7 @@
                         <i class="bi bi-search me-1 text-primary"></i>
                         Búsqueda
                     </label>
-                    <input type="text" class="form-control" placeholder="Buscar..."
-                        [(ngModel)]="filters.general">
+                    <input type="text" class="form-control" placeholder="Buscar..." [(ngModel)]="filters.general">
                 </div>
 
             </div>
@@ -194,7 +193,7 @@
                             </th>
                             <th class="px-4 py-3" style="width: 120px">
                                 <small class="text-uppercase fw-bold text-muted">
-                                    <i class="bi bi-receipt me-1"></i>Referencia
+                                    <i class="bi bi-receipt me-1"></i>Entregada por
                                 </small>
                             </th>
                             <th class="px-4 py-3" style="width: 120px">
@@ -247,7 +246,8 @@
                                         <div class="fw-semibold" style="font-size: 0.9rem;">
                                             {{ m?.product_name ?? m?.raw_material_name ?? 'N/A' }}
                                         </div>
-                                        <span *ngIf="m?.product_code ?? m?.raw_material_code" class="text-muted" style="font-size: 0.8rem;">
+                                        <span *ngIf="m?.product_code ?? m?.raw_material_code" class="text-muted"
+                                            style="font-size: 0.8rem;">
                                             {{ m?.product_code ?? m?.raw_material_code }}
                                         </span>
                                     </small>
@@ -299,27 +299,30 @@
                                         {{ parseNotesField(m.notes, 'Lote') || '—' }}
                                     </small>
                                 </td>
-                                <!-- Referencia -->
-                                <td class="px-4 py-3">
-                                    <small class="text-muted">
-                                        {{ parseNotesField(m.notes, 'Referencia') || '—' }}
-                                    </small>
-                                </td>
                                 <!-- Recibido por -->
                                 <td class="px-4 py-3">
                                     <small class="text-muted">
                                         {{ parseNotesField(m.notes, 'Recibido por') || '—' }}
                                     </small>
                                 </td>
+                                <!-- Entregada por -->
+                                <td class="px-4 py-3">
+                                    <small class="text-muted">
+                                        {{ parseNotesField(m.notes, 'Entregada por') || '—' }}
+                                    </small>
+                                </td>
                                 <!-- Detalles -->
                                 <td class="px-4 py-3">
-                                    <ng-container *ngIf="parseNotesField(m.notes, 'Detalles') as detalle">
-                                        <small class="text-muted" [title]="detalle || '—'">
-                                            {{ (detalle || '—') | slice:0:15 }}{{ detalle && detalle.length > 15 ? '...' : '' }}
-                                        </small>
-                                    </ng-container>
-                                    <ng-container *ngIf="!parseNotesField(m.notes, 'Detalles')">
-                                        <small class="text-muted">—</small>
+                                    <ng-container *ngIf="getDetailsList(m.notes) as detalles">
+                                        <div *ngIf="detalles.length > 0">
+                                            <button class="btn btn-sm btn-outline-info" type="button"
+                                                (click)="openDetailsModal(detalles)"
+                                                title="Ver lista de detalles ordenada">
+                                                <i class="bi bi-list-check me-1"></i>
+                                                <span class="badge bg-info text-white">{{ detalles.length }}</span>
+                                            </button>
+                                        </div>
+                                        <small *ngIf="detalles.length === 0" class="text-muted">—</small>
                                     </ng-container>
                                 </td>
                                 <!-- Acciones -->
@@ -582,59 +585,124 @@
                                 <i class="bi bi-receipt text-primary me-2"></i>
                                 Información de Entrada
                             </label>
-                            
-                            <div class="row g-3 mb-3">
-                                <!-- Fecha de Vencimiento -->
-                                <div class="col-md-6">
-                                    <label class="form-label small">
-                                        <i class="bi bi-calendar-x me-1 text-danger"></i>Fecha de Vencimiento
+
+                            <!-- Lista Ordenada de Campos de Entrada -->
+                            <ol class="list-group list-group-numbered">
+                                <!-- 1. Sellos -->
+                                <li class="list-group-item py-3 border-start-3 border-info">
+                                    <label class="form-label small fw-semibold mb-2 d-block">
+                                        <i class="bi bi-shield-lock me-1 text-info"></i>Sellos
                                     </label>
-                                    <input type="date" class="form-control" id="expiryDate" 
-                                        (change)="updateNotesSummary()"
-                                        placeholder="Selecciona fecha de vencimiento">
-                                </div>
-                                
+                                    <input type="text" class="form-control" id="seals" 
+                                        (input)="updateNotesSummary()" 
+                                        placeholder="Ej: Sellado, Intacto, Roto...">
+                                </li>
+
+                                <!-- 2. Tipo de Empaque -->
+                                <li class="list-group-item py-3 border-start-3 border-info">
+                                    <label class="form-label small fw-semibold mb-2 d-block">
+                                        <i class="bi bi-box-seam me-1 text-info"></i>Tipo de Empaque
+                                    </label>
+                                    <input type="text" class="form-control" id="packageType" 
+                                        (input)="updateNotesSummary()" 
+                                        placeholder="Ej: Caja, Bolsa, Paleta...">
+                                </li>
+
+                                <!-- 3. Empaque Limpio -->
+                                <li class="list-group-item py-3 border-start-3 border-info">
+                                    <label class="form-label small fw-semibold mb-2 d-block">
+                                        <i class="bi bi-check-circle me-1 text-info"></i>Empaque Limpio
+                                    </label>
+                                    <select class="form-select" id="cleanPackage" (change)="updateNotesSummary()">
+                                        <option value="">Seleccionar...</option>
+                                        <option value="Si">Sí</option>
+                                        <option value="No">No</option>
+                                    </select>
+                                </li>
+
+                                <!-- 4. Condiciones de Transporte -->
+                                <li class="list-group-item py-3 border-start-3 border-info">
+                                    <label class="form-label small fw-semibold mb-2 d-block">
+                                        <i class="bi bi-truck me-1 text-info"></i>Condiciones de Transporte
+                                    </label>
+                                    <select class="form-select" id="transportConditions" (change)="updateNotesSummary()">
+                                        <option value="">Seleccionar...</option>
+                                        <option value="Buenas">Buenas</option>
+                                        <option value="Regulares">Regulares</option>
+                                        <option value="Malas">Malas</option>
+                                        <option value="Danado">Dañado</option>
+                                    </select>
+                                </li>
+
+                                <!-- 5. Aceptado -->
+                                <li class="list-group-item py-3 border-start-3 border-info">
+                                    <label class="form-label small fw-semibold mb-2 d-block">
+                                        <i class="bi bi-check2-square me-1 text-info"></i>Aceptado
+                                    </label>
+                                    <select class="form-select" id="accepted" (change)="updateNotesSummary()">
+                                        <option value="">Seleccionar...</option>
+                                        <option value="Si">Sí</option>
+                                        <option value="No">No</option>
+                                    </select>
+                                </li>
+
+                                <!-- 6. Observaciones -->
+                                <li class="list-group-item py-3 border-start-3 border-info">
+                                    <label class="form-label small fw-semibold mb-2 d-block">
+                                        <i class="bi bi-chat-left-text me-1 text-info"></i>Observaciones
+                                    </label>
+                                    <textarea class="form-control" rows="3" id="additionalNotes"
+                                        (input)="updateNotesSummary()"
+                                        placeholder="Comentarios, detalles adicionales, problemas detectados..."></textarea>
+                                </li>
+                            </ol>
+
+                            <!-- Información Adicional (oculta visualmente pero importante) -->
+                            <div class="row g-3 mt-3">
                                 <!-- Proveedor -->
                                 <div class="col-md-6">
                                     <label class="form-label small">
-                                        <i class="bi bi-truck me-1 text-info"></i>Proveedor
+                                        <i class="bi bi-truck me-1 text-muted"></i>Proveedor
                                     </label>
-                                    <input type="text" class="form-control" id="supplier" 
-                                        (input)="updateNotesSummary()"
+                                    <input type="text" class="form-control" id="supplier" (input)="updateNotesSummary()"
                                         placeholder="Nombre del proveedor">
                                 </div>
-                            </div>
-                            
-                            <div class="row g-3 mb-3">
+
                                 <!-- Lote -->
                                 <div class="col-md-6">
                                     <label class="form-label small">
-                                        <i class="bi bi-barcode me-1 text-success"></i>Lote
+                                        <i class="bi bi-barcode me-1 text-muted"></i>Lote
                                     </label>
-                                    <input type="text" class="form-control" id="batch" 
-                                        (input)="updateNotesSummary()"
+                                    <input type="text" class="form-control" id="batch" (input)="updateNotesSummary()"
                                         placeholder="Número de lote o referencia">
                                 </div>
-                                
-                                <!-- Referencia de Compra -->
+
+                                <!-- Fecha de Vencimiento -->
                                 <div class="col-md-6">
                                     <label class="form-label small">
-                                        <i class="bi bi-receipt me-1 text-warning"></i>Referencia de Compra
+                                        <i class="bi bi-calendar-x me-1 text-muted"></i>Fecha de Vencimiento
                                     </label>
-                                    <input type="text" class="form-control" id="purchaseRef" 
-                                        (input)="updateNotesSummary()"
-                                        placeholder="Ej: OC-2024-001, Factura #">
+                                    <input type="date" class="form-control" id="expiryDate"
+                                        (change)="updateNotesSummary()">
                                 </div>
-                            </div>
-                            
-                            <!-- Notas Adicionales -->
-                            <div class="mb-3">
-                                <label class="form-label small">
-                                    <i class="bi bi-chat-left-text me-1 text-secondary"></i>Notas Adicionales
-                                </label>
-                                <textarea class="form-control" rows="3" id="additionalNotes"
-                                    (input)="updateNotesSummary()"
-                                    placeholder="Comentarios o detalles adicionales..."></textarea>
+
+                                <!-- Recepcionista -->
+                                <div class="col-md-6">
+                                    <label class="form-label small">
+                                        <i class="bi bi-person-check me-1 text-muted"></i>Recepcionista
+                                    </label>
+                                    <input type="text" class="form-control" id="receivedBy"
+                                        (input)="updateNotesSummary()" placeholder="Nombre de quien recibe">
+                                </div>
+
+                                <!-- Quién Entrega -->
+                                <div class="col-md-6">
+                                    <label class="form-label small">
+                                        <i class="bi bi-person-check me-1 text-muted"></i>Quién Entrega
+                                    </label>
+                                    <input type="text" class="form-control" id="deliveredBy"
+                                        (input)="updateNotesSummary()" placeholder="Nombre de quien entrega">
+                                </div>
                             </div>
                         </div>
 
@@ -650,11 +718,13 @@
                                 <label class="form-label small">
                                     <i class="bi bi-barcode me-1 text-success"></i>Lote (Opcional)
                                 </label>
-                                <select class="form-select" formControlName="batch_id" [disabled]="!form.get('product_id')?.value || loadingBatches">
+                                <select class="form-select" formControlName="batch_id"
+                                    [disabled]="!form.get('product_id')?.value || loadingBatches">
                                     <option [value]="null">Sin lote específico</option>
                                     <option *ngFor="let batch of availableBatches" [value]="batch.id ?? batch.batch_id">
                                         {{ batch.batch_code ?? batch.code ?? ('Lote #' + (batch.id ?? '')) }}
-                                        <span *ngIf="batch.expiry_date || batch.vencimiento"> - Vencimiento: {{ batch.expiry_date ?? batch.vencimiento | date:'short' }}</span>
+                                        <span *ngIf="batch.expiry_date || batch.vencimiento"> - Vencimiento: {{
+                                            batch.expiry_date ?? batch.vencimiento | date:'short' }}</span>
                                     </option>
                                 </select>
                                 <small class="form-text text-muted" *ngIf="!form.get('product_id')?.value">
@@ -663,7 +733,8 @@
                                 <small class="form-text text-muted" *ngIf="loadingBatches">
                                     <i class="bi bi-clock me-1"></i>Cargando lotes disponibles...
                                 </small>
-                                <small class="form-text text-muted" *ngIf="form.get('product_id')?.value && !loadingBatches && availableBatches.length === 0">
+                                <small class="form-text text-muted"
+                                    *ngIf="form.get('product_id')?.value && !loadingBatches && availableBatches.length === 0">
                                     <i class="bi bi-info-circle me-1"></i>No hay lotes disponibles para este producto
                                 </small>
                             </div>
@@ -680,16 +751,16 @@
                                     <option value="pasteleria">Línea Pastelería</option>
                                 </select>
                                 <small class="form-text text-muted">
-                                    <i class="bi bi-info-circle me-1"></i>Selecciona a qué línea de producción va el material
+                                    <i class="bi bi-info-circle me-1"></i>Selecciona a qué línea de producción va el
+                                    material
                                 </small>
                             </div>
-                            
+
                             <div class="mb-3">
                                 <label class="form-label small">
                                     <i class="bi bi-person-check me-1 text-info"></i>Quién Recibió
                                 </label>
-                                <input type="text" class="form-control" id="receivedBy" 
-                                    (input)="updateNotesSummary()"
+                                <input type="text" class="form-control" id="receivedBy" (input)="updateNotesSummary()"
                                     placeholder="Nombre de la persona que recibió">
                             </div>
 
@@ -697,8 +768,7 @@
                                 <label class="form-label small">
                                     <i class="bi bi-chat-left-text me-1 text-secondary"></i>Detalles de la Salida
                                 </label>
-                                <textarea class="form-control" rows="4" id="outDetails"
-                                    (input)="updateNotesSummary()"
+                                <textarea class="form-control" rows="4" id="outDetails" (input)="updateNotesSummary()"
                                     placeholder="Motivo de la salida, destino, observaciones, etc."></textarea>
                             </div>
                         </div>
@@ -722,10 +792,11 @@
                                     <option value="pasteleria">Línea Pastelería</option>
                                 </select>
                                 <small class="form-text text-muted">
-                                    <i class="bi bi-info-circle me-1"></i>Si el ajuste afecta a una línea específica, selecciónala
+                                    <i class="bi bi-info-circle me-1"></i>Si el ajuste afecta a una línea específica,
+                                    selecciónala
                                 </small>
                             </div>
-                            
+
                             <div class="mb-3">
                                 <label class="form-label small">
                                     <i class="bi bi-question-circle me-1 text-danger"></i>¿Por qué el Ajuste?
@@ -744,24 +815,26 @@
                                     placeholder="Describe qué sucedió: hallazgo, situación, circunstancias..."></textarea>
                             </div>
                         </div>
-                            
-                            <!-- Campo Oculto para Guardar Datos Formateados -->
-                            <input type="hidden" formControlName="notes" id="formattedNotes">
-                            
-                            <!-- Resumen Formateado -->
-                            <div class="alert alert-light border">
-                                <small class="fw-semibold d-block mb-2">
-                                    <i class="bi bi-info-circle me-1"></i>Resumen de información que se guardará:
-                                </small>
-                                <small class="text-muted" style="white-space: pre-line; word-break: break-word;" id="notesSummary">
-                                    Los datos aparecerán aquí organizados...
-                                </small>
-                            </div>
-                            
-                            <div class="form-text">
-                                <i class="bi bi-info-circle me-1"></i>
-                                Todos los campos se guardarán organizados y separados por guiones en las notas del movimiento
-                            </div>
+
+                        <!-- Campo Oculto para Guardar Datos Formateados -->
+                        <input type="hidden" formControlName="notes" id="formattedNotes">
+
+                        <!-- Resumen Formateado -->
+                        <div class="alert alert-light border">
+                            <small class="fw-semibold d-block mb-2">
+                                <i class="bi bi-info-circle me-1"></i>Resumen de información que se guardará:
+                            </small>
+                            <small class="text-muted" style="white-space: pre-line; word-break: break-word;"
+                                id="notesSummary">
+                                Los datos aparecerán aquí organizados...
+                            </small>
+                        </div>
+
+                        <div class="form-text">
+                            <i class="bi bi-info-circle me-1"></i>
+                            Todos los campos se guardarán organizados y separados por guiones en las notas del
+                            movimiento
+                        </div>
 
                         <div *ngIf="formError" class="alert alert-danger d-flex align-items-start" role="alert">
                             <i class="bi bi-exclamation-triangle-fill me-3 fs-5 mt-1"></i>
@@ -779,6 +852,79 @@
                         <i *ngIf="!loading" class="bi me-2"
                             [ngClass]="isEditing ? 'bi-save-fill' : 'bi-plus-circle-fill'"></i>
                         {{ loading ? 'Procesando...' : (isEditing ? 'Guardar Cambios' : 'Crear Movimiento') }}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Detalles de Movimiento -->
+    <div *ngIf="showDetailsModalFlag" class="modal fade show d-block" tabindex="-1" role="dialog"
+        style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header border-0 bg-info bg-opacity-10">
+                    <div>
+                        <h5 class="modal-title fw-bold text-info mb-0">
+                            <i class="bi bi-list-check me-2"></i>Detalles del Movimiento
+                        </h5>
+                    </div>
+                    <button type="button" class="btn-close" aria-label="Close" (click)="closeDetailsModal()"></button>
+                </div>
+                <div class="modal-body px-4 py-4">
+                    <!-- Lista Ordenada de Detalles -->
+                    <ol class="list-group list-group-numbered" *ngIf="currentDetailsModal && currentDetailsModal.length > 0">
+                        <li *ngFor="let detail of currentDetailsModal" 
+                            class="list-group-item d-flex justify-content-between align-items-start py-3 border-info border-opacity-25">
+                            <div class="ms-2 me-auto flex-grow-1">
+                                <div class="fw-semibold text-dark">
+                                    {{ detail.label }}
+                                </div>
+                                <div class="text-muted small mt-1" [title]="detail.value">
+                                    <span *ngIf="detail.value.length > 50" class="d-block">
+                                        {{ detail.value | slice:0:50 }}...
+                                    </span>
+                                    <span *ngIf="detail.value.length <= 50">
+                                        {{ detail.value }}
+                                    </span>
+                                </div>
+                            </div>
+                            <!-- Indicadores visuales para validaciones Si/No -->
+                            <span *ngIf="detail.label === 'Empaque Limpio' || detail.label === 'Aceptado'" 
+                                class="badge ms-2" [ngClass]="{
+                                    'bg-success': detail.value.toLowerCase() === 'sí' || detail.value.toLowerCase() === 'si',
+                                    'bg-danger': detail.value.toLowerCase() === 'no'
+                                }" style="white-space: nowrap;">
+                                <i class="bi me-1" [ngClass]="{
+                                    'bi-check-circle-fill': detail.value.toLowerCase() === 'sí' || detail.value.toLowerCase() === 'si',
+                                    'bi-x-circle-fill': detail.value.toLowerCase() === 'no'
+                                }"></i>
+                                {{ detail.value }}
+                            </span>
+
+                            <!-- Indicadores para condiciones de transporte -->
+                            <span *ngIf="detail.label === 'Condiciones de Transporte'" 
+                                class="badge ms-2" [ngClass]="{
+                                    'bg-success': detail.value.toLowerCase() === 'buenas',
+                                    'bg-warning text-dark': detail.value.toLowerCase() === 'regulares',
+                                    'bg-danger': detail.value.toLowerCase() === 'malas' || detail.value.toLowerCase() === 'danado'
+                                }" style="white-space: nowrap;">
+                                <i class="bi me-1" [ngClass]="{
+                                    'bi-check-circle-fill': detail.value.toLowerCase() === 'buenas',
+                                    'bi-exclamation-circle-fill': detail.value.toLowerCase() === 'regulares',
+                                    'bi-x-circle-fill': detail.value.toLowerCase() === 'malas' || detail.value.toLowerCase() === 'danado'
+                                }"></i>
+                                {{ detail.value }}
+                            </span>
+                        </li>
+                    </ol>
+                    <div *ngIf="!currentDetailsModal || currentDetailsModal.length === 0" class="alert alert-info mb-0">
+                        <i class="bi bi-info-circle me-2"></i>No hay detalles disponibles
+                    </div>
+                </div>
+                <div class="modal-footer border-top bg-light">
+                    <button class="btn btn-secondary" (click)="closeDetailsModal()">
+                        <i class="bi bi-x-circle me-2"></i>Cerrar
                     </button>
                 </div>
             </div>

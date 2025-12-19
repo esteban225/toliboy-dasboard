@@ -24,7 +24,7 @@ export class InventoryMovementComponent implements OnInit, OnDestroy {
   loading = false;
   error: string | null = null;
   page = 1;
-  perPage = 15;
+  perPage = 99;
   meta: any = null;
   hasActiveFilters = false;
 
@@ -58,6 +58,10 @@ onFilterChange() {
   // Batches
   availableBatches: any[] = [];
   loadingBatches = false;
+
+  // Details modal
+  currentDetailsModal: { label: string; value: string }[] = [];
+  showDetailsModalFlag = false;
 
   /**
    * Parsea las notas formateadas y extrae campos específicos
@@ -559,15 +563,23 @@ resetFilters(): void {
     
     // Limpiar todos los campos primero
     setTimeout(() => {
-      // Campos de ENTRADA
+      // Campos de ENTRADA - nuevos
+      const sealsEl = document.getElementById('seals') as HTMLInputElement;
+      const packageTypeEl = document.getElementById('packageType') as HTMLInputElement;
+      const cleanPackageEl = document.getElementById('cleanPackage') as HTMLSelectElement;
+      const transportConditionsEl = document.getElementById('transportConditions') as HTMLSelectElement;
+      const acceptedEl = document.getElementById('accepted') as HTMLSelectElement;
+
+      // Campos de ENTRADA - existentes
       const expiryDateEl = document.getElementById('expiryDate') as HTMLInputElement;
       const supplierEl = document.getElementById('supplier') as HTMLInputElement;
       const batchEl = document.getElementById('batch') as HTMLInputElement;
-      const purchaseRefEl = document.getElementById('purchaseRef') as HTMLInputElement;
       const additionalNotesEl = document.getElementById('additionalNotes') as HTMLTextAreaElement;
+      const receivedByEl = document.getElementById('receivedBy') as HTMLInputElement;
+      const deliveredByEl = document.getElementById('deliveredBy') as HTMLInputElement;
 
       // Campos de SALIDA
-      const receivedByEl = document.getElementById('receivedBy') as HTMLInputElement;
+      const receivedByOutEl = document.getElementById('receivedBy') as HTMLInputElement;
       const outDetailsEl = document.getElementById('outDetails') as HTMLTextAreaElement;
 
       // Campos de AJUSTE
@@ -575,12 +587,18 @@ resetFilters(): void {
       const adjustmentWhatEl = document.getElementById('adjustmentWhat') as HTMLTextAreaElement;
 
       // Limpiar todos
+      if (sealsEl) sealsEl.value = '';
+      if (packageTypeEl) packageTypeEl.value = '';
+      if (cleanPackageEl) cleanPackageEl.value = '';
+      if (transportConditionsEl) transportConditionsEl.value = '';
+      if (acceptedEl) acceptedEl.value = '';
       if (expiryDateEl) expiryDateEl.value = '';
       if (supplierEl) supplierEl.value = '';
       if (batchEl) batchEl.value = '';
-      if (purchaseRefEl) purchaseRefEl.value = '';
       if (additionalNotesEl) additionalNotesEl.value = '';
       if (receivedByEl) receivedByEl.value = '';
+      if (deliveredByEl) deliveredByEl.value = '';
+      if (receivedByOutEl) receivedByOutEl.value = '';
       if (outDetailsEl) outDetailsEl.value = '';
       if (adjustmentReasonEl) adjustmentReasonEl.value = '';
       if (adjustmentWhatEl) adjustmentWhatEl.value = '';
@@ -591,18 +609,28 @@ resetFilters(): void {
       const parts = notesText.split(' | ');
       
       parts.forEach(part => {
-        if (part.startsWith('Vencimiento:')) {
+        if (part.startsWith('Sellos:')) {
+          if (sealsEl) sealsEl.value = part.replace('Sellos:', '').trim();
+        } else if (part.startsWith('Tipo de Empaque:')) {
+          if (packageTypeEl) packageTypeEl.value = part.replace('Tipo de Empaque:', '').trim();
+        } else if (part.startsWith('Empaque Limpio:')) {
+          if (cleanPackageEl) cleanPackageEl.value = part.replace('Empaque Limpio:', '').trim();
+        } else if (part.startsWith('Condiciones de Transporte:')) {
+          if (transportConditionsEl) transportConditionsEl.value = part.replace('Condiciones de Transporte:', '').trim();
+        } else if (part.startsWith('Aceptado:')) {
+          if (acceptedEl) acceptedEl.value = part.replace('Aceptado:', '').trim();
+        } else if (part.startsWith('Observaciones:')) {
+          if (additionalNotesEl) additionalNotesEl.value = part.replace('Observaciones:', '').trim();
+        } else if (part.startsWith('Vencimiento:')) {
           if (expiryDateEl) expiryDateEl.value = part.replace('Vencimiento:', '').trim();
         } else if (part.startsWith('Proveedor:')) {
           if (supplierEl) supplierEl.value = part.replace('Proveedor:', '').trim();
         } else if (part.startsWith('Lote:')) {
           if (batchEl) batchEl.value = part.replace('Lote:', '').trim();
-        } else if (part.startsWith('Referencia:')) {
-          if (purchaseRefEl) purchaseRefEl.value = part.replace('Referencia:', '').trim();
-        } else if (part.startsWith('Notas:')) {
-          if (additionalNotesEl) additionalNotesEl.value = part.replace('Notas:', '').trim();
         } else if (part.startsWith('Recibido por:')) {
           if (receivedByEl) receivedByEl.value = part.replace('Recibido por:', '').trim();
+        } else if (part.startsWith('Entregado por:')) {
+          if (deliveredByEl) deliveredByEl.value = part.replace('Entregado por:', '').trim();
         } else if (part.startsWith('Detalles:')) {
           if (outDetailsEl) outDetailsEl.value = part.replace('Detalles:', '').trim();
         } else if (part.startsWith('Motivo:')) {
@@ -624,18 +652,31 @@ resetFilters(): void {
     const parts: string[] = [];
 
     if (movementType === 'in') {
-      // ENTRADA: Vencimiento, Proveedor, Lote, Referencia
+      // ENTRADA: Nuevos campos en orden
+      const seals = (document.getElementById('seals') as HTMLInputElement)?.value || '';
+      const packageType = (document.getElementById('packageType') as HTMLInputElement)?.value || '';
+      const cleanPackage = (document.getElementById('cleanPackage') as HTMLSelectElement)?.value || '';
+      const transportConditions = (document.getElementById('transportConditions') as HTMLSelectElement)?.value || '';
+      const accepted = (document.getElementById('accepted') as HTMLSelectElement)?.value || '';
+      const additionalNotes = (document.getElementById('additionalNotes') as HTMLTextAreaElement)?.value || '';
       const expiryDate = (document.getElementById('expiryDate') as HTMLInputElement)?.value || '';
       const supplier = (document.getElementById('supplier') as HTMLInputElement)?.value || '';
       const batch = (document.getElementById('batch') as HTMLInputElement)?.value || '';
-      const purchaseRef = (document.getElementById('purchaseRef') as HTMLInputElement)?.value || '';
-      const additionalNotes = (document.getElementById('additionalNotes') as HTMLTextAreaElement)?.value || '';
+      const receivedBy = (document.getElementById('receivedBy') as HTMLInputElement)?.value || '';
+      const deliveredBy = (document.getElementById('deliveredBy') as HTMLInputElement)?.value || '';
 
+      // Agregar en orden
+      if (seals) parts.push(`Sellos: ${seals}`);
+      if (packageType) parts.push(`Tipo de Empaque: ${packageType}`);
+      if (cleanPackage) parts.push(`Empaque Limpio: ${cleanPackage}`);
+      if (transportConditions) parts.push(`Condiciones de Transporte: ${transportConditions}`);
+      if (accepted) parts.push(`Aceptado: ${accepted}`);
+      if (additionalNotes) parts.push(`Observaciones: ${additionalNotes}`);
       if (expiryDate) parts.push(`Vencimiento: ${expiryDate}`);
       if (supplier) parts.push(`Proveedor: ${supplier}`);
       if (batch) parts.push(`Lote: ${batch}`);
-      if (purchaseRef) parts.push(`Referencia: ${purchaseRef}`);
-      if (additionalNotes) parts.push(`Notas: ${additionalNotes}`);
+      if (receivedBy) parts.push(`Recibido por: ${receivedBy}`);
+      if (deliveredBy) parts.push(`Entregado por: ${deliveredBy}`);
 
     } else if (movementType === 'out') {
       // SALIDA: Quién recibió y detalles
@@ -782,7 +823,7 @@ resetFilters(): void {
   }
 
   /**
-   * Genera un reporte de movimientos de inventario
+   * Genera un reporte de movimientos de inventario con columnas organizadas
    * @param format Formato del reporte: pdf, csv, excel o html
    */
   generateReport(format: 'pdf' | 'csv' | 'excel' | 'html'): void {
@@ -798,21 +839,26 @@ resetFilters(): void {
     this.generatingReport = true;
     console.log('generatingReport set to true');
 
-    // Preparar datos con columnas expandidas para los campos de notas parseados
+    // Preparar datos con campos separados pero sin romper el PDF
     const reportData = {
       title: 'Reporte de Movimientos de Inventario',
       headings: [
         'ID',
-        'Tipo de Movimiento',
-        'Producto/Materia Prima',
+        'Tipo',
+        'Producto',
         'Cantidad',
-        'Línea de Producción',
+        'Línea',
+        'Sellos',
+        'Empaque',
+        'Limpio',
+        'Transporte',
+        'Aceptado',
+        'Observaciones',
         'Vencimiento',
         'Proveedor',
         'Lote',
-        'Referencia',
         'Recibido por',
-        'Detalles',
+        'Entregado por',
         'Fecha'
       ],
       rows: this.movements.map(movement => [
@@ -821,12 +867,17 @@ resetFilters(): void {
         movement.product_name || movement.raw_material_name || 'Sin especificar',
         movement.quantity?.toString() || '0',
         movement.production_line || '—',
+        this.parseNotesField(movement.notes, 'Sellos') || '—',
+        this.parseNotesField(movement.notes, 'Tipo de Empaque') || '—',
+        this.parseNotesField(movement.notes, 'Empaque Limpio') || '—',
+        this.parseNotesField(movement.notes, 'Condiciones de Transporte') || '—',
+        this.parseNotesField(movement.notes, 'Aceptado') || '—',
+        this.parseNotesField(movement.notes, 'Observaciones') || '—',
         this.parseNotesField(movement.notes, 'Vencimiento') || '—',
         this.parseNotesField(movement.notes, 'Proveedor') || '—',
         this.parseNotesField(movement.notes, 'Lote') || '—',
-        this.parseNotesField(movement.notes, 'Referencia') || '—',
         this.parseNotesField(movement.notes, 'Recibido por') || '—',
-        this.parseNotesField(movement.notes, 'Detalles') || '—',
+        this.parseNotesField(movement.notes, 'Entregado por') || '—',
         movement.created_at ? new Date(movement.created_at).toLocaleDateString('es-ES') : 'Sin fecha'
       ]),
       format: format
@@ -894,6 +945,81 @@ resetFilters(): void {
       default:
         return 'No definido';
     }
+  }
+
+  /**
+   * Extrae una lista de detalles validados de las notas
+   */
+  getDetailsList(notes: string): { label: string; value: string }[] {
+    if (!notes) return [];
+    
+    const details: { label: string; value: string }[] = [];
+    
+    // Campos de entrada en orden
+    const entryFields = [
+      'Sellos',
+      'Tipo de Empaque',
+      'Empaque Limpio',
+      'Condiciones de Transporte',
+      'Aceptado',
+      'Observaciones'
+    ];
+
+    // Otros campos importantes
+    const otherFields = [
+      'Vencimiento',
+      'Proveedor',
+      'Lote',
+      'Recibido por',
+      'Entregado por',
+      'Detalles',
+      'Motivo',
+      'Qué sucedió'
+    ];
+
+    // Extraer campos de entrada primero
+    entryFields.forEach(field => {
+      const value = this.parseNotesField(notes, field);
+      if (value) {
+        details.push({ label: field, value });
+      }
+    });
+
+    // Luego otros campos
+    otherFields.forEach(field => {
+      const value = this.parseNotesField(notes, field);
+      if (value) {
+        details.push({ label: field, value });
+      }
+    });
+
+    return details;
+  }
+
+  /**
+   * Formatea una lista de detalles para mostrar en tooltip
+   */
+  formatTooltip(detalles: { label: string; value: string }[]): string {
+    if (!detalles || detalles.length === 0) return '';
+    return detalles
+      .map((d, idx) => `${idx + 1}. ${d.label}: ${d.value}`)
+      .join('\n');
+  }
+
+  /**
+   * Muestra el modal de detalles con la lista ordenada
+   */
+  openDetailsModal(detalles: { label: string; value: string }[]): void {
+    this.currentDetailsModal = detalles;
+    this.showDetailsModalFlag = true;
+  }
+
+  /**
+   * Cierra el modal de detalles
+   */
+  closeDetailsModal(): void {
+    this.showDetailsModalFlag = false;
+    this.currentDetailsModal = [];
   }
 
 }
