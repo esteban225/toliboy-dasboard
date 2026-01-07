@@ -38,13 +38,11 @@ export class AuthenticationService {
     private alertService: AlertService
   ) {
     const storedUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
-    console.log('🔧 AUTH SERVICE CONSTRUCTOR - Stored user:', storedUser);
     this.currentUserSubject = new BehaviorSubject<User>(storedUser);
     this.currentUser = this.currentUserSubject.asObservable();
 
     // Firebase Auth state listener
     this.afAuth.authState.subscribe((user) => {
-      console.log('🔥 FIREBASE AUTH STATE CHANGE:', user);
       if (user) {
         this.user = user;
         localStorage.setItem('user', JSON.stringify(this.user));
@@ -67,12 +65,11 @@ export class AuthenticationService {
         try {
           const parsedUser = JSON.parse(storedUser);
           if (parsedUser && parsedUser.role) {
-            console.log('🔄 AUTH SERVICE - Recovering user from localStorage:', parsedUser);
             this.currentUserSubject.next(parsedUser);
             return parsedUser;
           }
         } catch (error) {
-          console.error('❌ AUTH SERVICE - Error parsing stored user:', error);
+          // Silent error - avoid logging in production
         }
       }
     }
@@ -84,8 +81,6 @@ export class AuthenticationService {
    * Método para limpiar el currentUser desde effects
    */
   public clearCurrentUser(): void {
-    console.log('🧹 AUTH SERVICE - clearCurrentUser() called');
-    console.trace('🔍 Stack trace for clearCurrentUser:');
     this.currentUserSubject.next(null!);
   }
 

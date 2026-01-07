@@ -94,7 +94,7 @@ if (environment.defaultauth === 'firebase') {
     StoreModule.forRoot(rootReducer),
     StoreDevtoolsModule.instrument({
       maxAge: 25,
-      logOnly: environment.production,
+      logOnly: true, // ✅ Always logOnly to prevent performance issues
     }),
     EffectsModule.forRoot([
       AuthenticationEffects,

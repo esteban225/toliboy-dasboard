@@ -297,32 +297,56 @@ export class BatchesListComponent implements OnInit, OnDestroy {
   }
 
   getStatusBadgeClass(batch: Batch): string {
-    switch (batch.status?.toLowerCase()) {
+    const status = batch.status;
+    const statusStr = String(status || '').toLowerCase().trim();
+    
+    switch (statusStr) {
       case 'planned':
         return 'bg-secondary bg-opacity-10 text-secondary border border-secondary';
-      case 'in_progress':
+      case 'in_process':
         return 'bg-info bg-opacity-10 text-info border border-info';
+      case 'paused':
+        return 'bg-warning bg-opacity-10 text-warning border border-warning';
       case 'completed':
+      case 'delivered':
         return 'bg-success bg-opacity-10 text-success border border-success';
       case 'cancelled':
+        return 'bg-danger bg-opacity-10 text-danger border border-danger';
+      case 'true':
+      case '1':
+        return 'bg-success bg-opacity-10 text-success border border-success';
+      case 'false':
+      case '0':
         return 'bg-danger bg-opacity-10 text-danger border border-danger';
       default:
         return 'bg-secondary bg-opacity-10 text-secondary';
     }
   }
 
-  getStatusLabel(status?: string): string {
-    switch (status?.toLowerCase()) {
+  getStatusLabel(status?: string | boolean): string {
+    const statusStr = String(status || '').toLowerCase().trim();
+    
+    switch (statusStr) {
       case 'planned':
         return 'Planificado';
-      case 'in_progress':
-        return 'En Progreso';
+      case 'in_process':
+        return 'En Proceso';
+      case 'paused':
+        return 'Pausado';
       case 'completed':
         return 'Completado';
+      case 'delivered':
+        return 'Entregado';
       case 'cancelled':
         return 'Cancelado';
+      case 'true':
+      case '1':
+        return 'Activo';
+      case 'false':
+      case '0':
+        return 'Inactivo';
       default:
-        return status || '-';
+        return statusStr || '-';
     }
   }
 
