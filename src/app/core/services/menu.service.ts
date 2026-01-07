@@ -449,6 +449,37 @@ export class MenuService {
     // OP: Operador - Solo Kanban y herramientas básicas
     'OP': [
       {
+        id: 1,
+        label: 'MENUITEMS.MENU.TEXT',
+        isTitle: true
+      },
+      {
+        id: 8,
+        label: 'MENUITEMS.APPS.TEXT',
+        isTitle: true
+      },
+      {
+        id: 26,
+        label: 'MENUITEMS.APPS.LIST.KANBANBOARD',
+        icon: 'ti ti-subtask',
+        link: '/apps/kanbanboard',
+        parentId: 8,
+      },
+      {
+        id: 24,
+        label: 'MENUITEMS.APPS.LIST.TODO',
+        icon: 'ti ti-list',
+        link: '/apps/to-do',
+        parentId: 8,
+      },
+      {
+        id: 25,
+        label: 'MENUITEMS.APPS.LIST.CONTACTS',
+        icon: 'ti ti-address-book',
+        link: '/apps/contacts',
+        parentId: 8,
+      },
+      {
         id: 200,
         label: 'MENUITEMS.INVENTORY.TEXT',
         icon: 'ti ti-box',
