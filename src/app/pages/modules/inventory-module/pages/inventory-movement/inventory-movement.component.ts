@@ -578,9 +578,18 @@ resetFilters(): void {
       const receivedByEl = document.getElementById('receivedBy') as HTMLInputElement;
       const deliveredByEl = document.getElementById('deliveredBy') as HTMLInputElement;
 
-      // Campos de SALIDA
-      const receivedByOutEl = document.getElementById('receivedBy') as HTMLInputElement;
-      const outDetailsEl = document.getElementById('outDetails') as HTMLTextAreaElement;
+      // Campos de SALIDA - nuevos
+      const sealsOutEl = document.getElementById('sealsOut') as HTMLInputElement;
+      const packageTypeOutEl = document.getElementById('packageTypeOut') as HTMLInputElement;
+      const cleanPackageOutEl = document.getElementById('cleanPackageOut') as HTMLSelectElement;
+      const transportConditionsOutEl = document.getElementById('transportConditionsOut') as HTMLSelectElement;
+      const acceptedOutEl = document.getElementById('acceptedOut') as HTMLSelectElement;
+      const observationsOutEl = document.getElementById('observationsOut') as HTMLTextAreaElement;
+      const expiryDateOutEl = document.getElementById('expiryDateOut') as HTMLInputElement;
+      const supplierOutEl = document.getElementById('supplierOut') as HTMLInputElement;
+      const batchOutEl = document.getElementById('batchOut') as HTMLInputElement;
+      const receivedByOutEl = document.getElementById('receivedByOut') as HTMLInputElement;
+      const deliveredByOutEl = document.getElementById('deliveredByOut') as HTMLInputElement;
 
       // Campos de AJUSTE
       const adjustmentReasonEl = document.getElementById('adjustmentReason') as HTMLTextAreaElement;
@@ -592,14 +601,23 @@ resetFilters(): void {
       if (cleanPackageEl) cleanPackageEl.value = '';
       if (transportConditionsEl) transportConditionsEl.value = '';
       if (acceptedEl) acceptedEl.value = '';
+      if (sealsOutEl) sealsOutEl.value = '';
+      if (packageTypeOutEl) packageTypeOutEl.value = '';
+      if (cleanPackageOutEl) cleanPackageOutEl.value = '';
+      if (transportConditionsOutEl) transportConditionsOutEl.value = '';
+      if (acceptedOutEl) acceptedOutEl.value = '';
+      if (observationsOutEl) observationsOutEl.value = '';
       if (expiryDateEl) expiryDateEl.value = '';
+      if (expiryDateOutEl) expiryDateOutEl.value = '';
       if (supplierEl) supplierEl.value = '';
+      if (supplierOutEl) supplierOutEl.value = '';
       if (batchEl) batchEl.value = '';
+      if (batchOutEl) batchOutEl.value = '';
       if (additionalNotesEl) additionalNotesEl.value = '';
       if (receivedByEl) receivedByEl.value = '';
       if (deliveredByEl) deliveredByEl.value = '';
       if (receivedByOutEl) receivedByOutEl.value = '';
-      if (outDetailsEl) outDetailsEl.value = '';
+      if (deliveredByOutEl) deliveredByOutEl.value = '';
       if (adjustmentReasonEl) adjustmentReasonEl.value = '';
       if (adjustmentWhatEl) adjustmentWhatEl.value = '';
 
@@ -610,29 +628,49 @@ resetFilters(): void {
       
       parts.forEach(part => {
         if (part.startsWith('Sellos:')) {
-          if (sealsEl) sealsEl.value = part.replace('Sellos:', '').trim();
+          const value = part.replace('Sellos:', '').trim();
+          if (sealsEl) sealsEl.value = value;
+          if (sealsOutEl) sealsOutEl.value = value;
         } else if (part.startsWith('Tipo de Empaque:')) {
-          if (packageTypeEl) packageTypeEl.value = part.replace('Tipo de Empaque:', '').trim();
+          const value = part.replace('Tipo de Empaque:', '').trim();
+          if (packageTypeEl) packageTypeEl.value = value;
+          if (packageTypeOutEl) packageTypeOutEl.value = value;
         } else if (part.startsWith('Empaque Limpio:')) {
-          if (cleanPackageEl) cleanPackageEl.value = part.replace('Empaque Limpio:', '').trim();
+          const value = part.replace('Empaque Limpio:', '').trim();
+          if (cleanPackageEl) cleanPackageEl.value = value;
+          if (cleanPackageOutEl) cleanPackageOutEl.value = value;
         } else if (part.startsWith('Condiciones de Transporte:')) {
-          if (transportConditionsEl) transportConditionsEl.value = part.replace('Condiciones de Transporte:', '').trim();
+          const value = part.replace('Condiciones de Transporte:', '').trim();
+          if (transportConditionsEl) transportConditionsEl.value = value;
+          if (transportConditionsOutEl) transportConditionsOutEl.value = value;
         } else if (part.startsWith('Aceptado:')) {
-          if (acceptedEl) acceptedEl.value = part.replace('Aceptado:', '').trim();
+          const value = part.replace('Aceptado:', '').trim();
+          if (acceptedEl) acceptedEl.value = value;
+          if (acceptedOutEl) acceptedOutEl.value = value;
         } else if (part.startsWith('Observaciones:')) {
-          if (additionalNotesEl) additionalNotesEl.value = part.replace('Observaciones:', '').trim();
+          const value = part.replace('Observaciones:', '').trim();
+          if (additionalNotesEl) additionalNotesEl.value = value;
+          if (observationsOutEl) observationsOutEl.value = value;
         } else if (part.startsWith('Vencimiento:')) {
-          if (expiryDateEl) expiryDateEl.value = part.replace('Vencimiento:', '').trim();
+          const value = part.replace('Vencimiento:', '').trim();
+          if (expiryDateEl) expiryDateEl.value = value;
+          if (expiryDateOutEl) expiryDateOutEl.value = value;
         } else if (part.startsWith('Proveedor:')) {
-          if (supplierEl) supplierEl.value = part.replace('Proveedor:', '').trim();
+          const value = part.replace('Proveedor:', '').trim();
+          if (supplierEl) supplierEl.value = value;
+          if (supplierOutEl) supplierOutEl.value = value;
         } else if (part.startsWith('Lote:')) {
-          if (batchEl) batchEl.value = part.replace('Lote:', '').trim();
+          const value = part.replace('Lote:', '').trim();
+          if (batchEl) batchEl.value = value;
+          if (batchOutEl) batchOutEl.value = value;
         } else if (part.startsWith('Recibido por:')) {
-          if (receivedByEl) receivedByEl.value = part.replace('Recibido por:', '').trim();
+          const value = part.replace('Recibido por:', '').trim();
+          if (receivedByEl) receivedByEl.value = value;
+          if (receivedByOutEl) receivedByOutEl.value = value;
         } else if (part.startsWith('Entregado por:')) {
-          if (deliveredByEl) deliveredByEl.value = part.replace('Entregado por:', '').trim();
-        } else if (part.startsWith('Detalles:')) {
-          if (outDetailsEl) outDetailsEl.value = part.replace('Detalles:', '').trim();
+          const value = part.replace('Entregado por:', '').trim();
+          if (deliveredByEl) deliveredByEl.value = value;
+          if (deliveredByOutEl) deliveredByOutEl.value = value;
         } else if (part.startsWith('Motivo:')) {
           if (adjustmentReasonEl) adjustmentReasonEl.value = part.replace('Motivo:', '').trim();
         } else if (part.startsWith('Qué sucedió:')) {
@@ -679,12 +717,31 @@ resetFilters(): void {
       if (deliveredBy) parts.push(`Entregado por: ${deliveredBy}`);
 
     } else if (movementType === 'out') {
-      // SALIDA: Quién recibió y detalles
-      const receivedBy = (document.getElementById('receivedBy') as HTMLInputElement)?.value || '';
-      const outDetails = (document.getElementById('outDetails') as HTMLTextAreaElement)?.value || '';
+      // SALIDA: Mismos campos que entrada
+      const seals = (document.getElementById('sealsOut') as HTMLInputElement)?.value || '';
+      const packageType = (document.getElementById('packageTypeOut') as HTMLInputElement)?.value || '';
+      const cleanPackage = (document.getElementById('cleanPackageOut') as HTMLSelectElement)?.value || '';
+      const transportConditions = (document.getElementById('transportConditionsOut') as HTMLSelectElement)?.value || '';
+      const accepted = (document.getElementById('acceptedOut') as HTMLSelectElement)?.value || '';
+      const observations = (document.getElementById('observationsOut') as HTMLTextAreaElement)?.value || '';
+      const expiryDate = (document.getElementById('expiryDateOut') as HTMLInputElement)?.value || '';
+      const supplier = (document.getElementById('supplierOut') as HTMLInputElement)?.value || '';
+      const batch = (document.getElementById('batchOut') as HTMLInputElement)?.value || '';
+      const receivedBy = (document.getElementById('receivedByOut') as HTMLInputElement)?.value || '';
+      const deliveredBy = (document.getElementById('deliveredByOut') as HTMLInputElement)?.value || '';
 
+      // Agregar en orden
+      if (seals) parts.push(`Sellos: ${seals}`);
+      if (packageType) parts.push(`Tipo de Empaque: ${packageType}`);
+      if (cleanPackage) parts.push(`Empaque Limpio: ${cleanPackage}`);
+      if (transportConditions) parts.push(`Condiciones de Transporte: ${transportConditions}`);
+      if (accepted) parts.push(`Aceptado: ${accepted}`);
+      if (observations) parts.push(`Observaciones: ${observations}`);
+      if (expiryDate) parts.push(`Vencimiento: ${expiryDate}`);
+      if (supplier) parts.push(`Proveedor: ${supplier}`);
+      if (batch) parts.push(`Lote: ${batch}`);
       if (receivedBy) parts.push(`Recibido por: ${receivedBy}`);
-      if (outDetails) parts.push(`Detalles: ${outDetails}`);
+      if (deliveredBy) parts.push(`Entregado por: ${deliveredBy}`);
 
     } else if (movementType === 'adjustment') {
       // AJUSTE: Por qué y qué sucedió

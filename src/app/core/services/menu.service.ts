@@ -471,7 +471,40 @@ export class MenuService {
         icon: 'ti ti-list',
         link: '/apps/to-do',
         parentId: 8,
-      }
+      },
+      {
+        id: 25,
+        label: 'MENUITEMS.APPS.LIST.CONTACTS',
+        icon: 'ti ti-address-book',
+        link: '/apps/contacts',
+        parentId: 8,
+      },
+      {
+        id: 200,
+        label: 'MENUITEMS.INVENTORY.TEXT',
+        icon: 'ti ti-box',
+        subItems: [
+          {
+            id: 201,
+            label: 'MENUITEMS.INVENTORY.LIST.GESTIONINVENTORY',
+            link: '/modules/inventory',
+            parentId: 200
+          },
+          {
+            id: 202,
+            label: 'MENUITEMS.INVENTORY.LIST.INVENTORYMOVEMENT',
+            link: '/modules/inventory/inventoryMovement',
+            parentId: 200
+          },
+          {
+            id: 203,
+            label: 'MENUITEMS.INVENTORY.LIST.RAWMATERIALS',
+            link: '/modules/inventory/rawMaterial',
+            parentId: 200
+          }
+        ],
+        parentId: 100
+      },
     ]
   };
 
