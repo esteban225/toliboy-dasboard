@@ -29,16 +29,16 @@ export class InventoryMovementComponent implements OnInit, OnDestroy {
   hasActiveFilters = false;
 
   filters = {
-  type: '',
-  date: '',
-  product: '',
-  production_line: '',
-  general: ''
-};
+    type: '',
+    date: '',
+    product: '',
+    production_line: '',
+    general: ''
+  };
 
-onFilterChange() {
-  this.applyFilters();
-}
+  onFilterChange() {
+    this.applyFilters();
+  }
 
 
   // Modal & form
@@ -207,48 +207,48 @@ onFilterChange() {
       }
     });
   }
-applyFilters(): void {
-  const filters: any = {};
+  applyFilters(): void {
+    const filters: any = {};
 
-  if (this.filters.type) filters.movement_type = this.filters.type;
-  if (this.filters.date) filters.created_at = this.filters.date;
-  if (this.filters.production_line) filters.production_line = this.filters.production_line;
-  if (this.filters.product) filters.raw_material_id = this.filters.product;
-  if (this.filters.general) filters.notes = this.filters.general;
+    if (this.filters.type) filters.movement_type = this.filters.type;
+    if (this.filters.date) filters.created_at = this.filters.date;
+    if (this.filters.production_line) filters.production_line = this.filters.production_line;
+    if (this.filters.product) filters.raw_material_id = this.filters.product;
+    if (this.filters.general) filters.notes = this.filters.general;
 
-  // Marcar si hay filtros activos
-  this.hasActiveFilters = Object.keys(filters).length > 0;
+    // Marcar si hay filtros activos
+    this.hasActiveFilters = Object.keys(filters).length > 0;
 
-  this.page = 1; // Reset page to 1 on new filter application
-  this.loading = true;
+    this.page = 1; // Reset page to 1 on new filter application
+    this.loading = true;
 
-  this.invService.list(filters, this.perPage, this.page).subscribe({
-    next: (res) => {
-      this.movements = res.data || [];
-      this.meta = res.meta || null;
-      this.loading = false;
-      // Cargar detalles de productos para los movimientos filtrados
-      this.loadProductDetailsForMovements();
-    },
-    error: (err) => {
-      this.loading = false;
-      this.error = err?.error?.message || 'Error cargando movimientos';
-    }
-  });
-}
+    this.invService.list(filters, this.perPage, this.page).subscribe({
+      next: (res) => {
+        this.movements = res.data || [];
+        this.meta = res.meta || null;
+        this.loading = false;
+        // Cargar detalles de productos para los movimientos filtrados
+        this.loadProductDetailsForMovements();
+      },
+      error: (err) => {
+        this.loading = false;
+        this.error = err?.error?.message || 'Error cargando movimientos';
+      }
+    });
+  }
 
-resetFilters(): void {
-  this.filters = {
-    type: '',
-    date: '',
-    product: '',
-    production_line: '',
-    general: ''
-  };
-  this.hasActiveFilters = false;
-  this.page = 1;
-  this.loadMovements();
-}
+  resetFilters(): void {
+    this.filters = {
+      type: '',
+      date: '',
+      product: '',
+      production_line: '',
+      general: ''
+    };
+    this.hasActiveFilters = false;
+    this.page = 1;
+    this.loadMovements();
+  }
 
   private loadProductDetailsForMovements(): void {
     if (!this.movements || this.movements.length === 0) {
@@ -354,10 +354,10 @@ resetFilters(): void {
     this.formError = null;
     this.productSuggestions = [];
     this.availableBatches = [];
-    
+
     // Limpiar campos de notas
     this.parseAndLoadNotes('');
-    
+
     this.showModal = true;
   }
 
@@ -519,7 +519,7 @@ resetFilters(): void {
       batch_id: null
     });
     this.productSuggestions = [];
-    
+
     // Cargar batches disponibles si es una salida
     if (this.form.get('type')?.value === 'out') {
       this.loadBatchesForProduct(productId);
@@ -533,7 +533,7 @@ resetFilters(): void {
     }
 
     this.loadingBatches = true;
-    
+
     // Usar el método del servicio para obtener batches del material
     this.invService.getBatchesByMaterial(productId).subscribe({
       next: (res: any) => {
@@ -560,7 +560,7 @@ resetFilters(): void {
    */
   parseAndLoadNotes(notesText: string): void {
     const movementType = this.form.get('type')?.value;
-    
+
     // Limpiar todos los campos primero
     setTimeout(() => {
       // Campos de ENTRADA - nuevos
@@ -625,7 +625,7 @@ resetFilters(): void {
 
       // Parsear el texto separado por pipes
       const parts = notesText.split(' | ');
-      
+
       parts.forEach(part => {
         if (part.startsWith('Sellos:')) {
           const value = part.replace('Sellos:', '').trim();
@@ -886,7 +886,7 @@ resetFilters(): void {
   generateReport(format: 'pdf' | 'csv' | 'excel' | 'html'): void {
     console.log('generateReport llamado con formato:', format);
     console.log('Movimientos disponibles:', this.movements?.length || 0);
-    
+
     if (!this.movements || this.movements.length === 0) {
       console.warn('No hay movimientos para generar reporte');
       this.alert.warning('Sin datos', 'No hay movimientos para generar el reporte.');
@@ -902,59 +902,59 @@ resetFilters(): void {
       headings: [
         'ID',
         'Tipo',
-        'Producto',
-        'Cantidad',
         'Línea',
+        'Recepciona',
+        'Entrega',
+        'Nombre del Producto',
+        'Proveedor',
+        'Cantidad',
+        'Lote',
+        'Fecha de Vencimiento',
         'Sellos',
-        'Empaque',
-        'Limpio',
-        'Transporte',
+        'Tipo de Empaque',
+        'Empaque Limpio',
+        'Condiciones de Transporte',
         'Aceptado',
         'Observaciones',
-        'Vencimiento',
-        'Proveedor',
-        'Lote',
-        'Recibido por',
-        'Entregado por',
         'Fecha'
       ],
       rows: this.movements.map(movement => [
         movement.id?.toString() || '',
         this.getMovementTypeText(movement),
-        movement.product_name || movement.raw_material_name || 'Sin especificar',
-        movement.quantity?.toString() || '0',
         movement.production_line || '—',
+        this.parseNotesField(movement.notes, 'Recibido por') || '—',
+        this.parseNotesField(movement.notes, 'Entregado por') || '—',
+        movement.product_name || movement.raw_material_name || 'Sin especificar',
+        this.parseNotesField(movement.notes, 'Proveedor') || '—',
+        movement.quantity?.toString() || '0',
+        this.parseNotesField(movement.notes, 'Lote') || '—',
+        this.parseNotesField(movement.notes, 'Vencimiento') || '—',
         this.parseNotesField(movement.notes, 'Sellos') || '—',
         this.parseNotesField(movement.notes, 'Tipo de Empaque') || '—',
         this.parseNotesField(movement.notes, 'Empaque Limpio') || '—',
         this.parseNotesField(movement.notes, 'Condiciones de Transporte') || '—',
         this.parseNotesField(movement.notes, 'Aceptado') || '—',
         this.parseNotesField(movement.notes, 'Observaciones') || '—',
-        this.parseNotesField(movement.notes, 'Vencimiento') || '—',
-        this.parseNotesField(movement.notes, 'Proveedor') || '—',
-        this.parseNotesField(movement.notes, 'Lote') || '—',
-        this.parseNotesField(movement.notes, 'Recibido por') || '—',
-        this.parseNotesField(movement.notes, 'Entregado por') || '—',
         movement.created_at ? new Date(movement.created_at).toLocaleDateString('es-ES') : 'Sin fecha'
       ]),
       format: format
     };
-    
+
     console.log('Report data prepared:', reportData);
 
     this.reportService.generateReport(reportData).subscribe({
       next: (blob) => {
         console.log('Reporte recibido, tamaño:', blob.size);
         this.generatingReport = false;
-        
+
         // Generar nombre de archivo con timestamp
         const timestamp = new Date().toISOString().slice(0, 16).replace(/[:T]/g, '_');
         const filename = `movimientos_inventario_${timestamp}.${format === 'excel' ? 'xlsx' : format}`;
-        
+
         console.log('Descargando archivo:', filename);
         // Descargar archivo
         this.reportService.downloadFile(blob, filename);
-        
+
         this.alert.success(
           'Reporte generado',
           `El reporte en formato ${format.toUpperCase()} se ha descargado correctamente.`
@@ -963,9 +963,9 @@ resetFilters(): void {
       error: (error) => {
         console.error('Error en generateReport:', error);
         this.generatingReport = false;
-        
+
         let errorMessage = 'Error desconocido al generar el reporte.';
-        
+
         // Manejo de errores específicos
         if (error.status === 401) {
           errorMessage = 'Tu sesión ha expirado. Por favor, inicia sesión nuevamente.';
@@ -978,7 +978,7 @@ resetFilters(): void {
         } else if (error.message) {
           errorMessage = error.message;
         }
-        
+
         console.error('Mensaje de error:', errorMessage);
         this.alert.error('Error al generar reporte', errorMessage);
       }
@@ -1009,9 +1009,9 @@ resetFilters(): void {
    */
   getDetailsList(notes: string): { label: string; value: string }[] {
     if (!notes) return [];
-    
+
     const details: { label: string; value: string }[] = [];
-    
+
     // Campos de entrada en orden
     const entryFields = [
       'Sellos',

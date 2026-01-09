@@ -220,6 +220,20 @@ export class MenuService {
           }
         ],
         parentId: 100
+      },
+      {
+        id: 500,
+        label: 'MENUITEMS.TRACEABILITY.TEXT',
+        icon: 'ti ti-shuffle',
+        subItems: [
+          {
+            id: 501,
+            label: 'MENUITEMS.TRACEABILITY.LIST.DASHBOARDTRACEABILITY',
+            link: '/modules/traceability',
+            parentId: 500
+          }
+        ],
+        parentId: 100
       }
       /*
       {INVENTORY

@@ -87,6 +87,11 @@ const routes: Routes = [
     path:'modules/batches',
     loadChildren: () => import('./modules/batches-module/batches-module.module').then(m => m.BatchesModuleModule),
     canActivate: [RoleGuard]
+  },
+  {
+    path: 'modules/traceability',
+    loadChildren: () => import('./modules/traceability-module/traceability-module.module').then(m => m.TraceabilityModuleModule),
+    canActivate: [RoleGuard]
   }
 ];
 
