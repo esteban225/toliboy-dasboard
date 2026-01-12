@@ -564,8 +564,8 @@ export class InventoryMovementComponent implements OnInit, OnDestroy {
     // Limpiar todos los campos primero
     setTimeout(() => {
       // Campos de ENTRADA - nuevos
-      const sealsEl = document.getElementById('seals') as HTMLInputElement;
-      const packageTypeEl = document.getElementById('packageType') as HTMLInputElement;
+      const sealsEl = document.getElementById('seals') as HTMLSelectElement;
+      const packageTypeEl = document.getElementById('packageType') as HTMLSelectElement;
       const cleanPackageEl = document.getElementById('cleanPackage') as HTMLSelectElement;
       const transportConditionsEl = document.getElementById('transportConditions') as HTMLSelectElement;
       const acceptedEl = document.getElementById('accepted') as HTMLSelectElement;
@@ -691,8 +691,8 @@ export class InventoryMovementComponent implements OnInit, OnDestroy {
 
     if (movementType === 'in') {
       // ENTRADA: Nuevos campos en orden
-      const seals = (document.getElementById('seals') as HTMLInputElement)?.value || '';
-      const packageType = (document.getElementById('packageType') as HTMLInputElement)?.value || '';
+      const seals = (document.getElementById('seals') as HTMLSelectElement)?.value || '';
+      const packageType = (document.getElementById('packageType') as HTMLSelectElement)?.value || '';
       const cleanPackage = (document.getElementById('cleanPackage') as HTMLSelectElement)?.value || '';
       const transportConditions = (document.getElementById('transportConditions') as HTMLSelectElement)?.value || '';
       const accepted = (document.getElementById('accepted') as HTMLSelectElement)?.value || '';

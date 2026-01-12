@@ -10,13 +10,17 @@ export class InventoryMovementService {
 	// URL basada en el controlador PHP Laravel
 	private baseUrl = `${GlobalComponent.API_URL}inventory-movements`;
 
-	constructor(private http: HttpClient) {}
+	constructor(private http: HttpClient) { }
 
-	// Lista de movimientos con filtros
-	list(filters: Record<string, any> = {}, perPage = 100, page = 1): Observable<any> {
+	// Lista de movimientos con filtros (Solo fecha)
+	list(filters: Record<string, any> = {}, perPage = 100, page = 1, created_at = new Date()): Observable<any> {
+		// Formatea la fecha a 'YYYY-MM-DD'
+		const fechaSolo = created_at.toISOString().split('T')[0];
+
 		let params = new HttpParams()
 			.set('per_page', String(perPage))
-			.set('page', String(page));
+			.set('page', String(page))
+			.set('created_at', fechaSolo); // Ahora envía solo la fecha
 
 		Object.keys(filters || {}).forEach(key => {
 			const val = filters[key];

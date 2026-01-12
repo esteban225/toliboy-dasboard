@@ -1,5 +1,7 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
+import Pusher, { Channel } from 'pusher-js';
+import { environment } from '../../../environments/environment';
 
 export interface NotificationItem {
   id: string | number;
@@ -32,6 +34,10 @@ export interface NotificationGroup {
 export class NotificationService {
   private readonly STORAGE_KEY = 'app_notifications';
   private notificationsSubject = new BehaviorSubject<NotificationGroup[]>([]);
+  private pusher?: Pusher;
+  private userChannelName?: string;
+  private subscribedChannels: string[] = [];
+  private bindings: Array<{ channel: Channel; event: string; handler: (...args: any[]) => void }> = [];
   
   public notifications$ = this.notificationsSubject.asObservable();
 
@@ -77,14 +83,25 @@ export class NotificationService {
   /**
    * Agrega una nueva notificación
    */
-  addNotification(notification: Omit<NotificationItem, 'id' | 'timestamp' | 'isRead' | 'selected'>): void {
+  addNotification(
+    notification: Omit<NotificationItem, 'id' | 'timestamp' | 'isRead' | 'selected'> &
+      Partial<Pick<NotificationItem, 'id' | 'timestamp' | 'isRead' | 'selected'>>
+  ): void {
     const newNotification: NotificationItem = {
       ...notification,
-      id: this.generateId(),
-      timestamp: this.formatTimestamp(new Date()),
-      isRead: false,
-      selected: false
+      id: notification.id ?? this.generateId(),
+      timestamp: notification.timestamp ?? this.formatTimestamp(new Date()),
+      isRead: notification.isRead ?? false,
+      selected: notification.selected ?? false
     };
+
+    // Evitar duplicados si llega un mismo ID
+    const alreadyExists = this.notificationsSubject.value.some(group =>
+      group.items.some(item => item.id === newNotification.id)
+    );
+    if (alreadyExists) {
+      return;
+    }
 
     const currentNotifications = this.notificationsSubject.value;
     let newGroup = currentNotifications.find(group => group.title === 'Nuevas');
@@ -281,6 +298,113 @@ export class NotificationService {
       icon: 'ti ti-info-circle',
       data
     });
+  }
+
+  /**
+   * Inicializa la conexión con Pusher y se suscribe a los canales de notificaciones
+   */
+  initPusher(userId: string | number): void {
+    const config = (environment as any).pusher;
+
+    if (!config?.key || !config?.cluster) {
+      console.warn('Pusher no está configurado en environment.');
+      return;
+    }
+
+    this.disconnectPusher();
+
+    if (config.logToConsole) {
+      Pusher.logToConsole = true;
+    }
+
+    this.pusher = new Pusher(config.key, {
+      cluster: config.cluster,
+      forceTLS: config.forceTLS ?? true
+    });
+
+    this.pusher.connection.bind('error', (err: any) => {
+      console.error('Pusher connection error:', err);
+    });
+
+    this.userChannelName = `${config.channelPrefix}.${userId}`;
+    const globalChannelName = config.globalChannel ?? `${config.channelPrefix}.global`;
+
+    const userChannel = this.subscribeChannel(this.userChannelName);
+    const globalChannel = this.subscribeChannel(globalChannelName);
+
+    if (userChannel) {
+      this.bindNotificationChannel(userChannel, this.userChannelName);
+    }
+    if (globalChannel) {
+      this.bindNotificationChannel(globalChannel, globalChannelName);
+    }
+  }
+
+  /**
+   * Desconecta la sesión actual de Pusher
+   */
+  disconnectPusher(): void {
+    this.unbindAll();
+
+    if (this.pusher) {
+      this.subscribedChannels.forEach(name => this.pusher?.unsubscribe(name));
+      this.subscribedChannels = [];
+      this.pusher.disconnect();
+      this.pusher = undefined;
+    }
+  }
+
+  private bindNotificationChannel(channel: Channel, origin: string): void {
+    this.bindEvent(channel, 'pusher:subscription_succeeded', () =>
+      console.log(`Pusher suscrito: ${origin}`)
+    );
+    this.bindEvent(channel, 'pusher:subscription_error', (status: any) =>
+      console.error(`Pusher error ${origin}:`, status)
+    );
+    this.bindEvent(channel, 'notification.created', (data: any) =>
+      this.handleIncomingNotification(data, origin)
+    );
+  }
+
+  private subscribeChannel(name: string): Channel | undefined {
+    if (!this.pusher) return undefined;
+    const channel = this.pusher.subscribe(name);
+    this.subscribedChannels.push(name);
+    return channel;
+  }
+
+  private bindEvent(channel: Channel, event: string, handler: (...args: any[]) => void): void {
+    channel.bind(event, handler);
+    this.bindings.push({ channel, event, handler });
+  }
+
+  private unbindAll(): void {
+    this.bindings.forEach(b => b.channel.unbind(b.event, b.handler));
+    this.bindings = [];
+  }
+
+  private handleIncomingNotification(data: any, origin: string): void {
+    const notification = this.mapIncomingNotification(data, origin);
+    this.addNotification(notification);
+  }
+
+  private mapIncomingNotification(
+    data: any,
+    origin: string
+  ): Omit<NotificationItem, 'id' | 'timestamp' | 'isRead' | 'selected'> &
+    Partial<Pick<NotificationItem, 'id' | 'timestamp' | 'isRead' | 'selected'>> {
+    return {
+      id: data?.id ?? data?.uuid,
+      timestamp: data?.timestamp ?? data?.created_at,
+      isRead: data?.isRead ?? false,
+      selected: false,
+      type: data?.type ?? 'info',
+      title: data?.title,
+      message: data?.message ?? `Nueva notificación desde ${origin}`,
+      avatar: data?.avatar,
+      icon: data?.icon,
+      data: data?.data ?? data
+    };
   }
 
   /**

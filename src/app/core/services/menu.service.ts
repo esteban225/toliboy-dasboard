@@ -468,32 +468,6 @@ export class MenuService {
         isTitle: true
       },
       {
-        id: 8,
-        label: 'MENUITEMS.APPS.TEXT',
-        isTitle: true
-      },
-      {
-        id: 26,
-        label: 'MENUITEMS.APPS.LIST.KANBANBOARD',
-        icon: 'ti ti-subtask',
-        link: '/apps/kanbanboard',
-        parentId: 8,
-      },
-      {
-        id: 24,
-        label: 'MENUITEMS.APPS.LIST.TODO',
-        icon: 'ti ti-list',
-        link: '/apps/to-do',
-        parentId: 8,
-      },
-      {
-        id: 25,
-        label: 'MENUITEMS.APPS.LIST.CONTACTS',
-        icon: 'ti ti-address-book',
-        link: '/apps/contacts',
-        parentId: 8,
-      },
-      {
         id: 200,
         label: 'MENUITEMS.INVENTORY.TEXT',
         icon: 'ti ti-box',
@@ -577,16 +551,17 @@ export class MenuService {
    * Obtener la ruta por defecto según el rol
    */
   getDefaultRouteByRole(role: string): string {
+    const normalizedRole = (role || '').trim().toUpperCase();
     const routeMap: { [key: string]: string } = {
       'DEV': '/', // Dashboard completo
       'GG': '/', // Dashboard gerencial  
       'INGPL': '/', // Dashboard de planta
       'INGPR': '/', // Dashboard de producción
       'TRZ': '/apps/kanbanboard', // Kanban para trazabilidad
-      'OP': '/apps/kanbanboard' // Solo Kanban para operadores
+      'OP': '/modules/inventory' // Solo Kanban para operadores
     };
 
-    return routeMap[role] || '/apps/kanbanboard';
+    return routeMap[normalizedRole] || '/modules/inventory';
   }
 
   /**

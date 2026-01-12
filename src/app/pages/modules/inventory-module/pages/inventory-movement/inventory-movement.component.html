@@ -410,7 +410,7 @@
                                             id="typeIn">
                                         <label class="btn btn-outline-success w-100 py-3" for="typeIn">
                                             <i class="bi bi-arrow-down-circle-fill d-block fs-4 mb-2"></i>
-                                            <strong>Entrada</strong>
+                                            <strong>Recepción</strong>
                                         </label>
                                     </div>
                                 </div>
@@ -420,7 +420,7 @@
                                             id="typeOut">
                                         <label class="btn btn-outline-danger w-100 py-3" for="typeOut">
                                             <i class="bi bi-arrow-up-circle-fill d-block fs-4 mb-2"></i>
-                                            <strong>Salida</strong>
+                                            <strong>Liberación</strong>
                                         </label>
                                     </div>
                                 </div>
@@ -442,6 +442,7 @@
                             </div>
                         </div>
 
+                        <!--Selección de producto-->
                         <div class="mb-4 position-relative">
                             <label class="form-label fw-semibold">
                                 <i class="bi bi-box-seam text-primary me-2"></i>
@@ -498,7 +499,7 @@
                                 </span>
                             </div>
                         </div>
-
+                        <!-- Cantidad -->
                         <div class="mb-4">
                             <label class="form-label fw-semibold">
                                 <i class="bi bi-hash text-primary me-2"></i>
@@ -564,79 +565,27 @@
                                 Información de Entrada
                             </label>
 
-                            <!-- Lista Ordenada de Campos de Entrada -->
-                            <ol class="list-group list-group-numbered">
-                                <!-- 1. Sellos -->
-                                <li class="list-group-item py-3 border-start-3 border-info">
-                                    <label class="form-label small fw-semibold mb-2 d-block">
-                                        <i class="bi bi-shield-lock me-1 text-info"></i>Sellos
-                                    </label>
-                                    <input type="text" class="form-control" id="seals" 
-                                        (input)="updateNotesSummary()" 
-                                        placeholder="Ej: Sellado, Intacto, Roto...">
-                                </li>
-
-                                <!-- 2. Tipo de Empaque -->
-                                <li class="list-group-item py-3 border-start-3 border-info">
-                                    <label class="form-label small fw-semibold mb-2 d-block">
-                                        <i class="bi bi-box-seam me-1 text-info"></i>Tipo de Empaque
-                                    </label>
-                                    <input type="text" class="form-control" id="packageType" 
-                                        (input)="updateNotesSummary()" 
-                                        placeholder="Ej: Caja, Bolsa, Paleta...">
-                                </li>
-
-                                <!-- 3. Empaque Limpio -->
-                                <li class="list-group-item py-3 border-start-3 border-info">
-                                    <label class="form-label small fw-semibold mb-2 d-block">
-                                        <i class="bi bi-check-circle me-1 text-info"></i>Empaque Limpio
-                                    </label>
-                                    <select class="form-select" id="cleanPackage" (change)="updateNotesSummary()">
-                                        <option value="">Seleccionar...</option>
-                                        <option value="Si">Sí</option>
-                                        <option value="No">No</option>
-                                    </select>
-                                </li>
-
-                                <!-- 4. Condiciones de Transporte -->
-                                <li class="list-group-item py-3 border-start-3 border-info">
-                                    <label class="form-label small fw-semibold mb-2 d-block">
-                                        <i class="bi bi-truck me-1 text-info"></i>Condiciones de Transporte
-                                    </label>
-                                    <select class="form-select" id="transportConditions" (change)="updateNotesSummary()">
-                                        <option value="">Seleccionar...</option>
-                                        <option value="Buenas">Buenas</option>
-                                        <option value="Regulares">Regulares</option>
-                                        <option value="Malas">Malas</option>
-                                        <option value="Danado">Dañado</option>
-                                    </select>
-                                </li>
-
-                                <!-- 5. Aceptado -->
-                                <li class="list-group-item py-3 border-start-3 border-info">
-                                    <label class="form-label small fw-semibold mb-2 d-block">
-                                        <i class="bi bi-check2-square me-1 text-info"></i>Aceptado
-                                    </label>
-                                    <select class="form-select" id="accepted" (change)="updateNotesSummary()">
-                                        <option value="">Seleccionar...</option>
-                                        <option value="Si">Sí</option>
-                                        <option value="No">No</option>
-                                    </select>
-                                </li>
-
-                                <!-- 6. Observaciones -->
-                                <li class="list-group-item py-3 border-start-3 border-info">
-                                    <label class="form-label small fw-semibold mb-2 d-block">
-                                        <i class="bi bi-chat-left-text me-1 text-info"></i>Observaciones
-                                    </label>
-                                    <textarea class="form-control" rows="3" id="additionalNotes"
-                                        (input)="updateNotesSummary()"
-                                        placeholder="Comentarios, detalles adicionales, problemas detectados..."></textarea>
-                                </li>
-                            </ol>
-
                             <!-- Información Adicional (oculta visualmente pero importante) -->
                             <div class="row g-3 mt-3">
+
+                                <!-- Recepcionista -->
+                                <div class="col-md-6">
+                                    <label class="form-label small">
+                                        <i class="bi bi-person-check me-1 text-muted"></i>Recepcionista
+                                    </label>
+                                    <input type="text" class="form-control" id="receivedBy"
+                                        (input)="updateNotesSummary()" placeholder="Nombre de quien recibe">
+                                </div>
+
+                                <!-- Quién Entrega -->
+                                <div class="col-md-6">
+                                    <label class="form-label small">
+                                        <i class="bi bi-person-check me-1 text-muted"></i>Quién Entrega
+                                    </label>
+                                    <input type="text" class="form-control" id="deliveredBy"
+                                        (input)="updateNotesSummary()" placeholder="Nombre de quien entrega">
+                                </div>
+
                                 <!-- Proveedor -->
                                 <div class="col-md-6">
                                     <label class="form-label small">
@@ -664,74 +613,71 @@
                                         (change)="updateNotesSummary()">
                                 </div>
 
-                                <!-- Recepcionista -->
-                                <div class="col-md-6">
-                                    <label class="form-label small">
-                                        <i class="bi bi-person-check me-1 text-muted"></i>Recepcionista
-                                    </label>
-                                    <input type="text" class="form-control" id="receivedBy"
-                                        (input)="updateNotesSummary()" placeholder="Nombre de quien recibe">
-                                </div>
-
-                                <!-- Quién Entrega -->
-                                <div class="col-md-6">
-                                    <label class="form-label small">
-                                        <i class="bi bi-person-check me-1 text-muted"></i>Quién Entrega
-                                    </label>
-                                    <input type="text" class="form-control" id="deliveredBy"
-                                        (input)="updateNotesSummary()" placeholder="Nombre de quien entrega">
-                                </div>
                             </div>
-                        </div>
 
-                        <!-- Campos de Detalles de Notas - SALIDAS -->
-                        <div class="mb-4" *ngIf="form.get('type')?.value === 'out'">
-                            <label class="form-label fw-semibold">
-                                <i class="bi bi-arrow-up-circle text-danger me-2"></i>
-                                Información de Salida
-                            </label>
+                            <!-- Lista Ordenada de Campos -->
+                            <ol class="list-group list-group-numbered shadow-sm rounded">
 
-                            <!-- Lista Ordenada de Campos de Salida (igual que Entrada) -->
-                            <ol class="list-group list-group-numbered">
                                 <!-- 1. Sellos -->
-                                <li class="list-group-item py-3 border-start-3 border-danger">
-                                    <label class="form-label small fw-semibold mb-2 d-block">
-                                        <i class="bi bi-shield-lock me-1 text-danger"></i>Sellos
+                                <li class="list-group-item py-4">
+                                    <label for="seals" class="form-label fw-semibold">
+                                        <i class="bi bi-shield-lock text-info me-2"></i>Sellos
                                     </label>
-                                    <input type="text" class="form-control" id="sealsOut" 
-                                        (input)="updateNotesSummary()" 
-                                        placeholder="Ej: Sellado, Intacto, Roto...">
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light">
+                                            <i class="bi bi-pencil"></i>
+                                        </span>
+                                        <select id="seals" class="form-select" (change)="updateNotesSummary()">
+                                            <option value="" selected>Seleccione una opción</option>
+                                            <option value="Sellado">Sellado</option>
+                                            <option value="Intacto">Intacto</option>
+                                            <option value="Roto">Roto</option>
+                                            <option value="Sin sello">Sin sello</option>
+                                        </select>
+                                    </div>
                                 </li>
 
                                 <!-- 2. Tipo de Empaque -->
-                                <li class="list-group-item py-3 border-start-3 border-danger">
-                                    <label class="form-label small fw-semibold mb-2 d-block">
-                                        <i class="bi bi-box-seam me-1 text-danger"></i>Tipo de Empaque
+                                <li class="list-group-item py-4">
+                                    <label for="packageType" class="form-label fw-semibold">
+                                        <i class="bi bi-box-seam text-info me-2"></i>Tipo de Empaque
                                     </label>
-                                    <input type="text" class="form-control" id="packageTypeOut" 
-                                        (input)="updateNotesSummary()" 
-                                        placeholder="Ej: Caja, Bolsa, Paleta...">
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light">
+                                            <i class="bi bi-box"></i>
+                                        </span>
+                                        <select name="packageTypeSelect" id="packageType" class="form-select me-2" (change)="updateNotesSummary()">
+                                            <option value="" selected>Seleccione una opción</option>
+                                            <option value="Caja">Caja</option>
+                                            <option value="Bolsa">Bolsa</option>
+                                            <option value="Paleta">Paleta</option>
+                                            <option value="Tambor">Tambor</option>
+                                            <option value="Contenedor">Contenedor</option>
+                                            <option value="Otro">Otro</option>
+                                        </select>
+                                    </div>
                                 </li>
 
                                 <!-- 3. Empaque Limpio -->
-                                <li class="list-group-item py-3 border-start-3 border-danger">
-                                    <label class="form-label small fw-semibold mb-2 d-block">
-                                        <i class="bi bi-check-circle me-1 text-danger"></i>Empaque Limpio
+                                <li class="list-group-item py-4">
+                                    <label for="cleanPackage" class="form-label fw-semibold">
+                                        <i class="bi bi-check-circle text-info me-2"></i>Empaque Limpio
                                     </label>
-                                    <select class="form-select" id="cleanPackageOut" (change)="updateNotesSummary()">
-                                        <option value="">Seleccionar...</option>
+                                    <select class="form-select" id="cleanPackage" (change)="updateNotesSummary()">
+                                        <option value="">Seleccione una opción</option>
                                         <option value="Si">Sí</option>
                                         <option value="No">No</option>
                                     </select>
                                 </li>
 
                                 <!-- 4. Condiciones de Transporte -->
-                                <li class="list-group-item py-3 border-start-3 border-danger">
-                                    <label class="form-label small fw-semibold mb-2 d-block">
-                                        <i class="bi bi-truck me-1 text-danger"></i>Condiciones de Transporte
+                                <li class="list-group-item py-4">
+                                    <label for="transportConditions" class="form-label fw-semibold">
+                                        <i class="bi bi-truck text-info me-2"></i>Condiciones de Transporte
                                     </label>
-                                    <select class="form-select" id="transportConditionsOut" (change)="updateNotesSummary()">
-                                        <option value="">Seleccionar...</option>
+                                    <select class="form-select" id="transportConditions"
+                                        (change)="updateNotesSummary()">
+                                        <option value="">Seleccione una opción</option>
                                         <option value="Buenas">Buenas</option>
                                         <option value="Regulares">Regulares</option>
                                         <option value="Malas">Malas</option>
@@ -740,56 +686,151 @@
                                 </li>
 
                                 <!-- 5. Aceptado -->
-                                <li class="list-group-item py-3 border-start-3 border-danger">
-                                    <label class="form-label small fw-semibold mb-2 d-block">
-                                        <i class="bi bi-check2-square me-1 text-danger"></i>Aceptado
+                                <li class="list-group-item py-4">
+                                    <label for="accepted" class="form-label fw-semibold">
+                                        <i class="bi bi-check2-square text-info me-2"></i>Aceptado
                                     </label>
-                                    <select class="form-select" id="acceptedOut" (change)="updateNotesSummary()">
-                                        <option value="">Seleccionar...</option>
+                                    <select class="form-select" id="accepted" (change)="updateNotesSummary()">
+                                        <option value="">Seleccione una opción</option>
                                         <option value="Si">Sí</option>
                                         <option value="No">No</option>
                                     </select>
                                 </li>
 
                                 <!-- 6. Observaciones -->
-                                <li class="list-group-item py-3 border-start-3 border-danger">
-                                    <label class="form-label small fw-semibold mb-2 d-block">
-                                        <i class="bi bi-chat-left-text me-1 text-danger"></i>Observaciones
+                                <li class="list-group-item py-4">
+                                    <label for="additionalNotes" class="form-label fw-semibold">
+                                        <i class="bi bi-chat-left-text text-info me-2"></i>Observaciones
                                     </label>
-                                    <textarea class="form-control" rows="3" id="observationsOut"
+                                    <textarea class="form-control" rows="4" id="additionalNotes"
                                         (input)="updateNotesSummary()"
-                                        placeholder="Comentarios, detalles adicionales, problemas detectados..."></textarea>
+                                        placeholder="Comentarios, detalles adicionales o problemas detectados..."></textarea>
+                                    <div class="form-text">
+                                        Agrega cualquier información relevante sobre el estado del pedido.
+                                    </div>
+                                </li>
+
+                            </ol>
+                        </div>
+
+                        <!-- Campos de Detalles de Notas - LIBERACIONES -->
+                        <div class="mb-4" *ngIf="form.get('type')?.value === 'out'">
+
+                            <!-- Título -->
+                            <label class="form-label fw-semibold fs-6 mb-3 d-block">
+                                <i class="bi bi-arrow-up-circle text-danger me-2"></i>
+                                Información de Salida
+                            </label>
+
+                            <!-- Lista Ordenada de Campos -->
+                            <ol class="list-group list-group-numbered shadow-sm rounded">
+
+                                <!-- 1. Sellos -->
+                                <li class="list-group-item py-4">
+                                    <label for="sealsOut" class="form-label fw-semibold">
+                                        <i class="bi bi-shield-lock text-danger me-2"></i>Sellos
+                                    </label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light">
+                                            <i class="bi bi-pencil"></i>
+                                        </span>
+                                        <input type="text" class="form-control" id="sealsOut"
+                                            (input)="updateNotesSummary()" placeholder="Ej: Sellado, Intacto, Roto...">
+                                    </div>
+                                </li>
+
+                                <!-- 2. Tipo de Empaque -->
+                                <li class="list-group-item py-4">
+                                    <label for="packageTypeOut" class="form-label fw-semibold">
+                                        <i class="bi bi-box-seam text-danger me-2"></i>Tipo de Empaque
+                                    </label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light">
+                                            <i class="bi bi-box"></i>
+                                        </span>
+                                        <input type="text" class="form-control" id="packageTypeOut"
+                                            (input)="updateNotesSummary()" placeholder="Ej: Caja, Bolsa, Paleta...">
+                                    </div>
+                                </li>
+
+                                <!-- 3. Empaque Limpio -->
+                                <li class="list-group-item py-4">
+                                    <label for="cleanPackageOut" class="form-label fw-semibold">
+                                        <i class="bi bi-check-circle text-danger me-2"></i>Empaque Limpio
+                                    </label>
+                                    <select class="form-select" id="cleanPackageOut" (change)="updateNotesSummary()">
+                                        <option value="">Seleccione una opción</option>
+                                        <option value="Si">Sí</option>
+                                        <option value="No">No</option>
+                                    </select>
+                                </li>
+
+                                <!-- 4. Condiciones de Transporte -->
+                                <li class="list-group-item py-4">
+                                    <label for="transportConditionsOut" class="form-label fw-semibold">
+                                        <i class="bi bi-truck text-danger me-2"></i>Condiciones de Transporte
+                                    </label>
+                                    <select class="form-select" id="transportConditionsOut"
+                                        (change)="updateNotesSummary()">
+                                        <option value="">Seleccione una opción</option>
+                                        <option value="Buenas">Buenas</option>
+                                        <option value="Regulares">Regulares</option>
+                                        <option value="Malas">Malas</option>
+                                        <option value="Danado">Dañado</option>
+                                    </select>
+                                </li>
+
+                                <!-- 5. Aceptado -->
+                                <li class="list-group-item py-4">
+                                    <label for="acceptedOut" class="form-label fw-semibold">
+                                        <i class="bi bi-check2-square text-danger me-2"></i>Aceptado
+                                    </label>
+                                    <select class="form-select" id="acceptedOut" (change)="updateNotesSummary()">
+                                        <option value="">Seleccione una opción</option>
+                                        <option value="Si">Sí</option>
+                                        <option value="No">No</option>
+                                    </select>
+                                </li>
+
+                                <!-- 6. Observaciones -->
+                                <li class="list-group-item py-4">
+                                    <label for="observationsOut" class="form-label fw-semibold">
+                                        <i class="bi bi-chat-left-text text-danger me-2"></i>Observaciones
+                                    </label>
+                                    <textarea class="form-control" rows="4" id="observationsOut"
+                                        (input)="updateNotesSummary()"
+                                        placeholder="Comentarios, detalles adicionales o problemas detectados..."></textarea>
                                 </li>
                             </ol>
 
-                            <!-- Información Adicional (oculta visualmente pero importante) -->
-                            <div class="row g-3 mt-3">
-                                <!-- Selección de Lote -->
+                            <!-- Información Adicional -->
+                            <div class="row g-4 mt-4">
+
+                                <!-- Lote -->
                                 <div class="col-md-6">
-                                    <label class="form-label small">
-                                        <i class="bi bi-barcode me-1 text-muted"></i>Lote (Opcional)
+                                    <label class="form-label fw-semibold">
+                                        <i class="bi bi-barcode text-muted me-2"></i>Lote
                                     </label>
                                     <select class="form-select" formControlName="batch_id"
                                         [disabled]="!form.get('product_id')?.value || loadingBatches">
                                         <option [value]="null">Sin lote específico</option>
-                                        <option *ngFor="let batch of availableBatches" [value]="batch.id ?? batch.batch_id">
+                                        <option *ngFor="let batch of availableBatches"
+                                            [value]="batch.id ?? batch.batch_id">
                                             {{ batch.batch_code ?? batch.code ?? ('Lote #' + (batch.id ?? '')) }}
-                                            <span *ngIf="batch.expiry_date || batch.vencimiento"> - Vencimiento: {{
-                                                batch.expiry_date ?? batch.vencimiento | date:'short' }}</span>
                                         </option>
                                     </select>
-                                    <small class="form-text text-muted" *ngIf="!form.get('product_id')?.value">
+                                    <div class="form-text" *ngIf="!form.get('product_id')?.value">
                                         <i class="bi bi-info-circle me-1"></i>Selecciona un producto primero
-                                    </small>
-                                    <small class="form-text text-muted" *ngIf="loadingBatches">
+                                    </div>
+                                    <div class="form-text" *ngIf="loadingBatches">
                                         <i class="bi bi-clock me-1"></i>Cargando lotes disponibles...
-                                    </small>
+                                    </div>
                                 </div>
 
-                                <!-- Lote (Campo de Texto Adicional) -->
+                                <!-- Lote Detalle -->
                                 <div class="col-md-6">
-                                    <label class="form-label small">
-                                        <i class="bi bi-barcode me-1 text-muted"></i>Lote (Detalle)
+                                    <label class="form-label fw-semibold">
+                                        <i class="bi bi-barcode text-muted me-2"></i>Lote (Detalle)
                                     </label>
                                     <input type="text" class="form-control" id="batchOut" (input)="updateNotesSummary()"
                                         placeholder="Número de lote o referencia">
@@ -797,11 +838,11 @@
 
                                 <!-- Línea de Producción -->
                                 <div class="col-md-6">
-                                    <label class="form-label small">
-                                        <i class="bi bi-gear me-1 text-muted"></i>Línea de Producción
+                                    <label class="form-label fw-semibold">
+                                        <i class="bi bi-gear text-muted me-2"></i>Línea de Producción
                                     </label>
                                     <select class="form-select" formControlName="production_line">
-                                        <option value="">Selecciona una línea...</option>
+                                        <option value="">Seleccione una línea</option>
                                         <option value="richard">Línea Richard</option>
                                         <option value="panaderia">Línea Panadería</option>
                                         <option value="pasteleria">Línea Pastelería</option>
@@ -810,8 +851,8 @@
 
                                 <!-- Fecha de Vencimiento -->
                                 <div class="col-md-6">
-                                    <label class="form-label small">
-                                        <i class="bi bi-calendar-x me-1 text-muted"></i>Fecha de Vencimiento
+                                    <label class="form-label fw-semibold">
+                                        <i class="bi bi-calendar-x text-muted me-2"></i>Fecha de Vencimiento
                                     </label>
                                     <input type="date" class="form-control" id="expiryDateOut"
                                         (change)="updateNotesSummary()">
@@ -819,32 +860,34 @@
 
                                 <!-- Proveedor -->
                                 <div class="col-md-6">
-                                    <label class="form-label small">
-                                        <i class="bi bi-truck me-1 text-muted"></i>Proveedor
+                                    <label class="form-label fw-semibold">
+                                        <i class="bi bi-truck text-muted me-2"></i>Proveedor
                                     </label>
-                                    <input type="text" class="form-control" id="supplierOut" (input)="updateNotesSummary()"
-                                        placeholder="Nombre del proveedor">
+                                    <input type="text" class="form-control" id="supplierOut"
+                                        (input)="updateNotesSummary()" placeholder="Nombre del proveedor">
                                 </div>
 
                                 <!-- Quién Recibió -->
                                 <div class="col-md-6">
-                                    <label class="form-label small">
-                                        <i class="bi bi-person-check me-1 text-muted"></i>Quién Recibió
+                                    <label class="form-label fw-semibold">
+                                        <i class="bi bi-person-check text-muted me-2"></i>Quién Recibió
                                     </label>
-                                    <input type="text" class="form-control" id="receivedByOut" (input)="updateNotesSummary()"
-                                        placeholder="Nombre de la persona que recibió">
+                                    <input type="text" class="form-control" id="receivedByOut"
+                                        (input)="updateNotesSummary()" placeholder="Nombre de quien recibió">
                                 </div>
 
                                 <!-- Quién Entrega -->
                                 <div class="col-md-6">
-                                    <label class="form-label small">
-                                        <i class="bi bi-person-check me-1 text-muted"></i>Quién Entrega
+                                    <label class="form-label fw-semibold">
+                                        <i class="bi bi-person-check text-muted me-2"></i>Quién Entrega
                                     </label>
                                     <input type="text" class="form-control" id="deliveredByOut"
                                         (input)="updateNotesSummary()" placeholder="Nombre de quien entrega">
                                 </div>
+
                             </div>
                         </div>
+
 
                         <!-- Campos de Detalles de Notas - AJUSTES -->
                         <div class="mb-4" *ngIf="form.get('type')?.value === 'adjustment'">
@@ -889,26 +932,6 @@
                             </div>
                         </div>
 
-                        <!-- Campo Oculto para Guardar Datos Formateados -->
-                        <input type="hidden" formControlName="notes" id="formattedNotes">
-
-                        <!-- Resumen Formateado -->
-                        <div class="alert alert-light border">
-                            <small class="fw-semibold d-block mb-2">
-                                <i class="bi bi-info-circle me-1"></i>Resumen de información que se guardará:
-                            </small>
-                            <small class="text-muted" style="white-space: pre-line; word-break: break-word;"
-                                id="notesSummary">
-                                Los datos aparecerán aquí organizados...
-                            </small>
-                        </div>
-
-                        <div class="form-text">
-                            <i class="bi bi-info-circle me-1"></i>
-                            Todos los campos se guardarán organizados y separados por guiones en las notas del
-                            movimiento
-                        </div>
-
                         <div *ngIf="formError" class="alert alert-danger d-flex align-items-start" role="alert">
                             <i class="bi bi-exclamation-triangle-fill me-3 fs-5 mt-1"></i>
                             <div style="white-space: pre-line;">{{ formError }}</div>
@@ -946,8 +969,9 @@
                 </div>
                 <div class="modal-body px-4 py-4">
                     <!-- Lista Ordenada de Detalles -->
-                    <ol class="list-group list-group-numbered" *ngIf="currentDetailsModal && currentDetailsModal.length > 0">
-                        <li *ngFor="let detail of currentDetailsModal" 
+                    <ol class="list-group list-group-numbered"
+                        *ngIf="currentDetailsModal && currentDetailsModal.length > 0">
+                        <li *ngFor="let detail of currentDetailsModal"
                             class="list-group-item d-flex justify-content-between align-items-start py-3 border-info border-opacity-25">
                             <div class="ms-2 me-auto flex-grow-1">
                                 <div class="fw-semibold text-dark">
@@ -963,7 +987,7 @@
                                 </div>
                             </div>
                             <!-- Indicadores visuales para validaciones Si/No -->
-                            <span *ngIf="detail.label === 'Empaque Limpio' || detail.label === 'Aceptado'" 
+                            <span *ngIf="detail.label === 'Empaque Limpio' || detail.label === 'Aceptado'"
                                 class="badge ms-2" [ngClass]="{
                                     'bg-success': detail.value.toLowerCase() === 'sí' || detail.value.toLowerCase() === 'si',
                                     'bg-danger': detail.value.toLowerCase() === 'no'
@@ -976,8 +1000,7 @@
                             </span>
 
                             <!-- Indicadores para condiciones de transporte -->
-                            <span *ngIf="detail.label === 'Condiciones de Transporte'" 
-                                class="badge ms-2" [ngClass]="{
+                            <span *ngIf="detail.label === 'Condiciones de Transporte'" class="badge ms-2" [ngClass]="{
                                     'bg-success': detail.value.toLowerCase() === 'buenas',
                                     'bg-warning text-dark': detail.value.toLowerCase() === 'regulares',
                                     'bg-danger': detail.value.toLowerCase() === 'malas' || detail.value.toLowerCase() === 'danado'
