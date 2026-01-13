@@ -646,15 +646,8 @@
                                         <span class="input-group-text bg-light">
                                             <i class="bi bi-box"></i>
                                         </span>
-                                        <select name="packageTypeSelect" id="packageType" class="form-select me-2" (change)="updateNotesSummary()">
-                                            <option value="" selected>Seleccione una opción</option>
-                                            <option value="Caja">Caja</option>
-                                            <option value="Bolsa">Bolsa</option>
-                                            <option value="Paleta">Paleta</option>
-                                            <option value="Tambor">Tambor</option>
-                                            <option value="Contenedor">Contenedor</option>
-                                            <option value="Otro">Otro</option>
-                                        </select>
+                                        <input type="text" id="packageType" class="form-control me-2"
+                                            (input)="updateNotesSummary()" placeholder="Ej: Caja, Bolsa, Paleta" />
                                     </div>
                                 </li>
 
@@ -727,15 +720,20 @@
 
                                 <!-- 1. Sellos -->
                                 <li class="list-group-item py-4">
-                                    <label for="sealsOut" class="form-label fw-semibold">
-                                        <i class="bi bi-shield-lock text-danger me-2"></i>Sellos
+                                    <label for="seals" class="form-label fw-semibold">
+                                        <i class="bi bi-shield-lock text-info me-2"></i>Sellos
                                     </label>
                                     <div class="input-group">
                                         <span class="input-group-text bg-light">
                                             <i class="bi bi-pencil"></i>
                                         </span>
-                                        <input type="text" class="form-control" id="sealsOut"
-                                            (input)="updateNotesSummary()" placeholder="Ej: Sellado, Intacto, Roto...">
+                                        <select id="seals" class="form-select" (change)="updateNotesSummary()">
+                                            <option value="" selected>Seleccione una opción</option>
+                                            <option value="Sellado">Sellado</option>
+                                            <option value="Intacto">Intacto</option>
+                                            <option value="Roto">Roto</option>
+                                            <option value="Sin sello">Sin sello</option>
+                                        </select>
                                     </div>
                                 </li>
 
@@ -806,7 +804,7 @@
                             <!-- Información Adicional -->
                             <div class="row g-4 mt-4">
 
-                                <!-- Lote -->
+                                <!-- Lote 
                                 <div class="col-md-6">
                                     <label class="form-label fw-semibold">
                                         <i class="bi bi-barcode text-muted me-2"></i>Lote
@@ -826,7 +824,7 @@
                                         <i class="bi bi-clock me-1"></i>Cargando lotes disponibles...
                                     </div>
                                 </div>
-
+                                -->
                                 <!-- Lote Detalle -->
                                 <div class="col-md-6">
                                     <label class="form-label fw-semibold">
