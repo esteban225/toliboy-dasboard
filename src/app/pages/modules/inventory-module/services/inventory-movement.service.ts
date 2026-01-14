@@ -32,6 +32,22 @@ export class InventoryMovementService {
 		return this.http.get<any>(this.baseUrl, { params });
 	}
 
+	// Lista sin forzar fecha (para búsquedas históricas, ej: por lote en notas)
+	listWithoutDate(filters: Record<string, any> = {}, perPage = 100, page = 1): Observable<any> {
+		let params = new HttpParams()
+			.set('per_page', String(perPage))
+			.set('page', String(page));
+
+		Object.keys(filters || {}).forEach(key => {
+			const val = filters[key];
+			if (val !== undefined && val !== null && val !== '') {
+				params = params.set(key, String(val));
+			}
+		});
+
+		return this.http.get<any>(this.baseUrl, { params });
+	}
+
 	// Obtener un movimiento con sus lotes asociados
 	get(id: number): Observable<any> {
 		return this.http.get<any>(`${this.baseUrl}/${id}`);

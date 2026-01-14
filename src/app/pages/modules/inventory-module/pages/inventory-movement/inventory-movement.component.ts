@@ -48,6 +48,7 @@ export class InventoryMovementComponent implements OnInit, OnDestroy {
   formError: string | null = null;
   loadingProductDetails = false;
   generatingReport = false;
+  loadingBatchLookup = false;
   // Product search
   productSuggestions: any[] = [];
   private productSearch$ = new Subject<string>();
@@ -548,6 +549,126 @@ export class InventoryMovementComponent implements OnInit, OnDestroy {
     });
   }
 
+  prefillOutByBatch(): void {
+    const batchInput = document.getElementById('batchOut') as HTMLInputElement;
+    const batchCode = (batchInput?.value || '').trim();
+
+    if (!batchCode) {
+      this.alert.warning('Falta el lote', 'Ingresa el número de lote para buscar la entrada.');
+      return;
+    }
+
+    this.loadingBatchLookup = true;
+
+    // Intentar con los movimientos ya cargados primero (más rápido)
+    const localEntry = this.findEntryByBatch(batchCode);
+    if (localEntry) {
+      this.applyEntryDataToOut(localEntry, batchCode);
+      this.loadingBatchLookup = false;
+      return;
+    }
+
+    // Si no está en memoria, consultar al backend filtrando por entrada y notas (sin forzar fecha)
+    this.invService.listWithoutDate({ movement_type: 'in', notes: batchCode }, 50, 1).subscribe({
+      next: (res) => {
+        const entries = res?.data ?? [];
+        const match = entries.find((item: any) => this.matchesBatch(item, batchCode));
+
+        if (match) {
+          this.applyEntryDataToOut(match, batchCode);
+        } else {
+          this.alert.warning('Sin coincidencias', 'No se encontró ninguna entrada con ese lote.');
+        }
+        this.loadingBatchLookup = false;
+      },
+      error: (err) => {
+        this.loadingBatchLookup = false;
+        const msg = err?.error?.message || err?.message || 'No se pudo buscar el lote en el servidor.';
+        this.alert.error('Error buscando lote', msg);
+      }
+    });
+  }
+
+  private findEntryByBatch(batchCode: string): any | undefined {
+    const target = (batchCode || '').trim().toLowerCase();
+    if (!target) return undefined;
+
+    return this.movements.find(movement => {
+      const type = (movement?.type || movement?.movement_type || '').toLowerCase();
+      if (type !== 'in') return false;
+
+      const notesBatch = (this.parseNotesField(movement?.notes, 'Lote') || '').toLowerCase();
+      const batchField = (movement?.batch_code || movement?.batch || '').toLowerCase();
+      return notesBatch === target || batchField === target;
+    });
+  }
+
+  private matchesBatch(movement: any, batchCode: string): boolean {
+    const target = (batchCode || '').trim().toLowerCase();
+    if (!target) return false;
+
+    const notesBatch = (this.parseNotesField(movement?.notes, 'Lote') || '').trim().toLowerCase();
+    const batchField = (movement?.batch_code || movement?.batch || '').toLowerCase();
+    return notesBatch === target || batchField === target;
+  }
+
+  private applyEntryDataToOut(entry: any, fallbackBatch?: string): void {
+    const supplier = this.parseNotesField(entry?.notes, 'Proveedor');
+    const expiryDate = this.parseNotesField(entry?.notes, 'Vencimiento');
+    const seals = this.parseNotesField(entry?.notes, 'Sellos');
+    const packageType = this.parseNotesField(entry?.notes, 'Tipo de Empaque');
+    const cleanPackage = this.parseNotesField(entry?.notes, 'Empaque Limpio');
+    const transportConditions = this.parseNotesField(entry?.notes, 'Condiciones de Transporte');
+    const accepted = this.parseNotesField(entry?.notes, 'Aceptado');
+    const observations = this.parseNotesField(entry?.notes, 'Observaciones');
+    const receivedBy = this.parseNotesField(entry?.notes, 'Recibido por');
+    const deliveredBy = this.parseNotesField(entry?.notes, 'Entregado por');
+    const batch = this.parseNotesField(entry?.notes, 'Lote') || fallbackBatch || '';
+
+    const setValue = (id: string, value: string | null | undefined): void => {
+      const el = document.getElementById(id) as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement | null;
+      if (el && value !== undefined && value !== null) {
+        el.value = value;
+        el.classList.remove('is-invalid');
+      }
+    };
+
+    setValue('supplierOut', supplier);
+    setValue('expiryDateOut', expiryDate);
+    setValue('sealsOut', seals);
+    setValue('packageTypeOut', packageType);
+    setValue('cleanPackageOut', cleanPackage);
+    setValue('transportConditionsOut', transportConditions);
+    setValue('acceptedOut', accepted);
+    setValue('observationsOut', observations);
+    setValue('batchOut', batch);
+    setValue('receivedByOut', receivedBy);
+    setValue('deliveredByOut', deliveredBy);
+
+    const productId = entry?.raw_material_id ?? entry?.product_id ?? null;
+    const productName = entry?.product_name ?? entry?.raw_material_name ?? '';
+    const productCode = entry?.product_code ?? entry?.raw_material_code ?? '';
+    const unitCost = entry?.unit_cost ?? entry?.price ?? entry?.cost ?? null;
+
+    this.form.patchValue({
+      type: 'out',
+      product_id: productId ?? this.form.get('product_id')?.value,
+      batch_id: entry?.batch_id ?? this.form.get('batch_id')?.value,
+      unit_cost: unitCost ?? this.form.get('unit_cost')?.value,
+      product_search: this.buildProductDisplay(productCode, productName) || this.form.get('product_search')?.value
+    });
+
+    this.updateNotesSummary();
+    this.alert.success('Datos cargados', 'Se precargaron los datos de la entrada para la liberación.');
+  }
+
+  private buildProductDisplay(code?: string, name?: string): string {
+    if (code && name) return `${code} - ${name}`;
+    if (name) return name;
+    if (code) return code;
+    return '';
+  }
+
   cancelModal(): void {
     this.showModal = false;
     this.productSuggestions = [];
@@ -773,6 +894,87 @@ export class InventoryMovementComponent implements OnInit, OnDestroy {
 
     // Actualizar el valor en el formulario
     this.form.patchValue({ notes: formattedNotes });
+
+    // Si el usuario llena campos, limpiar resaltados rojos
+    this.clearInvalidIfFilled();
+
+    // Si el campo era inválido y ahora tiene valor, reflejarlo también en el form error
+    if (this.formError) {
+      const remaining = this.validateNotesRequired();
+      if (remaining.length === 0) {
+        this.formError = null;
+      }
+    }
+  }
+
+  private requiredFieldsByType(): { id: string; label: string }[] {
+    const movementType = this.form.get('type')?.value;
+    const requiredIn = [
+      { id: 'batch', label: 'Lote' },
+      { id: 'supplier', label: 'Proveedor' },
+      { id: 'expiryDate', label: 'Fecha de Vencimiento' },
+      { id: 'seals', label: 'Sellos' },
+      { id: 'packageType', label: 'Tipo de Empaque' },
+      { id: 'cleanPackage', label: 'Empaque Limpio' },
+      { id: 'transportConditions', label: 'Condiciones de Transporte' },
+      { id: 'accepted', label: 'Aceptado' },
+      { id: 'receivedBy', label: 'Recepcionista' },
+      { id: 'deliveredBy', label: 'Quién Entrega' }
+    ];
+
+    const requiredOut = [
+      { id: 'batchOut', label: 'Lote (Detalle)' },
+      { id: 'supplierOut', label: 'Proveedor' },
+      { id: 'expiryDateOut', label: 'Fecha de Vencimiento' },
+      { id: 'sealsOut', label: 'Sellos' },
+      { id: 'packageTypeOut', label: 'Tipo de Empaque' },
+      { id: 'cleanPackageOut', label: 'Empaque Limpio' },
+      { id: 'transportConditionsOut', label: 'Condiciones de Transporte' },
+      { id: 'acceptedOut', label: 'Aceptado' },
+      { id: 'receivedByOut', label: 'Quién Recibió' },
+      { id: 'deliveredByOut', label: 'Quién Entrega' }
+    ];
+
+    return movementType === 'out' ? requiredOut : movementType === 'in' ? requiredIn : [];
+  }
+
+  private clearInvalidIfFilled(): void {
+    this.requiredFieldsByType().forEach(field => {
+      const el = document.getElementById(field.id) as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement | null;
+      if (el && (el.value || '').trim()) {
+        el.classList.remove('is-invalid');
+      }
+    });
+  }
+
+  private validateNotesRequired(): string[] {
+    const missing: string[] = [];
+    let firstMissingEl: HTMLElement | null = null;
+
+    this.requiredFieldsByType().forEach(field => {
+      const el = document.getElementById(field.id) as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement | null;
+      const value = (el?.value || '').trim();
+      const isMissing = !value;
+      if (el) {
+        el.classList.toggle('is-invalid', isMissing);
+        if (isMissing && !firstMissingEl) {
+          firstMissingEl = el;
+        }
+      }
+      if (isMissing) {
+        missing.push(field.label);
+      }
+    });
+
+    // Enfocar y desplazar al primer faltante para guiar al usuario
+    if (firstMissingEl) {
+      setTimeout(() => {
+        firstMissingEl?.focus({ preventScroll: false });
+        firstMissingEl?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 50);
+    }
+
+    return missing;
   }
 
   submit(): void {
@@ -780,6 +982,13 @@ export class InventoryMovementComponent implements OnInit, OnDestroy {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       this.formError = 'Corrige los errores del formulario.';
+      return;
+    }
+
+    const missingNotes = this.validateNotesRequired();
+    if (missingNotes.length > 0) {
+      this.formError = `Completa los campos: ${missingNotes.join(', ')}`;
+      this.alert.warning('Faltan datos', this.formError);
       return;
     }
 

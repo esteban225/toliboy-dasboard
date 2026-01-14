@@ -715,19 +715,117 @@
                                 Información de Salida
                             </label>
 
+                                                        <!-- Información Adicional -->
+                            <div class="row g-4 mt-4">
+
+                                <!-- Lote 
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">
+                                        <i class="bi bi-barcode text-muted me-2"></i>Lote
+                                    </label>
+                                    <select class="form-select" formControlName="batch_id"
+                                        [disabled]="!form.get('product_id')?.value || loadingBatches">
+                                        <option [value]="null">Sin lote específico</option>
+                                        <option *ngFor="let batch of availableBatches"
+                                            [value]="batch.id ?? batch.batch_id">
+                                            {{ batch.batch_code ?? batch.code ?? ('Lote #' + (batch.id ?? '')) }}
+                                        </option>
+                                    </select>
+                                    <div class="form-text" *ngIf="!form.get('product_id')?.value">
+                                        <i class="bi bi-info-circle me-1"></i>Selecciona un producto primero
+                                    </div>
+                                    <div class="form-text" *ngIf="loadingBatches">
+                                        <i class="bi bi-clock me-1"></i>Cargando lotes disponibles...
+                                    </div>
+                                </div>
+                                -->
+                                <!-- Lote Detalle -->
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">
+                                        <i class="bi bi-barcode text-muted me-2"></i>Lote (Detalle)
+                                    </label>
+                                    <div class="input-group">
+                                        <input type="text" class="form-control" id="batchOut"
+                                            (input)="updateNotesSummary()" placeholder="Número de lote o referencia">
+                                        <button type="button" class="btn btn-outline-primary" (click)="prefillOutByBatch()"
+                                            [disabled]="loadingBatchLookup">
+                                            <span *ngIf="!loadingBatchLookup">
+                                                <i class="bi bi-search me-1"></i> Cargar lote
+                                            </span>
+                                            <span *ngIf="loadingBatchLookup" class="d-flex align-items-center">
+                                                <span class="spinner-border spinner-border-sm me-2" role="status"
+                                                    aria-hidden="true"></span>
+                                                Buscando...
+                                            </span>
+                                        </button>
+                                    </div>
+                                    <small class="text-muted">Busca la entrada por lote y precarga los datos de salida.</small>
+                                </div>
+
+                                <!-- Línea de Producción -->
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">
+                                        <i class="bi bi-gear text-muted me-2"></i>Línea de Producción
+                                    </label>
+                                    <select class="form-select" formControlName="production_line">
+                                        <option value="">Seleccione una línea</option>
+                                        <option value="richard">Línea Richard</option>
+                                        <option value="panaderia">Línea Panadería</option>
+                                        <option value="pasteleria">Línea Pastelería</option>
+                                    </select>
+                                </div>
+
+                                <!-- Fecha de Vencimiento -->
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">
+                                        <i class="bi bi-calendar-x text-muted me-2"></i>Fecha de Vencimiento
+                                    </label>
+                                    <input type="date" class="form-control" id="expiryDateOut"
+                                        (change)="updateNotesSummary()">
+                                </div>
+
+                                <!-- Proveedor -->
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">
+                                        <i class="bi bi-truck text-muted me-2"></i>Proveedor
+                                    </label>
+                                    <input type="text" class="form-control" id="supplierOut"
+                                        (input)="updateNotesSummary()" placeholder="Nombre del proveedor">
+                                </div>
+
+                                <!-- Quién Recibió -->
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">
+                                        <i class="bi bi-person-check text-muted me-2"></i>Quién Recibió
+                                    </label>
+                                    <input type="text" class="form-control" id="receivedByOut"
+                                        (input)="updateNotesSummary()" placeholder="Nombre de quien recibió">
+                                </div>
+
+                                <!-- Quién Entrega -->
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">
+                                        <i class="bi bi-person-check text-muted me-2"></i>Quién Entrega
+                                    </label>
+                                    <input type="text" class="form-control" id="deliveredByOut"
+                                        (input)="updateNotesSummary()" placeholder="Nombre de quien entrega">
+                                </div>
+
+                            </div> 
+                            
                             <!-- Lista Ordenada de Campos -->
                             <ol class="list-group list-group-numbered shadow-sm rounded">
 
                                 <!-- 1. Sellos -->
                                 <li class="list-group-item py-4">
-                                    <label for="seals" class="form-label fw-semibold">
+                                    <label for="sealsOut" class="form-label fw-semibold">
                                         <i class="bi bi-shield-lock text-info me-2"></i>Sellos
                                     </label>
                                     <div class="input-group">
                                         <span class="input-group-text bg-light">
                                             <i class="bi bi-pencil"></i>
                                         </span>
-                                        <select id="seals" class="form-select" (change)="updateNotesSummary()">
+                                        <select id="sealsOut" class="form-select" (change)="updateNotesSummary()">
                                             <option value="" selected>Seleccione una opción</option>
                                             <option value="Sellado">Sellado</option>
                                             <option value="Intacto">Intacto</option>
@@ -801,89 +899,6 @@
                                 </li>
                             </ol>
 
-                            <!-- Información Adicional -->
-                            <div class="row g-4 mt-4">
-
-                                <!-- Lote 
-                                <div class="col-md-6">
-                                    <label class="form-label fw-semibold">
-                                        <i class="bi bi-barcode text-muted me-2"></i>Lote
-                                    </label>
-                                    <select class="form-select" formControlName="batch_id"
-                                        [disabled]="!form.get('product_id')?.value || loadingBatches">
-                                        <option [value]="null">Sin lote específico</option>
-                                        <option *ngFor="let batch of availableBatches"
-                                            [value]="batch.id ?? batch.batch_id">
-                                            {{ batch.batch_code ?? batch.code ?? ('Lote #' + (batch.id ?? '')) }}
-                                        </option>
-                                    </select>
-                                    <div class="form-text" *ngIf="!form.get('product_id')?.value">
-                                        <i class="bi bi-info-circle me-1"></i>Selecciona un producto primero
-                                    </div>
-                                    <div class="form-text" *ngIf="loadingBatches">
-                                        <i class="bi bi-clock me-1"></i>Cargando lotes disponibles...
-                                    </div>
-                                </div>
-                                -->
-                                <!-- Lote Detalle -->
-                                <div class="col-md-6">
-                                    <label class="form-label fw-semibold">
-                                        <i class="bi bi-barcode text-muted me-2"></i>Lote (Detalle)
-                                    </label>
-                                    <input type="text" class="form-control" id="batchOut" (input)="updateNotesSummary()"
-                                        placeholder="Número de lote o referencia">
-                                </div>
-
-                                <!-- Línea de Producción -->
-                                <div class="col-md-6">
-                                    <label class="form-label fw-semibold">
-                                        <i class="bi bi-gear text-muted me-2"></i>Línea de Producción
-                                    </label>
-                                    <select class="form-select" formControlName="production_line">
-                                        <option value="">Seleccione una línea</option>
-                                        <option value="richard">Línea Richard</option>
-                                        <option value="panaderia">Línea Panadería</option>
-                                        <option value="pasteleria">Línea Pastelería</option>
-                                    </select>
-                                </div>
-
-                                <!-- Fecha de Vencimiento -->
-                                <div class="col-md-6">
-                                    <label class="form-label fw-semibold">
-                                        <i class="bi bi-calendar-x text-muted me-2"></i>Fecha de Vencimiento
-                                    </label>
-                                    <input type="date" class="form-control" id="expiryDateOut"
-                                        (change)="updateNotesSummary()">
-                                </div>
-
-                                <!-- Proveedor -->
-                                <div class="col-md-6">
-                                    <label class="form-label fw-semibold">
-                                        <i class="bi bi-truck text-muted me-2"></i>Proveedor
-                                    </label>
-                                    <input type="text" class="form-control" id="supplierOut"
-                                        (input)="updateNotesSummary()" placeholder="Nombre del proveedor">
-                                </div>
-
-                                <!-- Quién Recibió -->
-                                <div class="col-md-6">
-                                    <label class="form-label fw-semibold">
-                                        <i class="bi bi-person-check text-muted me-2"></i>Quién Recibió
-                                    </label>
-                                    <input type="text" class="form-control" id="receivedByOut"
-                                        (input)="updateNotesSummary()" placeholder="Nombre de quien recibió">
-                                </div>
-
-                                <!-- Quién Entrega -->
-                                <div class="col-md-6">
-                                    <label class="form-label fw-semibold">
-                                        <i class="bi bi-person-check text-muted me-2"></i>Quién Entrega
-                                    </label>
-                                    <input type="text" class="form-control" id="deliveredByOut"
-                                        (input)="updateNotesSummary()" placeholder="Nombre de quien entrega">
-                                </div>
-
-                            </div>
                         </div>
 
 
