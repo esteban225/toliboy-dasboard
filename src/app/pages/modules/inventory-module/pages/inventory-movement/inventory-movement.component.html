@@ -470,12 +470,13 @@
                                     (click)="selectProduct(p)">
                                     <div class="d-flex justify-content-between align-items-start">
                                         <div class="flex-grow-1">
-                                            <div class="fw-semibold">
-                                                <span *ngIf="p?.code ?? p?.product_code" class="text-primary me-2">
-                                                    {{ p?.code ?? p?.product_code }}
-                                                </span>
+                                            <div class="fw-semibold" style="font-size: 0.9rem;">
                                                 {{ p?.name ?? p?.product_name ?? 'Sin nombre' }}
                                             </div>
+                                            <span *ngIf="p?.code ?? p?.product_code" class="text-muted"
+                                                style="font-size: 0.8rem;">
+                                                {{ p?.code ?? p?.product_code }}
+                                            </span>
                                             <small class="text-muted">{{ p?.presentation ?? p?.unit ?? 'Sin
                                                 presentación' }}</small>
                                         </div>
@@ -560,212 +561,166 @@
 
                         <!-- Campos de Detalles de Notas - ENTRADAS -->
                         <div class="mb-4" *ngIf="form.get('type')?.value === 'in'">
-                            <label class="form-label fw-semibold">
-                                <i class="bi bi-receipt text-primary me-2"></i>
-                                Información de Entrada
-                            </label>
+                            
+                            <!-- Header -->
+                            <div class="d-flex align-items-center mb-3 pb-2 border-bottom">
+                                <i class="bi bi-arrow-down-circle-fill text-success fs-5 me-2"></i>
+                                <h6 class="mb-0 fw-bold text-success">Información de Entrada</h6>
+                            </div>
 
-                            <!-- Información Adicional (oculta visualmente pero importante) -->
-                            <div class="row g-3 mt-3">
-
-                                <!-- Recepcionista -->
-                                <div class="col-md-6">
-                                    <label class="form-label small">
-                                        <i class="bi bi-person-check me-1 text-muted"></i>Recepcionista
+                            <!-- Información Principal -->
+                            <div class="row g-3 mb-4">
+                                <div class="col-sm-6">
+                                    <label class="form-label small fw-semibold">
+                                        <i class="bi bi-person-check text-muted me-1"></i>Recepcionista
                                     </label>
                                     <input type="text" class="form-control" id="receivedBy"
                                         (input)="updateNotesSummary()" placeholder="Nombre de quien recibe">
                                 </div>
-
-                                <!-- Quién Entrega -->
-                                <div class="col-md-6">
-                                    <label class="form-label small">
-                                        <i class="bi bi-person-check me-1 text-muted"></i>Quién Entrega
+                                <div class="col-sm-6">
+                                    <label class="form-label small fw-semibold">
+                                        <i class="bi bi-person-badge text-muted me-1"></i>Quién Entrega
                                     </label>
                                     <input type="text" class="form-control" id="deliveredBy"
                                         (input)="updateNotesSummary()" placeholder="Nombre de quien entrega">
                                 </div>
-
-                                <!-- Proveedor -->
-                                <div class="col-md-6">
-                                    <label class="form-label small">
-                                        <i class="bi bi-truck me-1 text-muted"></i>Proveedor
+                                <div class="col-sm-6">
+                                    <label class="form-label small fw-semibold">
+                                        <i class="bi bi-truck text-muted me-1"></i>Proveedor
                                     </label>
                                     <input type="text" class="form-control" id="supplier" (input)="updateNotesSummary()"
                                         placeholder="Nombre del proveedor">
                                 </div>
-
-                                <!-- Lote -->
-                                <div class="col-md-6">
-                                    <label class="form-label small">
-                                        <i class="bi bi-barcode me-1 text-muted"></i>Lote
+                                <div class="col-sm-6">
+                                    <label class="form-label small fw-semibold">
+                                        <i class="bi bi-upc text-muted me-1"></i>Lote
                                     </label>
                                     <input type="text" class="form-control" id="batch" (input)="updateNotesSummary()"
-                                        placeholder="Número de lote o referencia">
+                                        placeholder="Número de lote">
                                 </div>
-
-                                <!-- Fecha de Vencimiento -->
-                                <div class="col-md-6">
-                                    <label class="form-label small">
-                                        <i class="bi bi-calendar-x me-1 text-muted"></i>Fecha de Vencimiento
+                                <div class="col-sm-6">
+                                    <label class="form-label small fw-semibold">
+                                        <i class="bi bi-calendar-event text-muted me-1"></i>Fecha de Vencimiento
                                     </label>
                                     <input type="date" class="form-control" id="expiryDate"
                                         (change)="updateNotesSummary()">
                                 </div>
-
                             </div>
 
-                            <!-- Lista Ordenada de Campos -->
-                            <ol class="list-group list-group-numbered shadow-sm rounded">
+                            <!-- Verificación -->
+                            <div class="d-flex align-items-center mb-3 pb-2 border-bottom">
+                                <i class="bi bi-clipboard-check text-info fs-5 me-2"></i>
+                                <h6 class="mb-0 fw-bold text-secondary">Verificación de Calidad</h6>
+                            </div>
 
-                                <!-- 1. Sellos -->
-                                <li class="list-group-item py-4">
-                                    <label for="seals" class="form-label fw-semibold">
-                                        <i class="bi bi-shield-lock text-info me-2"></i>Sellos
+                            <div class="row g-3">
+                                <div class="col-sm-6">
+                                    <label for="seals" class="form-label small fw-semibold">
+                                        <i class="bi bi-shield-lock text-muted me-1"></i>Sellos
                                     </label>
-                                    <div class="input-group">
-                                        <span class="input-group-text bg-light">
-                                            <i class="bi bi-pencil"></i>
-                                        </span>
-                                        <select id="seals" class="form-select" (change)="updateNotesSummary()">
-                                            <option value="" selected>Seleccione una opción</option>
-                                            <option value="Sellado">Sellado</option>
-                                            <option value="Intacto">Intacto</option>
-                                            <option value="Roto">Roto</option>
-                                            <option value="Sin sello">Sin sello</option>
-                                        </select>
-                                    </div>
-                                </li>
-
-                                <!-- 2. Tipo de Empaque -->
-                                <li class="list-group-item py-4">
-                                    <label for="packageType" class="form-label fw-semibold">
-                                        <i class="bi bi-box-seam text-info me-2"></i>Tipo de Empaque
+                                    <select id="seals" class="form-select" (change)="updateNotesSummary()">
+                                        <option value="">Seleccione...</option>
+                                        <option value="Sellado">Sellado</option>
+                                        <option value="Intacto">Intacto</option>
+                                        <option value="Roto">Roto</option>
+                                        <option value="Sin sello">Sin sello</option>
+                                    </select>
+                                </div>
+                                <div class="col-sm-6">
+                                    <label for="packageType" class="form-label small fw-semibold">
+                                        <i class="bi bi-box text-muted me-1"></i>Tipo de Empaque
                                     </label>
-                                    <div class="input-group">
-                                        <span class="input-group-text bg-light">
-                                            <i class="bi bi-box"></i>
-                                        </span>
-                                        <input type="text" id="packageType" class="form-control me-2"
-                                            (input)="updateNotesSummary()" placeholder="Ej: Caja, Bolsa, Paleta" />
-                                    </div>
-                                </li>
-
-                                <!-- 3. Empaque Limpio -->
-                                <li class="list-group-item py-4">
-                                    <label for="cleanPackage" class="form-label fw-semibold">
-                                        <i class="bi bi-check-circle text-info me-2"></i>Empaque Limpio
+                                    <input type="text" id="packageType" class="form-control"
+                                        (input)="updateNotesSummary()" placeholder="Ej: Caja, Bolsa...">
+                                </div>
+                                <div class="col-sm-6">
+                                    <label for="cleanPackage" class="form-label small fw-semibold">
+                                        <i class="bi bi-check-circle text-muted me-1"></i>Empaque Limpio
                                     </label>
                                     <select class="form-select" id="cleanPackage" (change)="updateNotesSummary()">
-                                        <option value="">Seleccione una opción</option>
+                                        <option value="">Seleccione...</option>
                                         <option value="Si">Sí</option>
                                         <option value="No">No</option>
                                     </select>
-                                </li>
-
-                                <!-- 4. Condiciones de Transporte -->
-                                <li class="list-group-item py-4">
-                                    <label for="transportConditions" class="form-label fw-semibold">
-                                        <i class="bi bi-truck text-info me-2"></i>Condiciones de Transporte
+                                </div>
+                                <div class="col-sm-6">
+                                    <label for="transportConditions" class="form-label small fw-semibold">
+                                        <i class="bi bi-truck text-muted me-1"></i>Condiciones de Transporte
                                     </label>
-                                    <select class="form-select" id="transportConditions"
-                                        (change)="updateNotesSummary()">
-                                        <option value="">Seleccione una opción</option>
+                                    <select class="form-select" id="transportConditions" (change)="updateNotesSummary()">
+                                        <option value="">Seleccione...</option>
                                         <option value="Buenas">Buenas</option>
                                         <option value="Regulares">Regulares</option>
                                         <option value="Malas">Malas</option>
                                         <option value="Danado">Dañado</option>
                                     </select>
-                                </li>
-
-                                <!-- 5. Aceptado -->
-                                <li class="list-group-item py-4">
-                                    <label for="accepted" class="form-label fw-semibold">
-                                        <i class="bi bi-check2-square text-info me-2"></i>Aceptado
+                                </div>
+                                <div class="col-sm-6">
+                                    <label for="accepted" class="form-label small fw-semibold">
+                                        <i class="bi bi-patch-check text-muted me-1"></i>Aceptado
                                     </label>
                                     <select class="form-select" id="accepted" (change)="updateNotesSummary()">
-                                        <option value="">Seleccione una opción</option>
+                                        <option value="">Seleccione...</option>
                                         <option value="Si">Sí</option>
                                         <option value="No">No</option>
                                     </select>
-                                </li>
-
-                                <!-- 6. Observaciones -->
-                                <li class="list-group-item py-4">
-                                    <label for="additionalNotes" class="form-label fw-semibold">
-                                        <i class="bi bi-chat-left-text text-info me-2"></i>Observaciones
+                                </div>
+                                <div class="col-12">
+                                    <label for="additionalNotes" class="form-label small fw-semibold">
+                                        <i class="bi bi-chat-left-text text-muted me-1"></i>Observaciones
                                     </label>
-                                    <textarea class="form-control" rows="4" id="additionalNotes"
+                                    <textarea class="form-control" rows="2" id="additionalNotes"
                                         (input)="updateNotesSummary()"
-                                        placeholder="Comentarios, detalles adicionales o problemas detectados..."></textarea>
-                                    <div class="form-text">
-                                        Agrega cualquier información relevante sobre el estado del pedido.
-                                    </div>
-                                </li>
-
-                            </ol>
+                                        placeholder="Comentarios adicionales..."></textarea>
+                                </div>
+                            </div>
                         </div>
 
                         <!-- Campos de Detalles de Notas - LIBERACIONES -->
                         <div class="mb-4" *ngIf="form.get('type')?.value === 'out'">
 
-                            <!-- Título -->
-                            <label class="form-label fw-semibold fs-6 mb-3 d-block">
-                                <i class="bi bi-arrow-up-circle text-danger me-2"></i>
-                                Información de Salida
-                            </label>
+                            <!-- Header -->
+                            <div class="d-flex align-items-center mb-3 pb-2 border-bottom">
+                                <i class="bi bi-arrow-up-circle-fill text-danger fs-5 me-2"></i>
+                                <h6 class="mb-0 fw-bold text-danger">Información de Salida</h6>
+                            </div>
 
-                                                        <!-- Información Adicional -->
-                            <div class="row g-4 mt-4">
-
-                                <!-- Lote 
-                                <div class="col-md-6">
-                                    <label class="form-label fw-semibold">
-                                        <i class="bi bi-barcode text-muted me-2"></i>Lote
-                                    </label>
-                                    <select class="form-select" formControlName="batch_id"
-                                        [disabled]="!form.get('product_id')?.value || loadingBatches">
-                                        <option [value]="null">Sin lote específico</option>
-                                        <option *ngFor="let batch of availableBatches"
-                                            [value]="batch.id ?? batch.batch_id">
-                                            {{ batch.batch_code ?? batch.code ?? ('Lote #' + (batch.id ?? '')) }}
-                                        </option>
-                                    </select>
-                                    <div class="form-text" *ngIf="!form.get('product_id')?.value">
-                                        <i class="bi bi-info-circle me-1"></i>Selecciona un producto primero
+                            <!-- Búsqueda de Lote -->
+                            <div class="bg-light rounded p-3 mb-4">
+                                <label class="form-label small fw-semibold mb-2">
+                                    <i class="bi bi-search text-primary me-1"></i>Buscar Lote de Entrada
+                                </label>
+                                <div class="row g-2">
+                                    <div class="col-12 col-md-6">
+                                        <div class="input-group">
+                                            <input type="text" class="form-control" id="batchOut"
+                                                (input)="updateNotesSummary()" placeholder="Código de lote...">
+                                            <button type="button" class="btn btn-primary"
+                                                (click)="prefillOutByBatch()" [disabled]="loadingBatchLookup">
+                                                <span *ngIf="!loadingBatchLookup">
+                                                    <i class="bi bi-arrow-right"></i>
+                                                </span>
+                                                <span *ngIf="loadingBatchLookup" class="spinner-border spinner-border-sm"></span>
+                                            </button>
+                                        </div>
                                     </div>
-                                    <div class="form-text" *ngIf="loadingBatches">
-                                        <i class="bi bi-clock me-1"></i>Cargando lotes disponibles...
-                                    </div>
-                                </div>
-                                -->
-                                <!-- Lote Detalle -->
-                                <div class="col-md-6">
-                                    <label class="form-label fw-semibold">
-                                        <i class="bi bi-barcode text-muted me-2"></i>Lote (Detalle)
-                                    </label>
-                                    <div class="input-group">
-                                        <input type="text" class="form-control" id="batchOut"
-                                            (input)="updateNotesSummary()" placeholder="Número de lote o referencia">
-                                        <button type="button" class="btn btn-outline-primary" (click)="prefillOutByBatch()"
-                                            [disabled]="loadingBatchLookup">
-                                            <span *ngIf="!loadingBatchLookup">
-                                                <i class="bi bi-search me-1"></i> Cargar lote
-                                            </span>
-                                            <span *ngIf="loadingBatchLookup" class="d-flex align-items-center">
-                                                <span class="spinner-border spinner-border-sm me-2" role="status"
-                                                    aria-hidden="true"></span>
-                                                Buscando...
-                                            </span>
+                                    <div class="col-12 col-md-6">
+                                        <button type="button" class="btn btn-outline-primary w-100"
+                                            (click)="openBatchSearchModal()">
+                                            <i class="bi bi-list-ul me-1"></i>Buscar en Historial
                                         </button>
                                     </div>
-                                    <small class="text-muted">Busca la entrada por lote y precarga los datos de salida.</small>
                                 </div>
+                                <small class="text-muted d-block mt-2">
+                                    <i class="bi bi-info-circle me-1"></i>Busca un lote para precargar los datos automáticamente
+                                </small>
+                            </div>
 
-                                <!-- Línea de Producción -->
-                                <div class="col-md-6">
-                                    <label class="form-label fw-semibold">
-                                        <i class="bi bi-gear text-muted me-2"></i>Línea de Producción
+                            <!-- Información Principal -->
+                            <div class="row g-3 mb-4">
+                                <div class="col-sm-6">
+                                    <label class="form-label small fw-semibold">
+                                        <i class="bi bi-gear text-muted me-1"></i>Línea de Producción
                                     </label>
                                     <select class="form-select" formControlName="production_line">
                                         <option value="">Seleccione una línea</option>
@@ -774,174 +729,143 @@
                                         <option value="pasteleria">Línea Pastelería</option>
                                     </select>
                                 </div>
-
-                                <!-- Fecha de Vencimiento -->
-                                <div class="col-md-6">
-                                    <label class="form-label fw-semibold">
-                                        <i class="bi bi-calendar-x text-muted me-2"></i>Fecha de Vencimiento
+                                <div class="col-sm-6">
+                                    <label class="form-label small fw-semibold">
+                                        <i class="bi bi-calendar-event text-muted me-1"></i>Fecha de Vencimiento
                                     </label>
                                     <input type="date" class="form-control" id="expiryDateOut"
                                         (change)="updateNotesSummary()">
                                 </div>
-
-                                <!-- Proveedor -->
-                                <div class="col-md-6">
-                                    <label class="form-label fw-semibold">
-                                        <i class="bi bi-truck text-muted me-2"></i>Proveedor
+                                <div class="col-sm-6">
+                                    <label class="form-label small fw-semibold">
+                                        <i class="bi bi-truck text-muted me-1"></i>Proveedor
                                     </label>
                                     <input type="text" class="form-control" id="supplierOut"
                                         (input)="updateNotesSummary()" placeholder="Nombre del proveedor">
                                 </div>
-
-                                <!-- Quién Recibió -->
-                                <div class="col-md-6">
-                                    <label class="form-label fw-semibold">
-                                        <i class="bi bi-person-check text-muted me-2"></i>Quién Recibió
+                                <div class="col-sm-6">
+                                    <label class="form-label small fw-semibold">
+                                        <i class="bi bi-person-check text-muted me-1"></i>Quién Recibió
                                     </label>
                                     <input type="text" class="form-control" id="receivedByOut"
                                         (input)="updateNotesSummary()" placeholder="Nombre de quien recibió">
                                 </div>
-
-                                <!-- Quién Entrega -->
-                                <div class="col-md-6">
-                                    <label class="form-label fw-semibold">
-                                        <i class="bi bi-person-check text-muted me-2"></i>Quién Entrega
+                                <div class="col-sm-6">
+                                    <label class="form-label small fw-semibold">
+                                        <i class="bi bi-person-badge text-muted me-1"></i>Quién Entrega
                                     </label>
                                     <input type="text" class="form-control" id="deliveredByOut"
                                         (input)="updateNotesSummary()" placeholder="Nombre de quien entrega">
                                 </div>
+                            </div>
 
-                            </div> 
-                            
-                            <!-- Lista Ordenada de Campos -->
-                            <ol class="list-group list-group-numbered shadow-sm rounded">
+                            <!-- Verificación -->
+                            <div class="d-flex align-items-center mb-3 pb-2 border-bottom">
+                                <i class="bi bi-clipboard-check text-info fs-5 me-2"></i>
+                                <h6 class="mb-0 fw-bold text-secondary">Verificación de Calidad</h6>
+                            </div>
 
-                                <!-- 1. Sellos -->
-                                <li class="list-group-item py-4">
-                                    <label for="sealsOut" class="form-label fw-semibold">
-                                        <i class="bi bi-shield-lock text-info me-2"></i>Sellos
+                            <div class="row g-3">
+                                <div class="col-sm-6">
+                                    <label for="sealsOut" class="form-label small fw-semibold">
+                                        <i class="bi bi-shield-lock text-muted me-1"></i>Sellos
                                     </label>
-                                    <div class="input-group">
-                                        <span class="input-group-text bg-light">
-                                            <i class="bi bi-pencil"></i>
-                                        </span>
-                                        <select id="sealsOut" class="form-select" (change)="updateNotesSummary()">
-                                            <option value="" selected>Seleccione una opción</option>
-                                            <option value="Sellado">Sellado</option>
-                                            <option value="Intacto">Intacto</option>
-                                            <option value="Roto">Roto</option>
-                                            <option value="Sin sello">Sin sello</option>
-                                        </select>
-                                    </div>
-                                </li>
-
-                                <!-- 2. Tipo de Empaque -->
-                                <li class="list-group-item py-4">
-                                    <label for="packageTypeOut" class="form-label fw-semibold">
-                                        <i class="bi bi-box-seam text-danger me-2"></i>Tipo de Empaque
+                                    <select id="sealsOut" class="form-select" (change)="updateNotesSummary()">
+                                        <option value="">Seleccione...</option>
+                                        <option value="Sellado">Sellado</option>
+                                        <option value="Intacto">Intacto</option>
+                                        <option value="Roto">Roto</option>
+                                        <option value="Sin sello">Sin sello</option>
+                                    </select>
+                                </div>
+                                <div class="col-sm-6">
+                                    <label for="packageTypeOut" class="form-label small fw-semibold">
+                                        <i class="bi bi-box text-muted me-1"></i>Tipo de Empaque
                                     </label>
-                                    <div class="input-group">
-                                        <span class="input-group-text bg-light">
-                                            <i class="bi bi-box"></i>
-                                        </span>
-                                        <input type="text" class="form-control" id="packageTypeOut"
-                                            (input)="updateNotesSummary()" placeholder="Ej: Caja, Bolsa, Paleta...">
-                                    </div>
-                                </li>
-
-                                <!-- 3. Empaque Limpio -->
-                                <li class="list-group-item py-4">
-                                    <label for="cleanPackageOut" class="form-label fw-semibold">
-                                        <i class="bi bi-check-circle text-danger me-2"></i>Empaque Limpio
+                                    <input type="text" class="form-control" id="packageTypeOut"
+                                        (input)="updateNotesSummary()" placeholder="Ej: Caja, Bolsa...">
+                                </div>
+                                <div class="col-sm-6">
+                                    <label for="cleanPackageOut" class="form-label small fw-semibold">
+                                        <i class="bi bi-check-circle text-muted me-1"></i>Empaque Limpio
                                     </label>
                                     <select class="form-select" id="cleanPackageOut" (change)="updateNotesSummary()">
-                                        <option value="">Seleccione una opción</option>
+                                        <option value="">Seleccione...</option>
                                         <option value="Si">Sí</option>
                                         <option value="No">No</option>
                                     </select>
-                                </li>
-
-                                <!-- 4. Condiciones de Transporte -->
-                                <li class="list-group-item py-4">
-                                    <label for="transportConditionsOut" class="form-label fw-semibold">
-                                        <i class="bi bi-truck text-danger me-2"></i>Condiciones de Transporte
+                                </div>
+                                <div class="col-sm-6">
+                                    <label for="transportConditionsOut" class="form-label small fw-semibold">
+                                        <i class="bi bi-truck text-muted me-1"></i>Condiciones de Transporte
                                     </label>
-                                    <select class="form-select" id="transportConditionsOut"
-                                        (change)="updateNotesSummary()">
-                                        <option value="">Seleccione una opción</option>
+                                    <select class="form-select" id="transportConditionsOut" (change)="updateNotesSummary()">
+                                        <option value="">Seleccione...</option>
                                         <option value="Buenas">Buenas</option>
                                         <option value="Regulares">Regulares</option>
                                         <option value="Malas">Malas</option>
                                         <option value="Danado">Dañado</option>
                                     </select>
-                                </li>
-
-                                <!-- 5. Aceptado -->
-                                <li class="list-group-item py-4">
-                                    <label for="acceptedOut" class="form-label fw-semibold">
-                                        <i class="bi bi-check2-square text-danger me-2"></i>Aceptado
+                                </div>
+                                <div class="col-sm-6">
+                                    <label for="acceptedOut" class="form-label small fw-semibold">
+                                        <i class="bi bi-patch-check text-muted me-1"></i>Aceptado
                                     </label>
                                     <select class="form-select" id="acceptedOut" (change)="updateNotesSummary()">
-                                        <option value="">Seleccione una opción</option>
+                                        <option value="">Seleccione...</option>
                                         <option value="Si">Sí</option>
                                         <option value="No">No</option>
                                     </select>
-                                </li>
-
-                                <!-- 6. Observaciones -->
-                                <li class="list-group-item py-4">
-                                    <label for="observationsOut" class="form-label fw-semibold">
-                                        <i class="bi bi-chat-left-text text-danger me-2"></i>Observaciones
+                                </div>
+                                <div class="col-12">
+                                    <label for="observationsOut" class="form-label small fw-semibold">
+                                        <i class="bi bi-chat-left-text text-muted me-1"></i>Observaciones
                                     </label>
-                                    <textarea class="form-control" rows="4" id="observationsOut"
+                                    <textarea class="form-control" rows="2" id="observationsOut"
                                         (input)="updateNotesSummary()"
-                                        placeholder="Comentarios, detalles adicionales o problemas detectados..."></textarea>
-                                </li>
-                            </ol>
-
+                                        placeholder="Comentarios adicionales..."></textarea>
+                                </div>
+                            </div>
                         </div>
 
 
                         <!-- Campos de Detalles de Notas - AJUSTES -->
                         <div class="mb-4" *ngIf="form.get('type')?.value === 'adjustment'">
-                            <label class="form-label fw-semibold">
-                                <i class="bi bi-gear text-warning me-2"></i>
-                                Información del Ajuste
-                            </label>
-
-                            <!-- Línea de Producción (opcional para ajustes) -->
-                            <div class="mb-3">
-                                <label class="form-label small">
-                                    <i class="bi bi-gear me-1 text-info"></i>Línea de Producción (Opcional)
-                                </label>
-                                <select class="form-select" formControlName="production_line">
-                                    <option value="">Sin línea específica</option>
-                                    <option value="richard">Línea Richard</option>
-                                    <option value="panaderia">Línea Panadería</option>
-                                    <option value="pasteleria">Línea Pastelería</option>
-                                </select>
-                                <small class="form-text text-muted">
-                                    <i class="bi bi-info-circle me-1"></i>Si el ajuste afecta a una línea específica,
-                                    selecciónala
-                                </small>
+                            
+                            <!-- Header -->
+                            <div class="d-flex align-items-center mb-3 pb-2 border-bottom">
+                                <i class="bi bi-gear-fill text-warning fs-5 me-2"></i>
+                                <h6 class="mb-0 fw-bold text-warning">Información del Ajuste</h6>
                             </div>
 
-                            <div class="mb-3">
-                                <label class="form-label small">
-                                    <i class="bi bi-question-circle me-1 text-danger"></i>¿Por qué el Ajuste?
-                                </label>
-                                <textarea class="form-control" rows="4" id="adjustmentReason"
-                                    (input)="updateNotesSummary()"
-                                    placeholder="Explica el motivo del ajuste: error en conteo, pérdida, daño, etc."></textarea>
-                            </div>
-
-                            <div class="mb-3">
-                                <label class="form-label small">
-                                    <i class="bi bi-info-circle me-1 text-secondary"></i>¿Qué Sucedió?
-                                </label>
-                                <textarea class="form-control" rows="3" id="adjustmentWhat"
-                                    (input)="updateNotesSummary()"
-                                    placeholder="Describe qué sucedió: hallazgo, situación, circunstancias..."></textarea>
+                            <div class="row g-3">
+                                <div class="col-sm-6">
+                                    <label class="form-label small fw-semibold">
+                                        <i class="bi bi-gear text-muted me-1"></i>Línea de Producción (Opcional)
+                                    </label>
+                                    <select class="form-select" formControlName="production_line">
+                                        <option value="">Sin línea específica</option>
+                                        <option value="richard">Línea Richard</option>
+                                        <option value="panaderia">Línea Panadería</option>
+                                        <option value="pasteleria">Línea Pastelería</option>
+                                    </select>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label small fw-semibold">
+                                        <i class="bi bi-question-circle text-muted me-1"></i>¿Por qué el Ajuste?
+                                    </label>
+                                    <textarea class="form-control" rows="2" id="adjustmentReason"
+                                        (input)="updateNotesSummary()"
+                                        placeholder="Motivo: error en conteo, pérdida, daño, etc."></textarea>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label small fw-semibold">
+                                        <i class="bi bi-info-circle text-muted me-1"></i>¿Qué Sucedió?
+                                    </label>
+                                    <textarea class="form-control" rows="2" id="adjustmentWhat"
+                                        (input)="updateNotesSummary()"
+                                        placeholder="Descripción de la situación..."></textarea>
+                                </div>
                             </div>
                         </div>
 
@@ -961,6 +885,160 @@
                         <i *ngIf="!loading" class="bi me-2"
                             [ngClass]="isEditing ? 'bi-save-fill' : 'bi-plus-circle-fill'"></i>
                         {{ loading ? 'Procesando...' : (isEditing ? 'Guardar Cambios' : 'Crear Movimiento') }}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Buscar Lote (filtrado y paginado) -->
+    <div *ngIf="showBatchSearchModal" class="modal fade show d-block" tabindex="-1" role="dialog"
+        style="background-color: rgba(0,0,0,0.35);">
+        <div class="modal-dialog modal-xl modal-dialog-scrollable">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header border-0 bg-primary bg-opacity-10">
+                    <h5 class="modal-title mb-0 fw-bold text-primary">
+                        <i class="bi bi-filter-circle me-2"></i>Buscar lote de entrada
+                    </h5>
+                    <button type="button" class="btn-close" aria-label="Close"
+                        (click)="closeBatchSearchModal()"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-4">
+                            <label class="form-label small fw-semibold">Producto (código o nombre)</label>
+                            <input type="text" class="form-control" placeholder="Ej: HAR-01 o Harina"
+                                [(ngModel)]="batchSearchFilters.productText" (input)="onBatchFiltersChange()">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small fw-semibold">Proveedor</label>
+                            <input type="text" class="form-control" placeholder="Nombre del proveedor"
+                                [(ngModel)]="batchSearchFilters.supplier" (input)="onBatchFiltersChange()">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label small fw-semibold">Fecha de ingreso</label>
+                            <input type="date" class="form-control" [(ngModel)]="batchSearchFilters.ingressDate"
+                                (change)="onBatchFiltersChange()">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label small fw-semibold">Vencimiento</label>
+                            <input type="date" class="form-control" [(ngModel)]="batchSearchFilters.expiryDate"
+                                (change)="onBatchFiltersChange()">
+                        </div>
+                        <div class="col-md-1">
+                            <label class="form-label small fw-semibold">Estado</label>
+                            <select class="form-select" [(ngModel)]="batchSearchFilters.status"
+                                (change)="onBatchFiltersChange()">
+                                <option value="">Todos</option>
+                                <option value="si">Aceptado</option>
+                                <option value="no">Rechazado</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Texto libre (lote, notas, observaciones)</label>
+                            <input type="text" class="form-control" placeholder="Busca en notas, lote o detalles"
+                                [(ngModel)]="batchSearchFilters.freeText" (keyup.enter)="onBatchFiltersChange()"
+                                (input)="onBatchFiltersChange()">
+                        </div>
+                        <div class="col-md-6 d-flex align-items-end justify-content-end gap-2">
+                            <button type="button" class="btn btn-outline-info" (click)="reloadBatchSearchData()"
+                                [disabled]="batchSearchLoading" title="Recargar datos desde el servidor">
+                                <i class="bi bi-arrow-clockwise"></i>
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary" (click)="resetBatchFilters()">
+                                <i class="bi bi-eraser me-1"></i>Limpiar filtros
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="text-muted small">Ordenar por fecha:</span>
+                            <button type="button" class="btn btn-sm btn-outline-primary" (click)="toggleBatchSort()">
+                                <i class="bi"
+                                    [ngClass]="batchSearchSort === 'desc' ? 'bi-arrow-down' : 'bi-arrow-up'"></i>
+                                {{ batchSearchSort === 'desc' ? 'Más recientes' : 'Más antiguos' }}
+                            </button>
+                        </div>
+                        <div class="btn-group">
+                            <button type="button" class="btn btn-sm btn-outline-secondary"
+                                (click)="batchSearchPrevPage()"
+                                [disabled]="batchSearchPage === 1 || batchSearchLoading">
+                                <i class="bi bi-chevron-left"></i>
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary"
+                                (click)="batchSearchNextPage()"
+                                [disabled]="batchSearchLoading || (batchSearchMeta?.last_page && batchSearchPage >= batchSearchMeta?.last_page)">
+                                <i class="bi bi-chevron-right"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive border rounded shadow-sm">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th style="width: 14%">Lote</th>
+                                    <th style="width: 22%">Producto</th>
+                                    <th style="width: 16%">Proveedor</th>
+                                    <th style="width: 12%">Vencimiento</th>
+                                    <th style="width: 12%">Estado</th>
+                                    <th style="width: 12%">Ingreso</th>
+                                    <th style="width: 12%" class="text-end">Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr *ngIf="batchSearchLoading">
+                                    <td colspan="7" class="text-center py-4">
+                                        <div class="d-inline-flex align-items-center gap-2 text-muted">
+                                            <span class="spinner-border spinner-border-sm" role="status"
+                                                aria-hidden="true"></span>
+                                            Cargando lotes...
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr *ngFor="let row of batchSearchView">
+                                    <td class="fw-semibold">{{ row?.parsed?.batch || '—' }}</td>
+                                    <td>
+                                        <div class="fw-semibold">{{ row?.product_name || row?.raw_material_name }}</div>
+                                        <div class="text-muted small">{{ row?.product_code || row?.raw_material_code }}
+                                        </div>
+                                    </td>
+                                    <td>{{ row?.parsed?.supplier || '—' }}</td>
+                                    <td>{{ row?.parsed?.expiry || '—' }}</td>
+                                    <td>
+                                        <span class="badge" [ngClass]="{
+                                                'bg-success': (row?.parsed?.accepted || '').toLowerCase() === 'si' || (row?.parsed?.accepted || '').toLowerCase() === 'sí',
+                                                'bg-danger': (row?.parsed?.accepted || '').toLowerCase() === 'no',
+                                                'bg-secondary': !(row?.parsed?.accepted)
+                                            }">
+                                            {{ row?.parsed?.accepted || 'N/D' }}
+                                        </span>
+                                    </td>
+                                    <td>{{ row?.created_at | date:'yyyy-MM-dd' }}</td>
+                                    <td class="text-end">
+                                        <button type="button" class="btn btn-sm btn-primary"
+                                            (click)="selectBatchFromModal(row)">
+                                            <i class="bi bi-check2-circle me-1"></i>Usar lote
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr *ngIf="!batchSearchLoading && batchSearchView.length === 0">
+                                    <td colspan="7" class="text-center py-4 text-muted">
+                                        <i class="bi bi-inbox me-2"></i>Sin resultados con los filtros actuales
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 bg-light">
+                    <div class="text-muted small">
+                        Página {{ batchSearchPage }}<span *ngIf="batchSearchMeta?.last_page"> de {{
+                            batchSearchMeta?.last_page }}</span>
+                    </div>
+                    <button type="button" class="btn btn-outline-secondary" (click)="closeBatchSearchModal()">
+                        <i class="bi bi-x-circle me-1"></i>Cerrar
                     </button>
                 </div>
             </div>

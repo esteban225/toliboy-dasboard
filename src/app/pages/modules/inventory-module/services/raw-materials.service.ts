@@ -14,8 +14,14 @@ export class RawMaterialsService {
 	constructor(private http: HttpClient) {}
 
 	private getHeaders(): HttpHeaders {
-		// GlobalComponent.headerToken contains the Authorization header and content-type
-		const headersObj: any = GlobalComponent.headerToken || {};
+		// Relee el token en cada llamada para no depender de un valor estático
+		const token = localStorage.getItem('token');
+		const headersObj: any = {
+			'Content-Type': 'application/json'
+		};
+		if (token) {
+			headersObj['Authorization'] = `Bearer ${token}`;
+		}
 		return new HttpHeaders(headersObj);
 	}
 
@@ -25,7 +31,7 @@ export class RawMaterialsService {
 	 * @param page número de página (1-based)
 	 * @param perPage registros por página
 	 */
-	list(filters: Record<string, any> = {}, page = 1, perPage = 100): Observable<{ data: RawMaterial[]; meta: PaginationMeta }> {
+	list(filters: Record<string, any> = {}, page = 1, perPage = 100): Observable<{ data: RawMaterial[]; meta: PaginationMeta | null }> {
 		let params = new HttpParams()
 			.set('page', String(page))
 			.set('per_page', String(perPage));
@@ -37,21 +43,46 @@ export class RawMaterialsService {
 			}
 		});
 
+		console.log('[RAW-MATERIALS SERVICE] Llamando a:', this.baseUrl);
+
 		return this.http
 			.get<any>(this.baseUrl, { headers: this.getHeaders(), params })
 			.pipe(
-				map((res) => ({
-					data: res.data ?? res.items ?? res, // adaptarse al formato del backend
-					meta:
-						res.meta ??
-						({
-							current_page: res.current_page,
-							last_page: res.last_page,
-							per_page: res.per_page,
-							total: res.total,
-						} as PaginationMeta),
-				})),
-				catchError(this.handleError)
+				map((res) => {
+					console.log('[RAW-MATERIALS SERVICE] Respuesta cruda:', res);
+					
+					// Soporta respuestas: {data:[...]}, {data:{data:[...],meta}}, {items:[...]}, o array directo
+					let extractedData: any[] = [];
+					
+					if (Array.isArray(res)) {
+						extractedData = res;
+					} else if (res?.success && Array.isArray(res?.data)) {
+						// Formato Laravel: {success: true, data: [...]}
+						extractedData = res.data;
+					} else if (Array.isArray(res?.data)) {
+						extractedData = res.data;
+					} else if (Array.isArray(res?.data?.data)) {
+						extractedData = res.data.data;
+					} else if (Array.isArray(res?.items)) {
+						extractedData = res.items;
+					}
+
+					console.log('[RAW-MATERIALS SERVICE] Datos extraídos:', extractedData.length, 'items');
+					if (extractedData.length > 0) {
+						console.log('[RAW-MATERIALS SERVICE] Ejemplo item:', extractedData[0]);
+					}
+
+					const extractedMeta: any = res?.meta ?? res?.data?.meta ?? null;
+
+					return {
+						data: extractedData,
+						meta: extractedMeta,
+					};
+				}),
+				catchError((error) => {
+					console.error('[RAW-MATERIALS SERVICE] Error:', error);
+					return throwError(() => error);
+				})
 			);
 	}
 
