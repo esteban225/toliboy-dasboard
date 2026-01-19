@@ -49,7 +49,7 @@ export class MenuService {
         link: '/apps/calendar',
         parentId: 8
       },
-      {
+      /*{
         id: 10,
         label: 'MENUITEMS.APPS.LIST.CHAT',
         icon: 'ti ti-messages',
@@ -69,7 +69,7 @@ export class MenuService {
         icon: 'ti ti-folders',
         link: '/apps/file-manager',
         parentId: 8,
-      },
+      },*/
       {
         id: 24,
         label: 'MENUITEMS.APPS.LIST.TODO',
@@ -77,13 +77,13 @@ export class MenuService {
         link: '/apps/to-do',
         parentId: 8,
       },
-      {
+      /*{
         id: 25,
         label: 'MENUITEMS.APPS.LIST.CONTACTS',
         icon: 'ti ti-address-book',
         link: '/apps/contacts',
         parentId: 8,
-      },
+      },*/
       {
         id: 26,
         label: 'MENUITEMS.APPS.LIST.KANBANBOARD',
@@ -106,18 +106,137 @@ export class MenuService {
             label: 'MENUITEMS.USERMANAGEMENT.LIST.USERMANAGEMENT',
             link: '/modules/users',
             parentId: 101
+          },
+          {
+            id: 103,
+            label: 'MENUITEMS.USERMANAGEMENT.LIST.WORKLOGUSERS',
+            link: '/modules/worklog-users',
+            parentId: 101
           }
         ],
         parentId: 100
       },
       {
         id: 103,
-        label: 'MENUITEMS.MODULES.LIST.INVENTORY',
+        label: 'MENUITEMS.FORMMANAGER.TEXT',
         icon: 'ti ti-box',
-        link: '/modules/inventory',
-        parentId: 100 
-      },/*
+        subItems: [
+          {
+            id: 104,
+            label: 'MENUITEMS.FORMMANAGER.LIST.FORMRESPONSES',
+            link: '/modules/forms',
+            parentId: 103
+          },
+          {
+            id: 105,
+            label: 'MENUITEMS.FORMMANAGER.LIST.FORMMANAGER',
+            link: '/modules/forms/forms-manager',
+            parentId: 103
+          },
+          {
+            id: 106,
+            label: 'MENUITEMS.FORMMANAGER.LIST.FORMSTRAZABILITY',
+            link: '/modules/forms/forms-trazability',
+            parentId: 103
+          },
+          {
+            id: 107,
+            label: 'MENUITEMS.FORMMANAGER.LIST.FORMRESPONSESDETAIL',
+            link: '/modules/forms/forms-responses',
+            parentId: 103
+          }
+        ],
+        parentId: 100
+
+      },
       {
+        id: 200,
+        label: 'MENUITEMS.INVENTORY.TEXT',
+        icon: 'ti ti-box',
+        subItems: [
+          {
+            id: 201,
+            label: 'MENUITEMS.INVENTORY.LIST.GESTIONINVENTORY',
+            link: '/modules/inventory',
+            parentId: 200
+          },
+          {
+            id: 202,
+            label: 'MENUITEMS.INVENTORY.LIST.INVENTORYMOVEMENT',
+            link: '/modules/inventory/inventoryMovement',
+            parentId: 200
+          },
+          {
+            id: 203,
+            label: 'MENUITEMS.INVENTORY.LIST.RAWMATERIALS',
+            link: '/modules/inventory/rawMaterial',
+            parentId: 200
+          }
+        ],
+        parentId: 100
+      },
+      {
+        id: 300,
+        label: 'MENUITEMS.PRODUCT.TEXT',
+        icon: 'ti ti-package',
+        subItems: [
+          {
+            id: 301,
+            label: 'MENUITEMS.PRODUCT.LIST.PRODUCTSANALYTICS',
+            link: '/modules/product/analytics',
+            parentId: 300
+          },
+          {
+            id: 302,
+            label: 'MENUITEMS.PRODUCT.LIST.PRODUCTSLIST',
+            link: '/modules/product',
+            parentId: 300
+          }
+        ],
+        parentId: 100
+      },
+      {
+        id: 400,
+        label: 'MENUITEMS.BATCHES.TEXT',
+        icon: 'ti ti-box-seam',
+        subItems: [
+          {
+            id: 401,
+            label: 'MENUITEMS.BATCHES.LIST.BATCHLIST',
+            link: '/modules/batches',
+            parentId: 400
+          },
+          {
+            id: 402,
+            label: 'MENUITEMS.BATCHES.LIST.ANALYTICS',
+            link: '/modules/batches/analytics',
+            parentId: 400
+          },
+          {
+            id: 403,
+            label: 'MENUITEMS.BATCHES.LIST.BATCHTRACKING',
+            link: '/modules/batches/batch-tracking',
+            parentId: 400
+          }
+        ],
+        parentId: 100
+      },
+      {
+        id: 500,
+        label: 'MENUITEMS.TRACEABILITY.TEXT',
+        icon: 'ti ti-shuffle',
+        subItems: [
+          {
+            id: 501,
+            label: 'MENUITEMS.TRACEABILITY.LIST.DASHBOARDTRACEABILITY',
+            link: '/modules/traceability',
+            parentId: 500
+          }
+        ],
+        parentId: 100
+      }
+      /*
+      {INVENTORY
         id: 200,
         label: 'MENUITEMS.ADMIN.TEXT',
         isTitle: true
@@ -349,24 +468,31 @@ export class MenuService {
         isTitle: true
       },
       {
-        id: 8,
-        label: 'MENUITEMS.APPS.TEXT',
-        isTitle: true
+        id: 200,
+        label: 'MENUITEMS.INVENTORY.TEXT',
+        icon: 'ti ti-box',
+        subItems: [
+          {
+            id: 201,
+            label: 'MENUITEMS.INVENTORY.LIST.GESTIONINVENTORY',
+            link: '/modules/inventory',
+            parentId: 200
+          },
+          {
+            id: 202,
+            label: 'MENUITEMS.INVENTORY.LIST.INVENTORYMOVEMENT',
+            link: '/modules/inventory/inventoryMovement',
+            parentId: 200
+          },
+          {
+            id: 203,
+            label: 'MENUITEMS.INVENTORY.LIST.RAWMATERIALS',
+            link: '/modules/inventory/rawMaterial',
+            parentId: 200
+          }
+        ],
+        parentId: 100
       },
-      {
-        id: 26,
-        label: 'MENUITEMS.APPS.LIST.KANBANBOARD',
-        icon: 'ti ti-subtask',
-        link: '/apps/kanbanboard',
-        parentId: 8,
-      },
-      {
-        id: 24,
-        label: 'MENUITEMS.APPS.LIST.TODO',
-        icon: 'ti ti-list',
-        link: '/apps/to-do',
-        parentId: 8,
-      }
     ]
   };
 
@@ -425,16 +551,17 @@ export class MenuService {
    * Obtener la ruta por defecto según el rol
    */
   getDefaultRouteByRole(role: string): string {
+    const normalizedRole = (role || '').trim().toUpperCase();
     const routeMap: { [key: string]: string } = {
       'DEV': '/', // Dashboard completo
       'GG': '/', // Dashboard gerencial  
       'INGPL': '/', // Dashboard de planta
       'INGPR': '/', // Dashboard de producción
       'TRZ': '/apps/kanbanboard', // Kanban para trazabilidad
-      'OP': '/apps/kanbanboard' // Solo Kanban para operadores
+      'OP': '/modules/inventory' // Solo Kanban para operadores
     };
 
-    return routeMap[role] || '/apps/kanbanboard';
+    return routeMap[normalizedRole] || '/modules/inventory';
   }
 
   /**

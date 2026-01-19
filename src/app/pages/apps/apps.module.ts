@@ -82,8 +82,7 @@ const DEFAULT_DROPZONE_CONFIG: DropzoneConfigInterface = {
     ContactsComponent,
     KanbanboardComponent,
     WidgetsComponent,
-    ProjectManagerComponent,
-
+    ProjectManagerComponent
   ],
   imports: [
     CommonModule,
@@ -111,7 +110,6 @@ const DEFAULT_DROPZONE_CONFIG: DropzoneConfigInterface = {
     DropzoneModule,
     AlertModule.forRoot(),
     FormManagerComponent // ✅ Componente standalone se importa aquí
-
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   providers: [

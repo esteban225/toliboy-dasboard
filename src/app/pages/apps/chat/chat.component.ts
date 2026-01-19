@@ -48,6 +48,9 @@ export class ChatComponent {
   constructor(public formBuilder: UntypedFormBuilder, private datePipe: DatePipe) { }
 
   ngOnInit(): void {
+    // Inicializar usuario desde localStorage
+    this.initializeUser();
+    
     // Chat Data Get Function
     this._fetchData();
 
@@ -57,6 +60,30 @@ export class ChatComponent {
     });
 
     this.onListScroll();
+  }
+
+  /**
+   * Inicializa el usuario de forma segura
+   */
+  private initializeUser(): void {
+    try {
+      const userString = localStorage.getItem('currentUser');
+      if (userString) {
+        const user = JSON.parse(userString);
+        this.username = user.name || 'Usuario';
+        this.isProfile = user.avatar || 'assets/images/users/avatar-1.jpg';
+        console.log('✅ Chat user loaded:', this.username);
+      } else {
+        // Usuario por defecto
+        this.username = 'Usuario';
+        this.isProfile = 'assets/images/users/avatar-1.jpg';
+        console.log('ℹ️ Using default chat user');
+      }
+    } catch (error) {
+      console.error('❌ Error loading chat user:', error);
+      this.username = 'Usuario';
+      this.isProfile = 'assets/images/users/avatar-1.jpg';
+    }
   }
 
   ngAfterViewInit() {
@@ -101,50 +128,87 @@ export class ChatComponent {
   }
 
   /**
- * Save the message in chat
- */
+   * Save the message in chat
+   */
   messageSave() {
     const message = this.formData.get('message')!.value;
+    
+    if (!message || !message.trim()) {
+      return; // No enviar mensajes vacíos
+    }
+
+    const currentTime = this.datePipe.transform(new Date(), "h:mm a");
+
     if (this.isreplyMessage == true) {
       var itemReplyList: any = document.getElementById("users-chat")?.querySelector(".chat-conversation-list");
-      var dateTime = this.datePipe.transform(new Date(), "h:mm a");
-      var chatReplyUser = (document.querySelector(".replyCard .replymessage-block .flex-grow-1 .conversation-name") as HTMLAreaElement).innerHTML;
-      var chatReplyMessage = (document.querySelector(".replyCard .replymessage-block .flex-grow-1 .mb-0") as HTMLAreaElement).innerText;
+      var chatReplyUser = (document.querySelector(".replyCard .replymessage-block .flex-grow-1 .conversation-name") as HTMLAreaElement)?.innerHTML || 'Usuario';
+      var chatReplyMessage = (document.querySelector(".replyCard .replymessage-block .flex-grow-1 .mb-0") as HTMLAreaElement)?.innerText || '';
 
       this.messageData.push({
+        id: this.messageData.length + 1,
         isSender: true,
-        sender: 'Marcus',
+        sender: this.username,
         replayName: chatReplyUser,
         replaymsg: chatReplyMessage,
-        message,
-        createdAt: dateTime,
+        message: message.trim(),
+        createdAt: currentTime,
+      });
+    } else {
+      // Mensaje normal
+      this.messageData.push({
+        id: this.messageData.length + 1,
+        isSender: true,
+        sender: this.username,
+        message: message.trim(),
+        createdAt: currentTime,
       });
     }
-    else {
-      if (this.formData.valid && message) {
-        // Message Push in Chat
-        this.messageData.push({
-          id: this.messageData.length + 1,
-          isSender: true,
-          sender: 'Marcus',
-          message,
-          createdAt: this.datePipe.transform(new Date(), "h:mm a"),
-        });
-      }
-    }
+
+    // Simular respuesta automática después de 1-3 segundos
+    this.simulateAutoReply();
 
     this.onListScroll();
 
-    // Set Form Data Reset
-    this.formData = this.formBuilder.group({
-      message: null,
-    });
+    // Reset form
+    this.formData.patchValue({ message: '' });
     this.isreplyMessage = false;
-
-    document.querySelector('.replyCard')?.classList.remove('show');
     this.emoji = '';
 
+    document.querySelector('.replyCard')?.classList.remove('show');
     this.submitted = true;
+  }
+
+  /**
+   * Simula respuesta automática del contacto
+   */
+  private simulateAutoReply(): void {
+    // Solo simular respuesta si hay un chat activo
+    if (!this.isFlag) return;
+
+    const responses = [
+      "¡Hola! ¿Cómo estás?",
+      "Entendido, gracias por el mensaje.",
+      "Te respondo en un momento.",
+      "Perfecto, hablamos luego.",
+      "¡Excelente! Me parece bien.",
+      "Ok, nos vemos pronto.",
+      "Gracias por la información.",
+      "¿Necesitas algo más?",
+    ];
+
+    const randomDelay = Math.random() * 3000 + 1000; // 1-4 segundos
+    const randomResponse = responses[Math.floor(Math.random() * responses.length)];
+
+    setTimeout(() => {
+      this.messageData.push({
+        id: this.messageData.length + 1,
+        isSender: false,
+        sender: this.username, // El contacto activo
+        message: randomResponse,
+        createdAt: this.datePipe.transform(new Date(), "h:mm a"),
+      });
+      this.onListScroll();
+    }, randomDelay);
   }
 
   // Emoji Picker
@@ -164,31 +228,82 @@ export class ChatComponent {
   }
 
   addEmoji(event: any) {
-    const { emoji } = this;
-    const text = `${emoji}${event.emoji.native}`;
-    this.emoji = text;
+    const currentMessage = this.formData.get('message')?.value || '';
+    const newMessage = currentMessage + event.emoji.native;
+    
+    this.formData.patchValue({ message: newMessage });
     this.showEmojiPicker = false;
+    
+    // Enfocar el input después de agregar emoji
+    setTimeout(() => {
+      const messageInput = document.querySelector('#messageInput') as HTMLInputElement;
+      if (messageInput) {
+        messageInput.focus();
+      }
+    }, 100);
   }
 
   /***
   * OnClick User Chat show
   */
   chatUsername(name: string, profile: any, status: string, event: any) {
-    const li = document.querySelectorAll('#userList')
+    // Remover clase active de todos los elementos
+    const li = document.querySelectorAll('#userList li');
     li.forEach((item: any) => {
-      item.classList.remove('active')
-    })
-    event.target.closest('li').classList.add('active')
+      item.classList.remove('active');
+    });
+    
+    // Agregar active al elemento clickeado
+    const clickedElement = event.target.closest('li');
+    if (clickedElement) {
+      clickedElement.classList.add('active');
+    }
+    
+    // Configurar chat activo
     this.isFlag = true;
     this.username = name;
-    const currentDate = new Date();
     this.isStatus = status;
     this.isProfile = profile ? profile : 'assets/images/users/user-dummy-img.jpg';
-    // this.messageData.map((chat) => { if (chat.image) { chat.profile = this.isProfile } });
+    
+    // Cargar mensajes para este usuario (simulados)
+    this.loadMessagesForUser(name);
+    
+    // Mostrar el chat
     const userChatShow = document.querySelector('.user-chat');
     if (userChatShow != null) {
       userChatShow.classList.add('user-chat-show');
     }
+    
+    console.log(`💬 Chat opened with: ${name}`);
+  }
+
+  /**
+   * Carga mensajes simulados para el usuario seleccionado
+   */
+  private loadMessagesForUser(userName: string): void {
+    // Limpiar mensajes anteriores
+    this.messageData = [];
+    
+    // Agregar algunos mensajes de ejemplo
+    const sampleMessages = [
+      {
+        id: 1,
+        isSender: false,
+        sender: userName,
+        message: `¡Hola! Soy ${userName}`,
+        createdAt: "10:00 AM",
+      },
+      {
+        id: 2,
+        isSender: false,
+        sender: userName,
+        message: "¿Cómo estás hoy?",
+        createdAt: "10:01 AM",
+      }
+    ];
+    
+    this.messageData = sampleMessages;
+    setTimeout(() => this.onListScroll(), 100);
   }
 
   // Copy Message

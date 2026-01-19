@@ -7,6 +7,7 @@ import interactionPlugin from '@fullcalendar/interaction';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import listPlugin from '@fullcalendar/list';
+import esLocale from '@fullcalendar/core/locales/es';
 import { defaultevent, events, createEventId } from '../../../core/data/calendar';
 import { ModalDirective } from 'ngx-bootstrap/modal';
 import Swal from 'sweetalert2';
@@ -30,6 +31,7 @@ export class CalendarComponent {
   formEditData!: UntypedFormGroup;
   submitted = false;
   formData!: UntypedFormGroup;
+  user: any;
 
   upcomingEvents: any;
   // events$: Observable<EventInput[]>;
@@ -39,6 +41,8 @@ export class CalendarComponent {
   constructor(private formBuilder: UntypedFormBuilder,private store: Store<RootReducerState>,private datePipe: DatePipe) { }
 
   ngOnInit(): void {
+    // Inicializar usuario de forma segura
+    this.initializeUser();
 
     // Validation
     this.formData = this.formBuilder.group({
@@ -60,6 +64,33 @@ export class CalendarComponent {
     this.upcomingEvents = defaultevent;
   }
 
+  /**
+   * Inicializa el usuario de forma segura
+   */
+  private initializeUser(): void {
+    try {
+      const userString = localStorage.getItem('currentUser');
+      if (userString) {
+        this.user = JSON.parse(userString);
+        console.log('✅ User loaded:', this.user);
+      } else {
+        // Usuario por defecto si no hay datos en localStorage
+        this.user = {
+          name: 'Usuario',
+          email: 'usuario@toliboy.com'
+        };
+        console.log('ℹ️ No user in localStorage, using default');
+      }
+    } catch (error) {
+      console.error('❌ Error parsing user data:', error);
+      // Usuario por defecto en caso de error
+      this.user = {
+        name: 'Usuario',
+        email: 'usuario@toliboy.com'
+      };
+    }
+  }
+
     /**
    * Returns form
    */
@@ -72,10 +103,18 @@ export class CalendarComponent {
  */
   calendarOptions: CalendarOptions = {
     plugins: [dayGridPlugin, interactionPlugin, timeGridPlugin, listPlugin],
+    locale: esLocale,
     headerToolbar: {
       right: 'dayGridMonth,dayGridWeek,dayGridDay,listMonth',
       center: 'title',
       left: 'prev,next today'
+    },
+    buttonText: {
+      today: 'Hoy',
+      month: 'Mes',
+      week: 'Semana',
+      day: 'Día',
+      list: 'Lista'
     },
     initialView: 'dayGridMonth',
     initialEvents: this.calendarEvents,
@@ -96,10 +135,10 @@ export class CalendarComponent {
   */
   openModal(events?: any) {
     var modaltitle = document.querySelector('.modal-title') as HTMLAreaElement;
-    modaltitle.innerHTML = "Add Event";
+    modaltitle.innerHTML = "Añadir Evento";
 
     var modalbtn = document.querySelector('#btn-save-event') as HTMLAreaElement;
-    modalbtn.innerHTML = "Add Event";
+    modalbtn.innerHTML = "Añadir Evento";
 
     document.getElementById('edit-event-btn')?.classList.add('d-none');
     document.getElementById('btn-delete-event')?.classList.add('d-none');
@@ -124,7 +163,7 @@ export class CalendarComponent {
     document.getElementById('btn-delete-event')?.classList.remove('d-none');
 
     var editbtn = document.querySelector('#edit-event-btn') as HTMLAreaElement;
-    editbtn.innerHTML = 'edit';
+    editbtn.innerHTML = 'editar';
 
     (document.getElementById('btn-save-event') as HTMLElement).setAttribute("hidden", "true");
 
@@ -164,16 +203,16 @@ export class CalendarComponent {
   }
 
   showeditEvent() {
-    if (document.querySelector('#edit-event-btn')?.innerHTML == 'cancel') {
+    if (document.querySelector('#edit-event-btn')?.innerHTML == 'cancelar') {
       this.eventModal?.hide();
     } else {
       (document.querySelector(".event-details") as HTMLElement).style.display = "none";
       (document.querySelector(".event-form") as HTMLElement).style.display = "block";
       (document.getElementById('btn-save-event') as HTMLElement).removeAttribute("hidden");
       var modalbtn = document.querySelector('#btn-save-event') as HTMLAreaElement;
-      modalbtn.innerHTML = "Update Event"
+      modalbtn.innerHTML = "Actualizar Evento"
       var editbtn = document.querySelector('#edit-event-btn') as HTMLAreaElement;
-      editbtn.innerHTML = 'cancel'
+      editbtn.innerHTML = 'cancelar'
     }
   }
 
@@ -200,7 +239,7 @@ export class CalendarComponent {
     Swal.fire({
       position: 'center',
       icon: 'success',
-      title: 'Event has been saved',
+      title: 'El evento ha sido guardado',
       showConfirmButton: false,
       timer: 1000,
     });
@@ -213,7 +252,7 @@ export class CalendarComponent {
     Swal.fire({
       position: 'center',
       icon: 'success',
-      title: 'Event has been Updated',
+      title: 'El evento ha sido actualizado',
       showConfirmButton: false,
       timer: 1000,
     });
@@ -223,7 +262,7 @@ export class CalendarComponent {
   * Save the event
   */
   saveEvent() {
-    if (document.querySelector('#btn-save-event')?.innerHTML == 'Add Event') {
+    if (document.querySelector('#btn-save-event')?.innerHTML == 'Añadir Evento') {
       if (this.formData.valid) {
         const className = this.formData.get('className')!.value;
         const title = this.formData.get('title')!.value;

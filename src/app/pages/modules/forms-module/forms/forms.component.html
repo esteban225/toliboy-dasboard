@@ -1,1 +1,516 @@
-<p>forms works!</p>
+<div class="container-fluid min-vh-100 d-flex flex-column justify-content-center align-items-center bg-light py-4">
+  <!-- BOTONES PRINCIPALES -->
+  <div class="row justify-content-center mb-4 w-100">
+    <div class="col-auto">
+      <div class="d-flex flex-column flex-md-row gap-3">
+        <button (click)="toggleSection('materia')" class="btn btn-primary btn-lg fw-semibold shadow">
+          <i class="fas fa-industry me-2"></i>Materia Prima
+        </button>
+        <button (click)="toggleSection('produccion')" class="btn btn-success btn-lg fw-semibold shadow">
+          <i class="fas fa-cogs me-2"></i>Producción de Productos
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SUBBOTONES MATERIA PRIMA -->
+  <div *ngIf="showMateria" class="container-xl mb-4" [@fadeZoom]>
+    <div class="row justify-content-center">
+      <div class="col-12">
+        <h4 class="text-center text-primary mb-4 fw-bold">
+          <i class="fas fa-warehouse me-2"></i>Formularios de Materia Prima
+        </h4>
+        <div class="row g-3 justify-content-center">
+          <ng-container *ngIf="forms$ | async as forms">
+            <div *ngFor="let form of forms" class="col-12 col-sm-6 col-md-4 col-lg-3">
+              <button
+                class="btn btn-outline-primary w-100 h-100 p-3 shadow-sm"
+                (click)="openModal(form)"
+              >
+                <div class="d-flex flex-column align-items-center">
+                  <i class="fas fa-file-alt fa-2x mb-2"></i>
+                  <span class="fw-semibold text-wrap">{{ form.title || form.name }}</span>
+                </div>
+              </button>
+            </div>
+          </ng-container>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SUBBOTONES PRODUCCIÓN -->
+  <div *ngIf="showProduccion" class="container-xl mb-4" [@fadeZoom]>
+    <div class="row justify-content-center">
+      <div class="col-12">
+        <h4 class="text-center text-success mb-4 fw-bold">
+          <i class="fas fa-factory me-2"></i>Formularios de Producción
+        </h4>
+        <div class="row g-3 justify-content-center">
+          <ng-container *ngIf="forms$ | async as forms">
+            <div *ngFor="let form of forms" class="col-12 col-sm-6 col-md-4 col-lg-3">
+              <button
+                class="btn btn-outline-success w-100 h-100 p-3 shadow-sm"
+                (click)="openModal(form)"
+              >
+                <div class="d-flex flex-column align-items-center">
+                  <i class="fas fa-clipboard-list fa-2x mb-2"></i>
+                  <span class="fw-semibold text-wrap">{{ form.title || form.name }}</span>
+                </div>
+              </button>
+            </div>
+          </ng-container>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL BOOTSTRAP NATIVO -->
+  <div class="modal fade" [class.show]="modalVisible" [style.display]="modalVisible ? 'block' : 'none'" 
+       tabindex="-1" *ngIf="modalVisible" (click)="closeModal()">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable" (click)="$event.stopPropagation()">
+      <div class="modal-content border-0 shadow-lg">
+        
+        <!-- CABECERA DEL MODAL -->
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title fw-bold d-flex align-items-center">
+            <i class="fas fa-form me-2"></i>{{ modalTitle }}
+          </h5>
+          <button type="button" class="btn-close btn-close-white" (click)="closeModal()"></button>
+        </div>
+
+        <!-- CONTENIDO SCROLLEABLE -->
+        <div class="modal-body bg-light">
+          <div *ngIf="selectedForm" class="form-container">
+
+            <form [formGroup]="dynamicForm" (ngSubmit)="onSubmitForm()" *ngIf="dynamicForm && selectedForm.form_fields?.length > 0">
+              <div class="row g-4">
+                <div *ngFor="let field of selectedForm.form_fields; let i = index" 
+                     [ngClass]="getFieldType(field) === 'textarea' || getFieldType(field) === 'text_area' || getFieldType(field) === 'file' || getFieldType(field) === 'image' || getFieldType(field) === 'range' || getFieldType(field) === 'color' ? 'col-12' : 'col-12 col-md-6'">
+                  
+                  <!-- ========== INPUTS CON FORM-FLOATING ========== -->
+                  <div class="form-floating" *ngIf="getFieldType(field) === 'text' || getFieldType(field) === 'string' || getFieldType(field) === 'number' || getFieldType(field) === 'integer' || getFieldType(field) === 'decimal' || getFieldType(field) === 'float' || getFieldType(field) === 'email' || getFieldType(field) === 'password' || getFieldType(field) === 'tel' || getFieldType(field) === 'url' || getFieldType(field) === 'search'">
+                    
+                    <!-- TEXT / STRING -->
+                    <input 
+                      *ngIf="getFieldType(field) === 'text' || getFieldType(field) === 'string'" 
+                      type="text" 
+                      [id]="getFieldCode(field)"
+                      [formControlName]="getFieldCode(field)" 
+                      [placeholder]="getFieldLabel(field)"
+                      [maxlength]="field.maxLength || field.max_length || null"
+                      [minlength]="field.minLength || field.min_length || null"
+                      class="form-control"
+                      [class.is-invalid]="dynamicForm.get(getFieldCode(field))?.invalid && dynamicForm.get(getFieldCode(field))?.touched"
+                    />
+
+                    <!-- NUMBER / INTEGER / DECIMAL / FLOAT -->
+                    <input 
+                      *ngIf="getFieldType(field) === 'number' || getFieldType(field) === 'integer' || getFieldType(field) === 'decimal' || getFieldType(field) === 'float'" 
+                      type="number" 
+                      [id]="getFieldCode(field)"
+                      [formControlName]="getFieldCode(field)" 
+                      [placeholder]="getFieldLabel(field)"
+                      [min]="field.min || null"
+                      [max]="field.max || null"
+                      [step]="field.step || (getFieldType(field) === 'integer' ? 1 : 0.01)"
+                      class="form-control"
+                      [class.is-invalid]="dynamicForm.get(getFieldCode(field))?.invalid && dynamicForm.get(getFieldCode(field))?.touched"
+                    />
+
+                    <!-- EMAIL -->
+                    <input 
+                      *ngIf="getFieldType(field) === 'email'" 
+                      type="email" 
+                      [id]="getFieldCode(field)"
+                      [formControlName]="getFieldCode(field)" 
+                      [placeholder]="getFieldLabel(field)"
+                      class="form-control"
+                      [class.is-invalid]="dynamicForm.get(getFieldCode(field))?.invalid && dynamicForm.get(getFieldCode(field))?.touched"
+                    />
+
+                    <!-- PASSWORD -->
+                    <input 
+                      *ngIf="getFieldType(field) === 'password'" 
+                      type="password" 
+                      [id]="getFieldCode(field)"
+                      [formControlName]="getFieldCode(field)" 
+                      [placeholder]="getFieldLabel(field)"
+                      [minlength]="field.minLength || field.min_length || null"
+                      class="form-control"
+                      [class.is-invalid]="dynamicForm.get(getFieldCode(field))?.invalid && dynamicForm.get(getFieldCode(field))?.touched"
+                    />
+
+                    <!-- TEL / PHONE -->
+                    <input 
+                      *ngIf="getFieldType(field) === 'tel' || getFieldType(field) === 'phone'" 
+                      type="tel" 
+                      [id]="getFieldCode(field)"
+                      [formControlName]="getFieldCode(field)" 
+                      [placeholder]="getFieldLabel(field)"
+                      [pattern]="field.pattern || null"
+                      class="form-control"
+                      [class.is-invalid]="dynamicForm.get(getFieldCode(field))?.invalid && dynamicForm.get(getFieldCode(field))?.touched"
+                    />
+
+                    <!-- URL -->
+                    <input 
+                      *ngIf="getFieldType(field) === 'url'" 
+                      type="url" 
+                      [id]="getFieldCode(field)"
+                      [formControlName]="getFieldCode(field)" 
+                      [placeholder]="getFieldLabel(field)"
+                      class="form-control"
+                      [class.is-invalid]="dynamicForm.get(getFieldCode(field))?.invalid && dynamicForm.get(getFieldCode(field))?.touched"
+                    />
+
+                    <!-- SEARCH -->
+                    <input 
+                      *ngIf="getFieldType(field) === 'search'" 
+                      type="search" 
+                      [id]="getFieldCode(field)"
+                      [formControlName]="getFieldCode(field)" 
+                      [placeholder]="getFieldLabel(field)"
+                      class="form-control"
+                      [class.is-invalid]="dynamicForm.get(getFieldCode(field))?.invalid && dynamicForm.get(getFieldCode(field))?.touched"
+                    />
+
+                    <!-- LABEL FLOTANTE -->
+                    <label [for]="getFieldCode(field)" class="text-primary fw-semibold">
+                      {{ getFieldLabel(field) }}
+                      <span *ngIf="isFieldRequired(field)" class="text-danger ms-1">*</span>
+                    </label>
+                  </div>
+
+                  <!-- ========== INPUTS DE FECHA Y TIEMPO ========== -->
+                  <!-- DATE -->
+                  <div *ngIf="getFieldType(field) === 'date'">
+                    <label [for]="getFieldCode(field)" class="form-label text-primary fw-semibold">
+                      <i class="fas fa-calendar me-1"></i>{{ getFieldLabel(field) }}
+                      <span *ngIf="isFieldRequired(field)" class="text-danger ms-1">*</span>
+                    </label>
+                    <input 
+                      type="date" 
+                      [id]="getFieldCode(field)"
+                      [formControlName]="getFieldCode(field)" 
+                      [min]="field.min || null"
+                      [max]="field.max || null"
+                      class="form-control"
+                      [class.is-invalid]="dynamicForm.get(getFieldCode(field))?.invalid && dynamicForm.get(getFieldCode(field))?.touched"
+                    />
+                  </div>
+
+                  <!-- TIME -->
+                  <div *ngIf="getFieldType(field) === 'time'">
+                    <label [for]="getFieldCode(field)" class="form-label text-primary fw-semibold">
+                      <i class="fas fa-clock me-1"></i>{{ getFieldLabel(field) }}
+                      <span *ngIf="isFieldRequired(field)" class="text-danger ms-1">*</span>
+                    </label>
+                    <input 
+                      type="time" 
+                      [id]="getFieldCode(field)"
+                      [formControlName]="getFieldCode(field)" 
+                      [min]="field.min || null"
+                      [max]="field.max || null"
+                      [step]="field.step || null"
+                      class="form-control"
+                      [class.is-invalid]="dynamicForm.get(getFieldCode(field))?.invalid && dynamicForm.get(getFieldCode(field))?.touched"
+                    />
+                  </div>
+
+                  <!-- DATETIME-LOCAL -->
+                  <div *ngIf="getFieldType(field) === 'datetime-local' || getFieldType(field) === 'datetime'">
+                    <label [for]="getFieldCode(field)" class="form-label text-primary fw-semibold">
+                      <i class="fas fa-calendar-alt me-1"></i>{{ getFieldLabel(field) }}
+                      <span *ngIf="isFieldRequired(field)" class="text-danger ms-1">*</span>
+                    </label>
+                    <input 
+                      type="datetime-local" 
+                      [id]="getFieldCode(field)"
+                      [formControlName]="getFieldCode(field)" 
+                      [min]="field.min || null"
+                      [max]="field.max || null"
+                      class="form-control"
+                      [class.is-invalid]="dynamicForm.get(getFieldCode(field))?.invalid && dynamicForm.get(getFieldCode(field))?.touched"
+                    />
+                  </div>
+
+                  <!-- MONTH -->
+                  <div *ngIf="getFieldType(field) === 'month'">
+                    <label [for]="getFieldCode(field)" class="form-label text-primary fw-semibold">
+                      <i class="fas fa-calendar-check me-1"></i>{{ getFieldLabel(field) }}
+                      <span *ngIf="isFieldRequired(field)" class="text-danger ms-1">*</span>
+                    </label>
+                    <input 
+                      type="month" 
+                      [id]="getFieldCode(field)"
+                      [formControlName]="getFieldCode(field)" 
+                      [min]="field.min || null"
+                      [max]="field.max || null"
+                      class="form-control"
+                      [class.is-invalid]="dynamicForm.get(getFieldCode(field))?.invalid && dynamicForm.get(getFieldCode(field))?.touched"
+                    />
+                  </div>
+
+                  <!-- WEEK -->
+                  <div *ngIf="getFieldType(field) === 'week'">
+                    <label [for]="getFieldCode(field)" class="form-label text-primary fw-semibold">
+                      <i class="fas fa-calendar-week me-1"></i>{{ getFieldLabel(field) }}
+                      <span *ngIf="isFieldRequired(field)" class="text-danger ms-1">*</span>
+                    </label>
+                    <input 
+                      type="week" 
+                      [id]="getFieldCode(field)"
+                      [formControlName]="getFieldCode(field)" 
+                      [min]="field.min || null"
+                      [max]="field.max || null"
+                      class="form-control"
+                      [class.is-invalid]="dynamicForm.get(getFieldCode(field))?.invalid && dynamicForm.get(getFieldCode(field))?.touched"
+                    />
+                  </div>
+
+                  <!-- ========== TEXTAREA ========== -->
+                  <div *ngIf="getFieldType(field) === 'textarea' || getFieldType(field) === 'text_area'">
+                    <label [for]="getFieldCode(field)" class="form-label text-primary fw-semibold">
+                      <i class="fas fa-align-left me-1"></i>{{ getFieldLabel(field) }}
+                      <span *ngIf="isFieldRequired(field)" class="text-danger ms-1">*</span>
+                    </label>
+                    <textarea 
+                      [id]="getFieldCode(field)"
+                      [formControlName]="getFieldCode(field)"
+                      [placeholder]="getFieldPlaceholder(field)"
+                      [rows]="field.rows || 4"
+                      [maxlength]="field.maxLength || field.max_length || null"
+                      [minlength]="field.minLength || field.min_length || null"
+                      class="form-control"
+                      [class.is-invalid]="dynamicForm.get(getFieldCode(field))?.invalid && dynamicForm.get(getFieldCode(field))?.touched"
+                    ></textarea>
+                    <div *ngIf="field.maxLength || field.max_length" class="form-text text-muted text-end">
+                      {{ dynamicForm.get(getFieldCode(field))?.value?.length || 0 }}/{{ field.maxLength || field.max_length }}
+                    </div>
+                  </div>
+
+                  <!-- ========== SELECT / DROPDOWN ========== -->
+                  <div *ngIf="getFieldType(field) === 'select' || getFieldType(field) === 'dropdown'">
+                    <label [for]="getFieldCode(field)" class="form-label text-primary fw-semibold">
+                      <i class="fas fa-list me-1"></i>{{ getFieldLabel(field) }}
+                      <span *ngIf="isFieldRequired(field)" class="text-danger ms-1">*</span>
+                    </label>
+                    <select 
+                      [id]="getFieldCode(field)"
+                      [formControlName]="getFieldCode(field)"
+                      [multiple]="field.multiple || false"
+                      [size]="field.multiple ? (field.size || 4) : null"
+                      class="form-select"
+                      [class.is-invalid]="dynamicForm.get(getFieldCode(field))?.invalid && dynamicForm.get(getFieldCode(field))?.touched"
+                    >
+                      <option value="" *ngIf="!field.multiple">Seleccionar...</option>
+                      <option *ngFor="let option of field.options" [value]="option.value || option">
+                        {{ option.label || option.text || option }}
+                      </option>
+                    </select>
+                  </div>
+
+                  <!-- ========== CHECKBOXES ========== -->
+                  <div *ngIf="getFieldType(field) === 'checkbox'">
+                    <label class="form-label text-primary fw-semibold d-block">
+                      <i class="fas fa-check-square me-1"></i>{{ getFieldLabel(field) }}
+                      <span *ngIf="isFieldRequired(field)" class="text-danger ms-1">*</span>
+                    </label>
+                    
+                    <!-- Single Checkbox -->
+                    <div *ngIf="!field.options" class="form-check">
+                      <input 
+                        type="checkbox" 
+                        [id]="getFieldCode(field)"
+                        [formControlName]="getFieldCode(field)"
+                        class="form-check-input"
+                        [class.is-invalid]="dynamicForm.get(getFieldCode(field))?.invalid && dynamicForm.get(getFieldCode(field))?.touched"
+                      />
+                      <label class="form-check-label" [for]="getFieldCode(field)">
+                        {{ getFieldDescription(field) || 'Acepto' }}
+                      </label>
+                    </div>
+                    
+                    <!-- Multiple Checkboxes -->
+                    <div *ngIf="field.options" class="row g-2">
+                      <div *ngFor="let option of field.options; let idx = index" class="col-12 col-sm-6">
+                        <div class="form-check">
+                          <input 
+                            type="checkbox" 
+                            [id]="getFieldCode(field) + '_' + idx"
+                            [value]="option.value || option"
+                            (change)="onCheckboxChange($event, getFieldCode(field), option.value || option)"
+                            class="form-check-input"
+                          />
+                          <label class="form-check-label" [for]="getFieldCode(field) + '_' + idx">
+                            {{ option.label || option.text || option }}
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- ========== RADIO BUTTONS ========== -->
+                  <div *ngIf="getFieldType(field) === 'radio'">
+                    <label class="form-label text-primary fw-semibold d-block">
+                      <i class="fas fa-dot-circle me-1"></i>{{ getFieldLabel(field) }}
+                      <span *ngIf="isFieldRequired(field)" class="text-danger ms-1">*</span>
+                    </label>
+                    <div class="row g-2">
+                      <div *ngFor="let option of field.options; let idx = index" class="col-12 col-sm-6">
+                        <div class="form-check">
+                          <input 
+                            type="radio" 
+                            [id]="getFieldCode(field) + '_' + idx"
+                            [formControlName]="getFieldCode(field)"
+                            [value]="option.value || option"
+                            class="form-check-input"
+                            [class.is-invalid]="dynamicForm.get(getFieldCode(field))?.invalid && dynamicForm.get(getFieldCode(field))?.touched"
+                          />
+                          <label class="form-check-label" [for]="getFieldCode(field) + '_' + idx">
+                            {{ option.label || option.text || option }}
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- ========== FILE INPUT ========== -->
+                  <div *ngIf="getFieldType(field) === 'file' || getFieldType(field) === 'image'">
+                    <label [for]="getFieldCode(field)" class="form-label text-primary fw-semibold">
+                      <i class="fas fa-file-upload me-1"></i>{{ getFieldLabel(field) }}
+                      <span *ngIf="isFieldRequired(field)" class="text-danger ms-1">*</span>
+                    </label>
+                    <input 
+                      type="file" 
+                      [id]="getFieldCode(field)"
+                      (change)="onFileChange($event, getFieldCode(field))"
+                      [accept]="getFieldType(field) === 'image' ? 'image/*' : (field.accept || '*/*')"
+                      [multiple]="field.multiple || false"
+                      class="form-control"
+                      [class.is-invalid]="dynamicForm.get(getFieldCode(field))?.invalid && dynamicForm.get(getFieldCode(field))?.touched"
+                    />
+                    <div class="form-text text-muted">
+                      <i class="fas fa-info-circle me-1"></i>
+                      Tamaño máximo: {{ field.maxSize || '5MB' }}. 
+                      Tipos permitidos: {{ getFieldType(field) === 'image' ? 'JPG, PNG, GIF' : (field.allowedTypes || 'Todos') }}
+                    </div>
+                  </div>
+
+                  <!-- ========== RANGE SLIDER ========== -->
+                  <div *ngIf="getFieldType(field) === 'range'">
+                    <label [for]="getFieldCode(field)" class="form-label text-primary fw-semibold">
+                      <i class="fas fa-sliders-h me-1"></i>{{ getFieldLabel(field) }}
+                      <span *ngIf="isFieldRequired(field)" class="text-danger ms-1">*</span>
+                    </label>
+                    <div class="d-flex align-items-center gap-3">
+                      <span class="text-muted">{{ field.min || 0 }}</span>
+                      <input 
+                        type="range" 
+                        [id]="getFieldCode(field)"
+                        [formControlName]="getFieldCode(field)"
+                        [min]="field.min || 0"
+                        [max]="field.max || 100"
+                        [step]="field.step || 1"
+                        class="form-range flex-grow-1"
+                      />
+                      <span class="text-muted">{{ field.max || 100 }}</span>
+                    </div>
+                    <div class="text-center mt-2">
+                      <span class="badge bg-primary">
+                        Valor: {{ dynamicForm.get(getFieldCode(field))?.value || field.min || 0 }}
+                      </span>
+                    </div>
+                  </div>
+
+                  <!-- ========== COLOR PICKER ========== -->
+                  <div *ngIf="getFieldType(field) === 'color'">
+                    <label [for]="getFieldCode(field)" class="form-label text-primary fw-semibold">
+                      <i class="fas fa-palette me-1"></i>{{ getFieldLabel(field) }}
+                      <span *ngIf="isFieldRequired(field)" class="text-danger ms-1">*</span>
+                    </label>
+                    <div class="d-flex align-items-center gap-3">
+                      <input 
+                        type="color" 
+                        [id]="getFieldCode(field)"
+                        [formControlName]="getFieldCode(field)"
+                        class="form-control form-control-color"
+                        style="width: 60px; height: 40px;"
+                        [class.is-invalid]="dynamicForm.get(getFieldCode(field))?.invalid && dynamicForm.get(getFieldCode(field))?.touched"
+                      />
+                      <span class="text-muted">
+                        Color seleccionado: {{ dynamicForm.get(getFieldCode(field))?.value || '#000000' }}
+                      </span>
+                    </div>
+                  </div>
+
+                  <!-- ========== HIDDEN INPUT ========== -->
+                  <input 
+                    *ngIf="getFieldType(field) === 'hidden'" 
+                    type="hidden" 
+                    [id]="getFieldCode(field)"
+                    [formControlName]="getFieldCode(field)"
+                    [value]="field.value || ''"
+                  />
+
+                  <!-- ========== DESCRIPCIÓN DEL CAMPO ========== -->
+                  <small *ngIf="getFieldDescription(field) && getFieldType(field) !== 'checkbox' && getFieldType(field) !== 'hidden'" 
+                         class="form-text text-muted mt-1 d-block">
+                    <i class="fas fa-info-circle me-1"></i>{{ getFieldDescription(field) }}
+                  </small>
+
+                  <!-- ========== MENSAJES DE ERROR ========== -->
+                  <div *ngIf="dynamicForm.get(getFieldCode(field))?.invalid && dynamicForm.get(getFieldCode(field))?.touched && getFieldType(field) !== 'hidden'" 
+                       class="invalid-feedback d-block">
+                    <i class="fas fa-exclamation-triangle me-1"></i>
+                    <span *ngIf="dynamicForm.get(getFieldCode(field))?.errors?.['required']">Este campo es requerido</span>
+                    <span *ngIf="dynamicForm.get(getFieldCode(field))?.errors?.['email']">Ingrese un email válido</span>
+                    <span *ngIf="dynamicForm.get(getFieldCode(field))?.errors?.['minlength']">
+                      Mínimo {{ dynamicForm.get(getFieldCode(field))?.errors?.['minlength'].requiredLength }} caracteres
+                    </span>
+                    <span *ngIf="dynamicForm.get(getFieldCode(field))?.errors?.['maxlength']">
+                      Máximo {{ dynamicForm.get(getFieldCode(field))?.errors?.['maxlength'].requiredLength }} caracteres
+                    </span>
+                    <span *ngIf="dynamicForm.get(getFieldCode(field))?.errors?.['min']">
+                      Valor mínimo: {{ dynamicForm.get(getFieldCode(field))?.errors?.['min'].min }}
+                    </span>
+                    <span *ngIf="dynamicForm.get(getFieldCode(field))?.errors?.['max']">
+                      Valor máximo: {{ dynamicForm.get(getFieldCode(field))?.errors?.['max'].max }}
+                    </span>
+                    <span *ngIf="dynamicForm.get(getFieldCode(field))?.errors?.['pattern']">Formato inválido</span>
+                  </div>
+                </div>
+              </div>
+            </form>
+
+            <!-- SIN CAMPOS -->
+            <div *ngIf="!selectedForm.form_fields || selectedForm.form_fields.length === 0" 
+                 class="alert alert-warning border-0 shadow-sm">
+              <div class="d-flex align-items-center">
+                <i class="fas fa-exclamation-triangle fa-2x me-3 text-warning"></i>
+                <div>
+                  <h5 class="alert-heading mb-1">No hay campos definidos</h5>
+                  <p class="mb-0">Este formulario no tiene campos configurados para mostrar.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- PIE DEL MODAL -->
+        <div class="modal-footer bg-light">
+          <button type="button" class="btn btn-outline-secondary" (click)="closeModal()">
+            <i class="fas fa-times me-2"></i>Cancelar
+          </button>
+          <button type="button" class="btn btn-primary" 
+                  (click)="onSubmitForm()" 
+                  [disabled]="!dynamicForm || dynamicForm.invalid">
+            <i class="fas fa-save me-2"></i>Guardar
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>

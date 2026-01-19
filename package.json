@@ -71,6 +71,7 @@
     "ngx-slider-v2": "^17.0.0",
     "ngx-toastr": "^18.0.0",
     "ngx-ui-switch": "^15.0.0",
+    "pusher-js": "^8.2.0",
     "prismjs": "^1.29.0",
     "rxjs": "~7.8.1",
     "simplebar-angular": "^3.2.4",

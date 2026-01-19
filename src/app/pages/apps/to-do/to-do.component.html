@@ -1,45 +1,5 @@
 <div class="chat-wrapper d-lg-flex gap-3 gap-lg-4 p-xl-1 pt-md-5 p-lg-1">
-    <div class="todo-sidebar">
-        <div class="d-flex flex-column h-100 p-3">
-            <div class="mb-3">
-                <button class="btn btn-success w-100" (click)="createProjectModal.show()"><i class="ri-add-line align-bottom"></i> Add Project</button>
-            </div>
 
-            <ngx-simplebar data-simplebar-track="light" class="px-4 mx-n4" style="height: 560px;">
-                <ul class="to-do-menu list-unstyled" id="projec0tlist-data">
-                    @for (data of projectData; track $index) {
-                    <li>
-                        <a href="javascript:void(0);" class="nav-link fs-13" (click)="collapse(data.coll)">{{data.title}}</a>
-                        <div class="collapse" [ngClass]="(data.coll)?'show':''" id="{{data.coll}}">
-                            <ul class="mb-0 sub-menu list-unstyled ps-3 vstack gap-2 mb-2">
-                                @for (sub of data.subItem; track $index) {
-                                <li>
-                                    <a href="javascript:void(0);"><i class="ri-stop-mini-fill align-middle fs-15 text-{{sub.color}}"></i> {{sub.version}}</a>
-                                </li>
-                                }
-                            </ul>
-                        </div>
-                    </li>}
-                </ul>
-            </ngx-simplebar>
-
-
-            <div class="mt-auto text-center">
-                <div class="card mt-4">
-                    <div class="card-body pt-0">
-                        <div class="avatar-sm mx-auto mt-n4">
-                            <div class="avatar-title bg-body-secondary rounded-circle text-primary fs-4">
-                                <i class="ti ti-plane-tilt"></i>
-                            </div>
-                        </div>
-                        <h6 class="mt-3">Upgrade to Premium</h6>
-                        <p class="fs-md mb-3">Tyr the Upgrade and enjoy Premium access from our platform</p>
-                        <a routerLink="/pages/pricing" class="btn btn-primary w-100">Upgrade Now</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div><!--end side content-->
     <div class="todo-content w-100 pb-0">
         <div class="row mb-4">
             <div class="col-auto order-1 d-block d-lg-none">
@@ -48,46 +8,36 @@
                 </button>
             </div>
             <div class="col-sm order-3 order-sm-2 mt-3 mt-sm-0">
-                <h5 class="fw-semibold mb-2">Vixon Admin & Dashboard <span class="badge bg-primary align-bottom ms-2">v1.0.0</span></h5>
-                <p class="text-decoration-underline d-inline-block mb-0 text-muted"><a href="javascript:void(0);" class="text-reset">Admin & Dashboard</a></p>
-            </div>
-
-            <div class="col-auto order-2 order-sm-3 ms-auto">
-                <div class="hstack gap-2">
-                    <div class="btn-group" role="group" aria-label="Basic example">
-                        <button class="btn btn-icon fw-semibold btn-secondary"><i class="ti ti-arrow-back-up"></i></button>
-                        <button class="btn btn-icon fw-semibold btn-success"><i class="ti ti-arrow-forward-up"></i></button>
-                    </div>
-                </div>
+                <h5 class="fw-semibold mb-2">Toliboy<span class="badge bg-primary align-bottom ms-2">v1.0.0</span></h5>
             </div>
         </div>
         <div class="p-3 bg-light rounded mb-4">
             <div class="row g-2">
                 <div class="col-lg-auto">
                     <select class="form-control" name="choices-select-sortlist" id="choices-select-sortlist" (change)="SortFilter($event);">
-                        <option value="">Sort</option>
-                        <option value="id">By ID</option>
-                        <option value="task">By Name</option>
+                        <option value="">Ordenar</option>
+                        <option value="id">Por ID</option>
+                        <option value="task">Por Nombre</option>
                     </select>
                 </div>
                 <div class="col-lg-auto">
                     <select class="form-control" data-choices data-choices-search-false name="choices-select-status" id="choices-select-status" (click)="taskFilter();">
-                        <option value="">All Tasks</option>
-                        <option value="Completed">Completed</option>
-                        <option value="Inprogress">Inprogress</option>
-                        <option value="Pending">Pending</option>
-                        <option value="New">New</option>
+                        <option value="">Todas las Tareas</option>
+                        <option value="Completed">Completadas</option>
+                        <option value="Inprogress">En Progreso</option>
+                        <option value="Pending">Pendientes</option>
+                        <option value="New">Nuevas</option>
                     </select>
                 </div>
                 <div class="col-lg">
                     <div class="search-box">
-                        <input type="text" id="searchTaskList" class="form-control search" placeholder="Search task name" [(ngModel)]="term" (keyup)="searchTerm()">
+                        <input type="text" id="searchTaskList" class="form-control search" placeholder="Buscar nombre de tarea" [(ngModel)]="term" (keyup)="searchTerm()">
                         <i class="ri-search-line search-icon"></i>
                     </div>
                 </div>
                 <div class="col-lg-auto">
-                    <button class="btn btn-primary createTask" type="button" (click)="createTask.show()" data-bs-target="#createTask">
-                        <i class="ri-add-fill align-bottom"></i> Add Tasks
+                    <button class="btn btn-primary createTask" type="button" (click)="openCreateTask()" data-bs-target="#createTask">
+                        <i class="ri-add-fill align-bottom"></i> Agregar Tareas
                     </button>
                 </div>
             </div>
@@ -96,20 +46,37 @@
         <div class="todo-content position-relative px-4 mx-n4" id="todo-content">
             <div id="elmLoader">
                 <div class="spinner-border text-primary avatar-sm" role="status">
-                    <span class="visually-hidden">Loading...</span>
+                    <span class="visually-hidden">Cargando...</span>
                 </div>
             </div>
+            <!-- Banner de notificaciones de fecha límite -->
+            @if(dueTasks && dueTasks.length > 0 && showDueBanner) {
+            <div class="alert alert-warning d-flex justify-content-between align-items-center" role="alert">
+                <div>
+                    <strong>Tienes {{dueTasks.length}} tarea(s) con fecha límite hoy o vencida:</strong>
+                    <ul class="mb-0 mt-2">
+                        @for (dt of dueTasks; track $index) {
+                        <li>{{dt.task}} — {{dt.dueDate}}</li>
+                        }
+                    </ul>
+                </div>
+                <div class="text-end">
+                    <button class="btn btn-sm btn-light me-2" (click)="dismissDueBanner()">Ignorar</button>
+                    <button class="btn btn-sm btn-primary" (click)="openCreateTask()">Crear Tarea</button>
+                </div>
+            </div>
+            }
             <div class="todo-task" id="todo-task">
+                @if(todoDatas && todoDatas.length > 0) {
                 <div class="table-responsive">
                     <table class="table align-middle position-relative table-nowrap">
                         <thead class="table-active">
                             <tr>
-                                <th scope="col">Task Name</th>
-                                <th scope="col">Assigned</th>
-                                <th scope="col">Due Date</th>
-                                <th scope="col">Status</th>
-                                <th scope="col">Priority</th>
-                                <th scope="col">Action</th>
+                                <th scope="col">Nombre de Tarea</th>
+                                <th scope="col">Fecha Límite</th>
+                                <th scope="col">Estado</th>
+                                <th scope="col">Prioridad</th>
+                                <th scope="col">Acción</th>
                             </tr>
                         </thead>
 
@@ -129,30 +96,53 @@
                                         </div>
                                     </div>
                                 </td>
-                                <td>
-                                    <div class="avatar-group flex-nowrap">
-                                        @for (subdata of data.subItem; track $index) {
-                                        <a href="javascript: void(0);" class="avatar-group-item" data-img="assets/images/users/avatar-1.jpg" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Curtis Saenz"> <img src="{{subdata.img}}" alt="" class="rounded-circle avatar-xxs"> </a>
-                                        }
-                                    </div>
-                                </td>
                                 <td>{{data.dueDate}}</td>
-                                <td><span class="badge text-uppercase" [ngClass]=" { 'text-warning bg-warning-subtle ': data.status === 'Pending', 'text-success bg-success-subtle': data.status === 'Completed', 'text-secondary bg-secondary-subtle': data.status === 'Inprogress', 'text-info bg-info-subtle': data.status === 'New'}">{{data.status}}</span>
+                                <td><span class="badge text-uppercase" [ngClass]=" { 'text-warning bg-warning-subtle ': data.status === 'Pending', 'text-success bg-success-subtle': data.status === 'Completed', 'text-secondary bg-secondary-subtle': data.status === 'Inprogress', 'text-info bg-info-subtle': data.status === 'New'}">
+                    {{ data.status === 'Completed' ? 'Completada' : 
+                       data.status === 'Inprogress' ? 'En Progreso' : 
+                       data.status === 'Pending' ? 'Pendiente' : 
+                       data.status === 'New' ? 'Nueva' : data.status }}
+                </span>
                                 </td>
-                                <td><span class="badge text-uppercase" [ngClass]=" { 'bg-danger': data.priority === 'High', 'bg-warning': data.priority === 'Medium','bg-success': data.priority === 'Low'}">{{data.priority}}</span>
+                                <td><span class="badge text-uppercase" [ngClass]=" { 'bg-danger': data.priority === 'High', 'bg-warning': data.priority === 'Medium','bg-success': data.priority === 'Low'}">
+                    {{ data.priority === 'High' ? 'Alta' : 
+                       data.priority === 'Medium' ? 'Media' : 
+                       data.priority === 'Low' ? 'Baja' : data.priority }}
+                </span>
                                 </td>
                                 <td>
-                                    <div class="hstack gap-2"> <button class="btn btn-sm btn-subtle-danger remove-list" (click)="removeData(data.id)"><i class="ri-delete-bin-5-fill align-bottom"></i></button> <button class="btn btn-sm btn-subtle-info edit-list" (click)="editData($index)"><i class="ri-pencil-fill align-bottom"></i></button> </div>
+                                    <div class="hstack gap-2"> 
+                                        <button class="btn btn-sm btn-subtle-danger remove-list" (click)="removeData(data.id)">
+                                            <i class="ri-delete-bin-5-fill align-bottom"></i>
+                                        </button> 
+                                        <button class="btn btn-sm btn-subtle-info edit-list" (click)="editData($index)">
+                                            <i class="ri-pencil-fill align-bottom"></i>
+                                        </button> 
+                                    </div>
                                 </td>
                             </tr>
                             }
                         </tbody>
                     </table>
                 </div>
+                } @else {
+                <div class="py-4 mt-4 text-center">
+                    <div class="avatar-md mx-auto mb-4">
+                        <div class="avatar-title bg-light rounded-circle text-primary fs-24">
+                            <i class="ri-task-line"></i>
+                        </div>
+                    </div>
+                    <h5>No se encontraron tareas</h5>
+                    <p class="text-muted">Crea tu primera tarea para comenzar con tu lista de tareas pendientes.</p>
+                    <button class="btn btn-primary" (click)="openCreateTask()">
+                        <i class="ri-add-line align-bottom me-1"></i> Crear Tarea
+                    </button>
+                </div>
+                }
             </div>
             <div class="py-4 mt-4 text-center" id="noresult" style="display: none;">
                 <i class="ti ti-search fs-2 text-success"></i>
-                <h6 class="mt-3">Sorry! No Result Found</h6>
+                <h6 class="mt-3">¡Lo siento! No se encontraron resultados</h6>
             </div>
         </div>
 
@@ -164,19 +154,19 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header p-3 bg-success-subtle">
-                <h5 class="modal-title" id="createProjectModalLabel">Create Project</h5>
+                <h5 class="modal-title" id="createProjectModalLabel">Crear Proyecto</h5>
                 <button type="button" class="btn-close" (click)="createProjectModal.hide()" id="addProjectBtn-close" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <div>
                     <div class="mb-4">
-                        <label for="projectname-input" class="form-label">Project Name</label>
-                        <input type="text" class="form-control" id="projectname-input" autocomplete="off" placeholder="Enter project name">
-                        <input type="hidden" class="form-control" id="projectid-input" value="" placeholder="Enter project name">
+                        <label for="projectname-input" class="form-label">Nombre del Proyecto</label>
+                        <input type="text" class="form-control" id="projectname-input" autocomplete="off" placeholder="Ingresa el nombre del proyecto">
+                        <input type="hidden" class="form-control" id="projectid-input" value="" placeholder="Ingresa el nombre del proyecto">
                     </div>
                     <div class="hstack gap-2 justify-content-end">
-                        <button type="button" class="btn btn-ghost-success" (click)="createProjectModal.hide()"><i class="ri-close-line align-bottom"></i> Close</button>
-                        <button type="button" class="btn btn-primary" id="addNewProject">Add Project</button>
+                        <button type="button" class="btn btn-ghost-success" (click)="createProjectModal.hide()"><i class="ri-close-line align-bottom"></i> Cerrar</button>
+                        <button type="button" class="btn btn-primary" id="addNewProject">Agregar Proyecto</button>
                     </div>
                 </div>
             </div>
@@ -191,7 +181,7 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0">
             <div class="modal-header p-3 bg-success-subtle">
-                <h5 class="modal-title" id="createTaskLabel">Create Task</h5>
+                <h5 class="modal-title" id="createTaskLabel">Crear Tarea</h5>
                 <button type="button" class="btn-close" (click)="createTask.hide()"></button>
             </div>
             <div class="modal-body">
@@ -199,70 +189,41 @@
                 <form (ngSubmit)="saveTodo()" [formGroup]="todoForm" autocomplete="off" action="" id="creattask-form">
                     <input type="hidden" id="taskid-input" class="form-control">
                     <div class="mb-3">
-                        <label for="task-title-input" class="form-label">Task Title</label>
-                        <input type="text" id="task-title-input" formControlName="task" [ngClass]="{ 'is-invalid': submitted && form['task'].errors }" class="form-control" placeholder="Enter task title">
+                        <label for="task-title-input" class="form-label">Título de la Tarea</label>
+                        <input type="text" id="task-title-input" formControlName="task" [ngClass]="{ 'is-invalid': submitted && form['task'].errors }" class="form-control" placeholder="Ingresa el título de la tarea">
                     </div>
-                    <div class="mb-3 position-relative">
-                        <label for="task-assign-input" class="form-label">Assigned To</label>
-                        @if(assignmember){
-                        <div class="avatar-group justify-content-center" id="assignee-member">
-                            @for (member of assignmember; track $index) {
-                            <a href="javascript: void(0);" class="avatar-group-item mb-2" placement="top" tooltip="{{member.name}}">
-                                <img src="{{member.img}}" alt="" class="rounded-circle avatar-xs">
-                            </a>}
-                        </div>}
-                        <div dropdown class="select-element">
-                            <button dropdownToggle class="btn btn-light w-100 d-flex justify-content-between" type="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
-                                <span>Assigned To<b id="total-assignee" class="mx-1">{{assignmember?.length}}</b>Members</span> <i class="ti ti-chevron-down"></i>
-                            </button>
-                            <div *bsDropdownMenu class="dropdown-menu w-100">
-                                <ngx-simplebar data-simplebar-track="light" style="max-height: 141px">
-                                    <ul class="list-unstyled mb-0">
-                                        @for (data of assignList; track $index) {
-                                        <li>
-                                            <a class="dropdown-item d-flex align-items-center" href="javascript:void(0);" (click)="slectMember($index)">
-                                                <div class="avatar-xxs flex-shrink-0 me-2">
-                                                    <img src="{{data.img}}" alt="" class="img-fluid rounded-circle" />
-                                                </div>
-                                                <div class="flex-grow-1">{{data.name}}</div>
-                                            </a>
-                                        </li>}
-                                    </ul>
-                                </ngx-simplebar>
-                            </div>
-                        </div>
-                    </div>
+                    <!-- Se quitó la sección de asignación de personas -->
                     <div class="row g-4 mb-3">
                         <div class="col-lg-6">
-                            <label for="task-status" class="form-label">Status</label>
+                            <label for="task-status" class="form-label">Estado</label>
                             <select class="form-control" data-choices data-choices-search-false id="task-status-input" formControlName="status" [ngClass]="{ 'is-invalid': submitted && form['status'].errors }">
-                                <option value="">Status</option>
-                                <option value="New" selected>New</option>
-                                <option value="Inprogress">Inprogress</option>
-                                <option value="Pending">Pending</option>
-                                <option value="Completed">Completed</option>
+                                <option value="">Estado</option>
+                                <option value="New" selected>Nueva</option>
+                                <option value="Inprogress">En Progreso</option>
+                                <option value="Pending">Pendiente</option>
+                                <option value="Completed">Completada</option>
                             </select>
                         </div>
                         <!--end col-->
                         <div class="col-lg-6">
-                            <label for="priority-field" class="form-label">Priority</label>
+                            <label for="priority-field" class="form-label">Prioridad</label>
                             <select class="form-control" data-choices data-choices-search-false id="priority-field" formControlName="priority" [ngClass]="{ 'is-invalid': submitted && form['priority'].errors }">
-                                <option value="">Priority</option>
-                                <option value="High">High</option>
-                                <option value="Medium">Medium</option>
-                                <option value="Low">Low</option>
+                                <option value="">Prioridad</option>
+                                <option value="High">Alta</option>
+                                <option value="Medium">Media</option>
+                                <option value="Low">Baja</option>
                             </select>
                         </div>
                         <!--end col-->
                     </div>
                     <div class="mb-4">
-                        <label for="task-duedate-input" class="form-label">Due Date:</label>
-                        <input type="text" id="task-duedate-input" class="form-control" mwlFlatpickr [altInput]="true" [convertModelValue]="true" [dateFormat]="'Y-m-d'" formControlName="dueDate" [ngClass]="{ 'is-invalid': submitted && form['dueDate'].errors }" placeholder="Due date">
+                        <label for="task-duedate-input" class="form-label">Fecha Límite:</label>
+                        <input type="text" id="task-duedate-input" class="form-control" mwlFlatpickr [altInput]="true" [convertModelValue]="true" [dateFormat]="'Y-m-d'" formControlName="dueDate" [ngClass]="{ 'is-invalid': submitted && form['dueDate'].errors }" placeholder="Fecha límite">
                     </div>
 
                     <div class="hstack gap-2 justify-content-end">
-                        <button type="button" class="btn btn-ghost-success" (click)="createTask.hide()"><i class="ri-close-fill align-bottom"></i> Close</button>
-                        <button type="submit" class="btn btn-primary" id="addNewTodo">Add Task</button>
+                        <button type="button" class="btn btn-ghost-success" (click)="createTask.hide()"><i class="ri-close-fill align-bottom"></i> Cerrar</button>
+                        <button type="submit" class="btn btn-primary" id="addNewTodo">Agregar Tarea</button>
                     </div>
                 </form>
             </div>
@@ -282,13 +243,13 @@
                 <div class="mt-2 text-center">
                     <i class="ti ti-trash fs-1 text-danger"></i>
                     <div class="mt-4 pt-2 fs-15 mx-4 mx-sm-5">
-                        <h5>Are you sure ?</h5>
-                        <p class="text-muted mx-4 mb-0">Are you sure you want to remove this task ?</p>
+                        <h5>¿Estás seguro?</h5>
+                        <p class="text-muted mx-4 mb-0">¿Estás seguro de que quieres eliminar esta tarea?</p>
                     </div>
                 </div>
                 <div class="d-flex gap-2 justify-content-center mt-4 mb-2">
-                    <button type="button" class="btn w-sm btn-light" (click)="removeTaskItemModal.hide()">Close</button>
-                    <button type="button" class="btn w-sm btn-danger" id="remove-todoitem" (click)="confirmDelete()">Yes, Delete It!</button>
+                    <button type="button" class="btn w-sm btn-light" (click)="removeTaskItemModal.hide()">Cerrar</button>
+                    <button type="button" class="btn w-sm btn-danger" id="remove-todoitem" (click)="confirmDelete()">¡Sí, Eliminar!</button>
                 </div>
             </div>
         </div><!-- /.modal-content -->

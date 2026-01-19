@@ -1,0 +1,93 @@
+// Analytics page styles
+.card {
+  transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+
+  &:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1) !important;
+  }
+}
+
+// KPI Cards
+.card-body {
+  h3 {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+  }
+
+  p {
+    font-weight: 500;
+  }
+}
+
+// Table responsive styles
+.table-responsive {
+  .table {
+    margin-bottom: 0;
+
+    thead th {
+      background-color: #f8f9fa;
+      border-bottom: 2px solid #dee2e6;
+      font-weight: 600;
+      color: #6c757d;
+      padding: 1rem 0.75rem;
+    }
+
+    tbody td {
+      padding: 1rem 0.75rem;
+      border-bottom: 1px solid #dee2e6;
+
+      &:first-child {
+        font-weight: 500;
+      }
+    }
+
+    tbody tr {
+      transition: background-color 0.15s ease-in-out;
+
+      &:hover {
+        background-color: #f8f9fa;
+      }
+    }
+  }
+}
+
+// Badge styles
+.badge {
+  font-weight: 500;
+  padding: 0.35rem 0.65rem;
+}
+
+// Stats boxes in category grid
+.bg-light {
+  padding: 1.25rem;
+  border-radius: 0.5rem;
+  transition: all 0.3s ease-in-out;
+
+  h4 {
+    font-size: 1.5rem;
+    margin-bottom: 0.25rem;
+  }
+
+  p {
+    margin-bottom: 0;
+    font-weight: 500;
+  }
+
+  small {
+    display: block;
+    font-size: 0.875rem;
+  }
+
+  &:hover {
+    background-color: #e9ecef;
+    transform: translateY(-3px);
+  }
+}
+
+// Hide on small screens
+@media (max-width: 576px) {
+  .hide-sm {
+    display: none;
+  }
+}

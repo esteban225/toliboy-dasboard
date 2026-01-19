@@ -675,6 +675,51 @@
                     </div>
 
                 </div><!-- end preloader-menu -->
+
+                <!-- Control de Configuración -->
+                <div class="mt-4 pt-3 border-top">
+                    <h6 class="fs-md mb-3">Control de Configuración</h6>
+                    
+                    <!-- Información de guardado -->
+                    <div class="alert alert-info alert-border-left" *ngIf="layoutPersistence.hasStoredSettings()">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-info-circle me-2"></i>
+                            <small>Configuración guardada automáticamente</small>
+                        </div>
+                    </div>
+
+                    <!-- Botones de control -->
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <button type="button" class="btn btn-danger w-100 btn-sm" (click)="resetToDefaults()">
+                                <i class="bi bi-arrow-clockwise me-1"></i>
+                                Resetear
+                            </button>
+                        </div>
+                        <div class="col-6">
+                            <button type="button" class="btn btn-success w-100 btn-sm" (click)="exportSettings()">
+                                <i class="bi bi-download me-1"></i>
+                                Exportar
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-2">
+                        <input type="file" #fileInput (change)="importSettings($event)" accept=".json" class="d-none">
+                        <button type="button" class="btn btn-outline-primary w-100 btn-sm" (click)="fileInput.click()">
+                            <i class="bi bi-upload me-1"></i>
+                            Importar Configuración
+                        </button>
+                    </div>
+
+                    <!-- Información de versión -->
+                    <div class="mt-3 text-center">
+                        <small class="text-muted">
+                            <i class="bi bi-palette2 me-1"></i>
+                            Personalizador v1.0
+                        </small>
+                    </div>
+                </div>
             </div>
         </ngx-simplebar>
 

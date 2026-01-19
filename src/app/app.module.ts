@@ -1,6 +1,11 @@
-import { NgModule } from '@angular/core';
+import { NgModule, LOCALE_ID } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { registerLocaleData } from '@angular/common';
+import localeEs from '@angular/common/locales/es';
+
+// Registrar el locale español
+registerLocaleData(localeEs);
 
 // Page Route
 import { AppRoutingModule } from './app-routing.module';
@@ -51,9 +56,8 @@ import { UserContactEffects } from './pages/modules/user-module/store/effects/us
 
 
 //forms response effects
-import { FormResponseEffects } from './pages/apps/kanbanboard/store/effects/formResponse.effects';
-
-// Forms validation effects
+import { FormResponseEffects } from './pages/modules/forms-module/store/effects/formResponse.effects';
+import { FormFilesEffects } from './pages/modules/forms-module/store/effects/formFiles.effects';
 
 
 // Función para traducciones
@@ -90,7 +94,7 @@ if (environment.defaultauth === 'firebase') {
     StoreModule.forRoot(rootReducer),
     StoreDevtoolsModule.instrument({
       maxAge: 25,
-      logOnly: environment.production,
+      logOnly: true, // ✅ Always logOnly to prevent performance issues
     }),
     EffectsModule.forRoot([
       AuthenticationEffects,
@@ -102,6 +106,7 @@ if (environment.defaultauth === 'firebase') {
       UserEffects,
       UserContactEffects,
       FormResponseEffects,
+      FormFilesEffects,
     ]),
     AngularFireModule.initializeApp(environment.firebaseConfig),
     AngularFireAuthModule,
@@ -110,6 +115,7 @@ if (environment.defaultauth === 'firebase') {
   providers: [
     { provide: HTTP_INTERCEPTORS, useClass: JwtInterceptor, multi: true },
     { provide: HTTP_INTERCEPTORS, useClass: ErrorInterceptor, multi: true },
+    { provide: LOCALE_ID, useValue: 'es-ES' },
   ],
   bootstrap: [AppComponent],
 })

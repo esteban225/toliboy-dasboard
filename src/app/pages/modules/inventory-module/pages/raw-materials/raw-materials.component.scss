@@ -1,0 +1,76 @@
+/* Styles for Raw Materials page:统一 color like title and ensure header displays above backgrounds */
+.rm-page {
+	/* Make most headings and labels use primary color */
+	color: var(--bs-body-color);
+
+	h2, .card-title, .fw-semibold, .form-label, .small, .page-link, .badge {
+		color: var(--bs-primary) !important;
+	}
+
+	/* Icons should also use primary tone */
+	.bi {
+		color: var(--bs-primary) !important;
+	}
+}
+
+.rm-page-header {
+	position: relative;
+	z-index: 1050; /* above cards */
+	background: rgba(255,255,255,0.95);
+	padding: 1rem;
+	border-radius: 0.375rem;
+	box-shadow: 0 0.25rem 0.5rem rgba(0,0,0,0.04);
+}
+
+/* Ensure the side form header text is white when using bg-primary */
+.rm-page .card-header.bg-primary h5, .rm-page .card-header.bg-success h5 {
+	color: #fff !important;
+}
+
+/* Responsive improvements and utility classes */
+.rm-page {
+	.table-responsive {
+		overflow: auto;
+		-webkit-overflow-scrolling: touch;
+	}
+
+	/* Helper to hide less important columns on small screens */
+	.hide-sm {
+		@media (max-width: 767.98px) {
+			display: none !important;
+		}
+	}
+
+	/* Reduce paddings on small screens to fit more content */
+	@media (max-width: 767.98px) {
+		.card-body { padding: 0.6rem; }
+		.form-label { font-size: 0.85rem; }
+		.table th, .table td { padding: 0.45rem 0.5rem; font-size: 0.85rem; }
+		.btn { padding: 0.45rem 0.6rem; font-size: 0.9rem; }
+	}
+
+	/* Make the side form full width on small screens and sticky on large */
+	.position-sticky {
+		@media (max-width: 991.98px) {
+			position: static !important;
+			width: 100%;
+			top: auto !important;
+			margin-top: 1rem;
+		}
+	}
+
+	/* Improve visibility of low stock badge */
+	.badge-low-stock {
+		background: linear-gradient(90deg, rgba(255,193,7,0.12), rgba(255,193,7,0.06));
+		border: 1px solid rgba(255,193,7,0.18);
+		color: #7a5800;
+	}
+}
+
+/* Modal / large forms on mobile: use full screen for clarity */
+@media (max-width: 575.98px) {
+	.modal-dialog { max-width: 100%; margin: 0.5rem; }
+	.modal-content { height: 90vh; border-radius: 0.5rem; }
+	.modal-body { overflow:auto; }
+}
+

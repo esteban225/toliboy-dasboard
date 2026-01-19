@@ -1,0 +1,353 @@
+<div class="container-fluid p-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col">
+            <div class="card border-0 shadow-sm rounded-4 p-4">
+                <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
+                    <div>
+                        <h2 class="fw-bold mb-2">
+                            <i class="bi bi-box-seam text-primary me-2"></i>
+                            Materias Primas
+                        </h2>
+                        <p class="text-muted mb-0 fw-medium">
+                            <i class="bi bi-info-circle me-1"></i>
+                            Gestión de inventario y materiales
+                        </p>
+                    </div>
+                    <div class="d-flex gap-2 flex-wrap">
+                        <button class="btn btn-outline-secondary rounded-3" (click)="forceReload()">
+                            <i class="bi bi-arrow-clockwise me-2"></i>
+                            <span class="d-none d-sm-inline">Recargar</span>
+                        </button>
+                        <button class="btn btn-primary rounded-3 shadow-sm" (click)="openCreate()">
+                            <i class="bi bi-plus-circle-fill me-2"></i>
+                            Nuevo
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-header border-0 bg-body-secondary py-3">
+            <h6 class="mb-0 fw-bold">
+                <i class="bi bi-funnel me-2"></i>Filtros de búsqueda
+            </h6>
+        </div>
+        <div class="card-body p-4">
+            <form [formGroup]="filterForm">
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold small text-muted text-uppercase mb-2" style="letter-spacing: 0.5px;">
+                            <i class="bi bi-tag me-1 text-primary"></i>Nombre
+                        </label>
+                        <input class="form-control rounded-3 border-secondary-subtle" formControlName="name" placeholder="Buscar por nombre" />
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold small text-muted text-uppercase mb-2" style="letter-spacing: 0.5px;">
+                            <i class="bi bi-upc-scan me-1 text-primary"></i>Código
+                        </label>
+                        <input class="form-control rounded-3 border-secondary-subtle" formControlName="code" placeholder="Buscar por código" />
+                    </div>
+                    <div class="col-md-4">
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-primary rounded-3 flex-fill" (click)="applyFilters()">
+                                <i class="bi bi-search me-1"></i>Buscar
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary rounded-3" (click)="clearFilters()">
+                                <i class="bi bi-eraser"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Alertas -->
+    <div *ngIf="loading$" class="alert alert-info border-0 rounded-3 shadow-sm d-flex align-items-center mb-4" role="alert">
+        <div class="spinner-border spinner-border-sm me-3" role="status">
+            <span class="visually-hidden">Cargando...</span>
+        </div>
+        <div class="fw-semibold">Cargando datos...</div>
+    </div>
+
+    <div *ngIf="error$" class="alert alert-danger border-0 rounded-3 shadow-sm d-flex align-items-center mb-4" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-3 fs-5"></i>
+        <div>{{ error$ }}</div>
+    </div>
+
+    <!-- Contenido principal -->
+    <div class="row g-4">
+        <!-- Tabla -->
+        <div class="col-lg-12">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="bg-body-secondary border-bottom">
+                            <tr>
+                                <th class="text-center px-4 py-3 fw-bold text-uppercase small text-muted" style="letter-spacing: 0.5px; width: 80px;">ID</th>
+                                <th class="px-4 py-3 fw-bold text-uppercase small text-muted" style="letter-spacing: 0.5px; min-width: 200px;">Nombre</th>
+                                <th class="px-4 py-3 fw-bold text-uppercase small text-muted d-none d-md-table-cell" style="letter-spacing: 0.5px; width: 150px;">Código</th>
+                                <th class="px-4 py-3 fw-bold text-uppercase small text-muted d-none d-lg-table-cell" style="letter-spacing: 0.5px; width: 120px;">Unidad</th>
+                                <th class="text-end px-4 py-3 fw-bold text-uppercase small text-muted" style="letter-spacing: 0.5px; width: 100px;">Stock</th>
+                                <th class="text-end px-4 py-3 fw-bold text-uppercase small text-muted d-none d-md-table-cell" style="letter-spacing: 0.5px; width: 100px;">Mínimo</th>
+                                <th class="text-center px-4 py-3 fw-bold text-uppercase small text-muted" style="letter-spacing: 0.5px; width: 120px;">Estado</th>
+                                <th class="text-center px-4 py-3 fw-bold text-uppercase small text-muted" style="letter-spacing: 0.5px; width: 140px;">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr *ngFor="let m of rawMaterials$; trackBy: trackById" class="border-bottom" style="transition: background-color 0.2s;">
+                                <td class="text-center px-4 py-3">
+                                    <span class="badge rounded-pill bg-secondary bg-opacity-10 text-body border fw-semibold">{{ m.id }}</span>
+                                </td>
+                                <td class="px-4 py-3">
+                                    <div class="fw-bold mb-1">{{ m.name }}</div>
+                                    <small class="text-muted d-block" *ngIf="m.description">{{ m.description }}</small>
+                                </td>
+                                <td class="px-4 py-3 d-none d-md-table-cell">
+                                    <span class="badge rounded-pill bg-secondary bg-opacity-10 text-body border fw-semibold px-3 py-2">
+                                        {{ m.code }}
+                                    </span>
+                                </td>
+                                <td class="px-4 py-3 d-none d-lg-table-cell">
+                                    <span class="badge rounded-pill bg-info bg-opacity-10 text-info border border-info fw-semibold px-3 py-2">
+                                        <i class="bi bi-rulers me-1"></i>{{ m.unit_of_measure }}
+                                    </span>
+                                </td>
+                                <td class="text-end px-4 py-3">
+                                    <div class="d-flex align-items-center justify-content-end gap-2">
+                                        <span class="fw-bold fs-5" [ngClass]="m.stock < m.min_stock ? 'text-danger' : 'text-success'">
+                                            {{ m.stock }}
+                                        </span>
+                                        <i class="bi bi-exclamation-circle-fill text-danger" *ngIf="m.stock < m.min_stock" title="Stock crítico"></i>
+                                    </div>
+                                </td>
+                                <td class="text-end px-4 py-3 d-none d-md-table-cell">
+                                    <span class="text-muted fw-semibold">{{ m.min_stock }}</span>
+                                </td>
+                                <td class="text-center px-4 py-3">
+                                    <span class="badge rounded-pill px-3 py-2 fw-semibold" 
+                                        [ngClass]="m.is_active ? 'bg-success' : 'bg-secondary'">
+                                        <i class="bi me-1" [ngClass]="m.is_active ? 'bi-check-circle-fill' : 'bi-x-circle-fill'"></i>
+                                        {{ m.is_active ? 'Activo' : 'Inactivo' }}
+                                    </span>
+                                </td>
+                                <td class="text-center px-4 py-3">
+                                    <div class="btn-group btn-group-sm" role="group">
+                                        <button class="btn btn-outline-primary rounded-start-3" (click)="select(m)" title="Editar material">
+                                            <i class="bi bi-pencil-fill"></i>
+                                        </button>
+                                        <button class="btn btn-outline-danger rounded-end-3" (click)="remove(m.id)" title="Eliminar material">
+                                            <i class="bi bi-trash-fill"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr *ngIf="!rawMaterials$ || rawMaterials$.length === 0">
+                                <td colspan="8" class="text-center py-5">
+                                    <div class="py-5">
+                                        <div class="rounded-circle d-inline-flex align-items-center justify-content-center mb-4 bg-secondary bg-opacity-10" 
+                                             style="width: 100px; height: 100px;">
+                                            <i class="bi bi-inbox display-4 text-muted"></i>
+                                        </div>
+                                        <h5 class="fw-bold mb-2">No hay materias primas</h5>
+                                        <p class="text-muted mb-4">No se encontraron registros con los filtros aplicados</p>
+                                        <button class="btn btn-primary rounded-3 px-4 shadow-sm" (click)="openCreate()">
+                                            <i class="bi bi-plus-circle-fill me-2"></i>Agregar primera materia prima
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Paginación -->
+                <div class="card-footer border-top bg-body-secondary" *ngIf="meta$.total">
+                    <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
+                        <div class="text-muted">
+                            <i class="bi bi-file-text me-2"></i>
+                            Mostrando
+                            <span class="fw-bold">{{ ((meta$.current_page - 1) * meta$.per_page) + 1 }}</span> -
+                            <span class="fw-bold">{{ min(meta$.current_page * meta$.per_page, meta$.total) }}</span>
+                            de
+                            <span class="fw-bold">{{ meta$.total }}</span> registros
+                        </div>
+                        <nav>
+                            <ul class="pagination pagination-sm mb-0">
+                                <li class="page-item" [class.disabled]="meta$.current_page <= 1">
+                                    <a class="page-link rounded-start-3" (click)="goToPage(meta$.current_page - 1, $event)" href="#" tabindex="-1">
+                                        <i class="bi bi-chevron-left"></i>
+                                        <span class="d-none d-md-inline ms-1">Anterior</span>
+                                    </a>
+                                </li>
+                                <li class="page-item active">
+                                    <span class="page-link bg-primary border-primary">
+                                        Página {{ meta$.current_page }} de {{ meta$.last_page }}
+                                    </span>
+                                </li>
+                                <li class="page-item" [class.disabled]="meta$.current_page >= meta$.last_page">
+                                    <a class="page-link rounded-end-3" (click)="goToPage(meta$.current_page + 1, $event)" href="#">
+                                        <span class="d-none d-md-inline me-1">Siguiente</span>
+                                        <i class="bi bi-chevron-right"></i>
+                                    </a>
+                                </li>
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Formulario -->
+    <div *ngIf="showForm$" class="modal fade show d-block" tabindex="-1" role="dialog" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+            <div class="modal-content border-0 shadow-lg rounded-4">
+                <div class="modal-header border-0 pb-0"
+                    [ngClass]="form.get('id')?.value ? 'bg-primary bg-opacity-10' : 'bg-success bg-opacity-10'">
+                    <div>
+                        <h4 class="modal-title fw-bold mb-1" [ngClass]="form.get('id')?.value ? 'text-primary' : 'text-success'">
+                            <i class="bi me-2" [ngClass]="form.get('id')?.value ? 'bi-pencil-square' : 'bi-plus-square-fill'"></i>
+                            {{ form.get('id')?.value ? 'Editar' : 'Nueva' }} Materia Prima
+                        </h4>
+                        <p class="text-muted small mb-0">
+                            {{ form.get('id')?.value ? 'Modifica la información del material' : 'Registra un nuevo material en el inventario' }}
+                        </p>
+                    </div>
+                    <button type="button" class="btn-close" aria-label="Cerrar" (click)="select(null)"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <form [formGroup]="form" (ngSubmit)="save()">
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">
+                                <i class="bi bi-tag-fill text-primary me-2"></i>Nombre *
+                            </label>
+                            <input formControlName="name" class="form-control rounded-3 form-control-lg" 
+                                placeholder="Ej: Harina de trigo"
+                                [class.is-invalid]="form.get('name')?.invalid && form.get('name')?.touched" />
+                            <div class="form-text">
+                                <i class="bi bi-info-circle me-1"></i>Nombre identificativo del material
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">
+                                <i class="bi bi-upc-scan text-primary me-2"></i>Código
+                            </label>
+                            <input formControlName="code" class="form-control rounded-3" 
+                                placeholder="Ej: MP-001"
+                                [class.is-invalid]="form.get('code')?.invalid && form.get('code')?.touched" />
+                            <div *ngIf="form.get('code')?.hasError('maxlength')" class="invalid-feedback">
+                                <i class="bi bi-exclamation-circle-fill me-1"></i>
+                                El código no debe tener más de 100 caracteres.
+                            </div>
+                            <div *ngIf="form.get('code')?.hasError('server')" class="invalid-feedback">
+                                <i class="bi bi-exclamation-circle-fill me-1"></i>
+                                {{ form.get('code')?.getError('server') }}
+                            </div>
+                            <div class="form-text" *ngIf="!form.get('code')?.invalid">
+                                <i class="bi bi-info-circle me-1"></i>Código único para identificar el material
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">
+                                <i class="bi bi-text-paragraph text-primary me-2"></i>Descripción
+                            </label>
+                            <textarea formControlName="description" class="form-control rounded-3" rows="3"
+                                placeholder="Descripción detallada del material..."></textarea>
+                            <div class="form-text">
+                                <i class="bi bi-info-circle me-1"></i>Opcional: características adicionales
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">
+                                <i class="bi bi-rulers text-primary me-2"></i>Unidad de medida
+                            </label>
+                            <div class="input-group input-group-lg">
+                                <span class="input-group-text bg-body-secondary">
+                                    <i class="bi bi-rulers"></i>
+                                </span>
+                                <input formControlName="unit_of_measure" class="form-control rounded-end-3"
+                                    placeholder="Ej: kg, litros, unidades" />
+                            </div>
+                            <div class="form-text">
+                                <i class="bi bi-info-circle me-1"></i>Unidad para medir el inventario
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-6">
+                                <label class="form-label fw-semibold">
+                                    <i class="bi bi-box-fill text-success me-2"></i>Existencias
+                                </label>
+                                <div class="input-group input-group-lg">
+                                    <span class="input-group-text bg-body-secondary">
+                                        <i class="bi bi-box"></i>
+                                    </span>
+                                    <input type="number" formControlName="stock" class="form-control"
+                                        placeholder="0" min="0" />
+                                </div>
+                                <div class="form-text">
+                                    <i class="bi bi-info-circle me-1"></i>Cantidad actual
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label fw-semibold">
+                                    <i class="bi bi-exclamation-triangle-fill text-warning me-2"></i>Stock Mínimo
+                                </label>
+                                <div class="input-group input-group-lg">
+                                    <span class="input-group-text bg-body-secondary">
+                                        <i class="bi bi-dash-circle"></i>
+                                    </span>
+                                    <input type="number" formControlName="min_stock" class="form-control"
+                                        placeholder="0" min="0" />
+                                </div>
+                                <div class="form-text">
+                                    <i class="bi bi-info-circle me-1"></i>Alerta de reposición
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <div class="card border-0 bg-body-secondary rounded-3">
+                                <div class="card-body py-3">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" role="switch"
+                                            formControlName="is_active" id="isActive" />
+                                        <label class="form-check-label fw-semibold" for="isActive">
+                                            <i class="bi bi-power text-success me-2"></i>
+                                            Material activo en el sistema
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div *ngIf="form.get('is_active')?.hasError('server')" class="text-danger small mt-2">
+                                <i class="bi bi-exclamation-circle-fill me-1"></i>
+                                {{ form.get('is_active')?.getError('server') }}
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer border-0 bg-body-secondary">
+                    <button type="button" class="btn btn-outline-secondary rounded-3" (click)="select(null)" [disabled]="loading$">
+                        <i class="bi bi-x-circle me-2"></i>Cancelar
+                    </button>
+                    <button type="submit" class="btn rounded-3 shadow-sm" (click)="save()"
+                        [ngClass]="form.get('id')?.value ? 'btn-primary' : 'btn-success'"
+                        [disabled]="loading$ || form.invalid">
+                        <span *ngIf="loading$" class="spinner-border spinner-border-sm me-2"></span>
+                        <i class="bi me-2" *ngIf="!loading$"
+                            [ngClass]="form.get('id')?.value ? 'bi-save-fill' : 'bi-plus-circle-fill'"></i>
+                        {{ loading$ ? 'Guardando...' : (form.get('id')?.value ? 'Actualizar' : 'Crear') }}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

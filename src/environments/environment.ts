@@ -4,7 +4,7 @@
 export const environment = {
   production: false,
   defaultauth: 'fackbackend',
-  AUTH_API: 'http://3.85.24.170/api',   // <- USAR LA RAÍZ SIN "/api"
+  AUTH_API: 'https://apitoliboy.lat/api',   // <- USAR LA RAÍZ SIN "/api"
   firebaseConfig: {
     apiKey: 'AIzaSyAIrRUP8z39yFhjsfnLsxwDhzxzAguzHvI',
     authDomain: 'vixon-angular.firebaseapp.com',
@@ -14,6 +14,14 @@ export const environment = {
     messagingSenderId: '822277458131',
     appId: '1:822277458131:web:5ec3bee2543b96567aac26',
     measurementId: 'G-YPD27EXC6H'
+  },
+  pusher: {
+    key: '3cfb434018939310b096',
+    cluster: 'us2',
+    channelPrefix: 'notifications',
+    globalChannel: 'notifications.global',
+    forceTLS: true,
+    logToConsole: true
   }
 };
 
