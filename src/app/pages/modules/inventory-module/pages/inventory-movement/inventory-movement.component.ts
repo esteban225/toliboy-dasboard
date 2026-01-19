@@ -21,6 +21,7 @@ import { ReportService } from 'src/app/core/services/report.service';
 
 export class InventoryMovementComponent implements OnInit, OnDestroy {
   movements: any[] = [];
+  private movementsLoaded = false;
   loading = false;
   error: string | null = null;
   page = 1;
@@ -29,16 +30,16 @@ export class InventoryMovementComponent implements OnInit, OnDestroy {
   hasActiveFilters = false;
 
   filters = {
-  type: '',
-  date: '',
-  product: '',
-  production_line: '',
-  general: ''
-};
+    type: '',
+    date: '',
+    product: '',
+    production_line: '',
+    general: ''
+  };
 
-onFilterChange() {
-  this.applyFilters();
-}
+  onFilterChange() {
+    this.applyFilters();
+  }
 
 
   // Modal & form
@@ -48,6 +49,7 @@ onFilterChange() {
   formError: string | null = null;
   loadingProductDetails = false;
   generatingReport = false;
+  loadingBatchLookup = false;
   // Product search
   productSuggestions: any[] = [];
   private productSearch$ = new Subject<string>();
@@ -55,9 +57,33 @@ onFilterChange() {
   private productSearchControlSub: Subscription | null = null;
   private cachedProducts: any[] = [];
   private productsCached = false;
+  private rawMaterialsLoaded = false;
+  private rawMaterialsMap = new Map<number, { id: number; name: string; code: string | null; unit_cost?: number | null }>();
+  private rawMaterialsList: any[] = [];
   // Batches
   availableBatches: any[] = [];
   loadingBatches = false;
+
+  // Batch search modal (entrada -> salida)
+  showBatchSearchModal = false;
+  batchSearchLoading = false;
+  batchSearchResults: any[] = [];
+  batchSearchView: any[] = [];
+  batchSearchPage = 1;
+  batchSearchPerPage = 10;
+  batchSearchMeta: any = null;
+  batchSearchSort: 'asc' | 'desc' = 'desc';
+  // Almacena TODOS los movimientos de entrada (sin filtro de fecha) para la modal
+  private allEntryMovements: any[] = [];
+  private allEntryMovementsLoaded = false;
+  batchSearchFilters = {
+    productText: '',
+    supplier: '',
+    ingressDate: '',
+    expiryDate: '',
+    status: '',
+    freeText: ''
+  };
 
   // Details modal
   currentDetailsModal: { label: string; value: string }[] = [];
@@ -108,6 +134,7 @@ onFilterChange() {
 
   ngOnInit(): void {
     this.loadMovements();
+    this.loadRawMaterials();
     // subscribe product search
     this.productSearchSub = this.productSearch$
       .pipe(
@@ -128,25 +155,56 @@ onFilterChange() {
             return of({ data: filteredData.slice(0, 10), meta: null });
           }
 
-          // Si no hay caché, obtener productos del servidor
-          return this.rawService.list({}, 1, 100).pipe(
-            map((res: any) => {
-              // Guardar en caché
-              this.cachedProducts = res?.data || [];
-              this.productsCached = true;
+          // Si ya cargamos materias primas, usar la lista local
+          if (this.rawMaterialsLoaded && this.rawMaterialsList.length > 0) {
+            const filteredData = this.rawMaterialsList.filter((item: any) => {
+              const name = (item?.name || '').toLowerCase();
+              const code = (item?.code || '').toLowerCase();
+              const searchTerm = term.toLowerCase();
+              return name.includes(searchTerm) || code.includes(searchTerm);
+            });
+            // cachear para próximas búsquedas
+            this.cachedProducts = this.rawMaterialsList;
+            this.productsCached = true;
+            return of({ data: filteredData.slice(0, 10), meta: null });
+          }
 
-              // Filtrar manualmente los resultados que contengan el término
-              const filteredData = this.cachedProducts.filter((item: any) => {
+          // Si no hay caché, obtener productos del servidor
+          return this.rawService.list({}, 1, 200).pipe(
+            map((res: any) => {
+              const data = this.normalizeProducts(res?.data) ?? [];
+
+              // Guardar en caché si hay datos
+              if (Array.isArray(data) && data.length > 0) {
+                this.cachedProducts = data;
+                this.productsCached = true;
+              }
+
+              // Fallback a productos presentes en la tabla si la API devuelve vacío
+              const source = (this.cachedProducts.length ? this.cachedProducts : data);
+              const mergedSource = source.length > 0 ? source : this.extractProductsFromMovements();
+
+              const filteredData = mergedSource.filter((item: any) => {
                 const name = (item?.name || '').toLowerCase();
                 const code = (item?.code || '').toLowerCase();
                 const searchTerm = term.toLowerCase();
                 return name.includes(searchTerm) || code.includes(searchTerm);
               });
+
               return { data: filteredData.slice(0, 10), meta: res?.meta };
             }),
             catchError((error) => {
               console.error('Error searching products:', error);
-              return of({ data: [], meta: null });
+              try { this.alert.error('No se pudo cargar el catálogo de materias primas'); } catch (e) { /* noop */ }
+              // Fallback: usar productos de la tabla ya cargada
+              const fallback = this.extractProductsFromMovements();
+              const filteredFallback = fallback.filter((item: any) => {
+                const name = (item?.name || '').toLowerCase();
+                const code = (item?.code || '').toLowerCase();
+                const searchTerm = term.toLowerCase();
+                return name.includes(searchTerm) || code.includes(searchTerm);
+              });
+              return of({ data: filteredFallback.slice(0, 10), meta: null });
             })
           );
         })
@@ -172,6 +230,124 @@ onFilterChange() {
     this.productsCached = false;
   }
 
+  private normalizeProducts(raw: any): any[] {
+    if (Array.isArray(raw)) return raw;
+    if (Array.isArray(raw?.data)) return raw.data;
+    if (Array.isArray(raw?.items)) return raw.items;
+    return [];
+  }
+
+  private loadRawMaterials(): void {
+    console.log('[RAW MATERIALS] Iniciando carga de materias primas...');
+    this.rawService.list({}, 1, 500).subscribe({
+      next: (res: any) => {
+        console.log('[RAW MATERIALS] Respuesta recibida:', res);
+        
+        // Intentar extraer datos de múltiples formatos posibles
+        let data: any[] = [];
+        if (Array.isArray(res)) {
+          data = res;
+        } else if (Array.isArray(res?.data)) {
+          data = res.data;
+        } else if (Array.isArray(res?.data?.data)) {
+          data = res.data.data;
+        } else if (Array.isArray(res?.items)) {
+          data = res.items;
+        }
+        
+        console.log('[RAW MATERIALS] Datos extraídos:', data.length, 'items');
+        
+        if (data.length > 0) {
+          this.rawMaterialsList = data;
+          this.cachedProducts = data;
+          this.productsCached = true;
+          this.rawMaterialsLoaded = true;
+          
+          // Construir mapa id -> detalle
+          this.rawMaterialsMap.clear();
+          data.forEach((item: any) => {
+            const itemId = item?.id ?? item?.raw_material_id;
+            if (itemId) {
+              this.rawMaterialsMap.set(Number(itemId), {
+                id: Number(itemId),
+                name: item?.name ?? item?.raw_material_name ?? '',
+                code: item?.code ?? item?.raw_material_code ?? null,
+                unit_cost: item?.unit_cost ?? item?.price ?? item?.cost ?? null,
+              });
+            }
+          });
+          
+          console.log('[RAW MATERIALS] Mapa construido con', this.rawMaterialsMap.size, 'entradas');
+          console.log('[RAW MATERIALS] Ejemplo:', this.rawMaterialsMap.entries().next().value);
+          
+          // Enriquecer movimientos ya cargados
+          this.applyMapToMovements();
+        } else {
+          console.warn('[RAW MATERIALS] No se encontraron materias primas en la respuesta');
+        }
+      },
+      error: (err) => {
+        console.error('[RAW MATERIALS] Error cargando materias primas:', err);
+      }
+    });
+  }
+
+  private applyMapToMovements(): void {
+    console.log('[APPLY MAP] Aplicando mapa a movimientos. Movimientos:', this.movements?.length, 'Mapa size:', this.rawMaterialsMap.size);
+    
+    if (!this.movements || this.movements.length === 0) {
+      console.log('[APPLY MAP] No hay movimientos para actualizar');
+      return;
+    }
+    
+    if (this.rawMaterialsMap.size === 0) {
+      console.log('[APPLY MAP] Mapa vacío, no se pueden resolver nombres');
+      return;
+    }
+    
+    let updated = 0;
+    this.movements = this.movements.map(movement => {
+      const productId = movement?.raw_material_id ?? movement?.product_id;
+      console.log('[APPLY MAP] Buscando ID:', productId, 'tipo:', typeof productId);
+      
+      const rm = this.rawMaterialsMap.get(Number(productId));
+      
+      if (rm) {
+        updated++;
+        console.log('[APPLY MAP] Encontrado:', rm.name, rm.code);
+        return {
+          ...movement,
+          product_name: rm.name || movement?.product_name || movement?.raw_material_name,
+          product_code: rm.code || movement?.product_code || movement?.raw_material_code,
+          raw_material_name: rm.name || movement?.raw_material_name,
+          raw_material_code: rm.code || movement?.raw_material_code,
+        };
+      }
+      return movement;
+    });
+    
+    console.log('[APPLY MAP] Movimientos actualizados:', updated, 'de', this.movements.length);
+  }
+
+  private extractProductsFromMovements(): any[] {
+    const set = new Map<number | string, any>();
+
+    (this.movements || []).forEach((m: any) => {
+      const id = m?.raw_material_id ?? m?.product_id;
+      if (!id) return;
+      if (set.has(id)) return;
+
+      set.set(id, {
+        id,
+        name: m?.product_name ?? m?.raw_material_name ?? '',
+        code: m?.product_code ?? m?.raw_material_code ?? '',
+        unit_cost: m?.unit_cost ?? m?.price ?? m?.cost ?? 0,
+      });
+    });
+
+    return Array.from(set.values());
+  }
+
   loadMovements(): void {
     this.loading = true;
     this.error = null;
@@ -188,6 +364,10 @@ onFilterChange() {
         if (res?.success && Array.isArray(res?.data)) {
           this.movements = res.data;
           this.meta = res.meta || null;
+          this.movementsLoaded = true;
+
+          // Aplicar nombres/códigos desde el mapa ya cargado, si existe
+          this.applyMapToMovements();
 
           // Cargar nombres y códigos de productos para cada movimiento
           this.loadProductDetailsForMovements();
@@ -207,48 +387,48 @@ onFilterChange() {
       }
     });
   }
-applyFilters(): void {
-  const filters: any = {};
+  applyFilters(): void {
+    const filters: any = {};
 
-  if (this.filters.type) filters.movement_type = this.filters.type;
-  if (this.filters.date) filters.created_at = this.filters.date;
-  if (this.filters.production_line) filters.production_line = this.filters.production_line;
-  if (this.filters.product) filters.raw_material_id = this.filters.product;
-  if (this.filters.general) filters.notes = this.filters.general;
+    if (this.filters.type) filters.movement_type = this.filters.type;
+    if (this.filters.date) filters.created_at = this.filters.date;
+    if (this.filters.production_line) filters.production_line = this.filters.production_line;
+    if (this.filters.product) filters.raw_material_id = this.filters.product;
+    if (this.filters.general) filters.notes = this.filters.general;
 
-  // Marcar si hay filtros activos
-  this.hasActiveFilters = Object.keys(filters).length > 0;
+    // Marcar si hay filtros activos
+    this.hasActiveFilters = Object.keys(filters).length > 0;
 
-  this.page = 1; // Reset page to 1 on new filter application
-  this.loading = true;
+    this.page = 1; // Reset page to 1 on new filter application
+    this.loading = true;
 
-  this.invService.list(filters, this.perPage, this.page).subscribe({
-    next: (res) => {
-      this.movements = res.data || [];
-      this.meta = res.meta || null;
-      this.loading = false;
-      // Cargar detalles de productos para los movimientos filtrados
-      this.loadProductDetailsForMovements();
-    },
-    error: (err) => {
-      this.loading = false;
-      this.error = err?.error?.message || 'Error cargando movimientos';
-    }
-  });
-}
+    this.invService.list(filters, this.perPage, this.page).subscribe({
+      next: (res) => {
+        this.movements = res.data || [];
+        this.meta = res.meta || null;
+        this.loading = false;
+        // Cargar detalles de productos para los movimientos filtrados
+        this.loadProductDetailsForMovements();
+      },
+      error: (err) => {
+        this.loading = false;
+        this.error = err?.error?.message || 'Error cargando movimientos';
+      }
+    });
+  }
 
-resetFilters(): void {
-  this.filters = {
-    type: '',
-    date: '',
-    product: '',
-    production_line: '',
-    general: ''
-  };
-  this.hasActiveFilters = false;
-  this.page = 1;
-  this.loadMovements();
-}
+  resetFilters(): void {
+    this.filters = {
+      type: '',
+      date: '',
+      product: '',
+      production_line: '',
+      general: ''
+    };
+    this.hasActiveFilters = false;
+    this.page = 1;
+    this.loadMovements();
+  }
 
   private loadProductDetailsForMovements(): void {
     if (!this.movements || this.movements.length === 0) {
@@ -270,8 +450,45 @@ resetFilters(): void {
       return;
     }
 
-    // Cargar detalles de productos en paralelo usando forkJoin
-    const productCalls = productIds.map(id =>
+    // Intentar resolver con el mapa local primero
+    const productMap = new Map<number, any>();
+    productIds.forEach(id => {
+      if (this.rawMaterialsMap.has(Number(id))) {
+        productMap.set(Number(id), this.rawMaterialsMap.get(Number(id)));
+      }
+    });
+
+    // IDs que faltan del mapa local
+    const missingIds = productIds.filter(id => !productMap.has(Number(id)));
+
+    const handleUpdateMovements = () => {
+      this.movements = this.movements.map(movement => {
+        const productId = movement?.raw_material_id ?? movement?.product_id;
+        const productDetails = productMap.get(Number(productId));
+
+        if (productDetails) {
+          return {
+            ...movement,
+            product_name: productDetails.name,
+            product_code: productDetails.code,
+            raw_material_name: productDetails.name,
+            raw_material_code: productDetails.code
+          };
+        }
+
+        return movement;
+      });
+      this.loading = false;
+    };
+
+    // Si no falta ninguno, actualizar y salir
+    if (missingIds.length === 0) {
+      handleUpdateMovements();
+      return;
+    }
+
+    // Cargar detalles faltantes en paralelo usando forkJoin
+    const productCalls = missingIds.map(id =>
       this.rawService.getById(id).pipe(
         map((response: any) => {
           const product = response?.data ?? response;
@@ -294,38 +511,19 @@ resetFilters(): void {
       )
     );
 
-    // Usar forkJoin para esperar todas las llamadas
     forkJoin(productCalls).subscribe({
       next: (products) => {
-        console.log('Detalles de productos cargados:', products);
-
-        // Crear un mapa para búsqueda rápida
-        const productMap = new Map(products.map(p => [p.id, p]));
-
-        // Actualizar movimientos con detalles de productos
-        this.movements = this.movements.map(movement => {
-          const productId = movement?.raw_material_id ?? movement?.product_id;
-          const productDetails = productMap.get(productId);
-
-          if (productDetails) {
-            return {
-              ...movement,
-              product_name: productDetails.name,
-              product_code: productDetails.code,
-              raw_material_name: productDetails.name,
-              raw_material_code: productDetails.code
-            };
-          }
-
-          return movement;
+        // Añadir los productos obtenidos al mapa y al cache global
+        products.forEach(p => {
+          productMap.set(Number(p.id), p);
+          this.rawMaterialsMap.set(Number(p.id), p);
         });
 
-        console.log('Movimientos actualizados con detalles de productos:', this.movements);
-        this.loading = false;
+        handleUpdateMovements();
       },
       error: (error) => {
         console.error('Error cargando detalles de productos:', error);
-        this.loading = false;
+        handleUpdateMovements();
       }
     });
   }
@@ -354,10 +552,10 @@ resetFilters(): void {
     this.formError = null;
     this.productSuggestions = [];
     this.availableBatches = [];
-    
+
     // Limpiar campos de notas
     this.parseAndLoadNotes('');
-    
+
     this.showModal = true;
   }
 
@@ -519,7 +717,7 @@ resetFilters(): void {
       batch_id: null
     });
     this.productSuggestions = [];
-    
+
     // Cargar batches disponibles si es una salida
     if (this.form.get('type')?.value === 'out') {
       this.loadBatchesForProduct(productId);
@@ -533,7 +731,7 @@ resetFilters(): void {
     }
 
     this.loadingBatches = true;
-    
+
     // Usar el método del servicio para obtener batches del material
     this.invService.getBatchesByMaterial(productId).subscribe({
       next: (res: any) => {
@@ -548,6 +746,419 @@ resetFilters(): void {
     });
   }
 
+  openBatchSearchModal(): void {
+    this.batchSearchPage = 1;
+    this.resetBatchFilters();
+    this.showBatchSearchModal = true;
+    
+    // Asegurar que las materias primas estén cargadas antes de cargar los movimientos
+    if (!this.rawMaterialsLoaded || this.rawMaterialsMap.size === 0) {
+      this.batchSearchLoading = true;
+      this.rawService.list({}, 1, 500).subscribe({
+        next: (res) => {
+          const items = res?.data ?? [];
+          items.forEach((item: any) => {
+            if (item?.id) {
+              this.rawMaterialsMap.set(Number(item.id), {
+                id: item.id,
+                name: item.name ?? item.product_name ?? '',
+                code: item.code ?? item.product_code ?? null,
+                unit_cost: item.unit_cost ?? item.price ?? null
+              });
+            }
+          });
+          this.rawMaterialsLoaded = true;
+          this.loadAllEntryMovements();
+        },
+        error: () => {
+          // Continuar sin materias primas
+          this.loadAllEntryMovements();
+        }
+      });
+    } else {
+      this.loadAllEntryMovements();
+    }
+  }
+
+  closeBatchSearchModal(): void {
+    this.showBatchSearchModal = false;
+    this.batchSearchLoading = false;
+  }
+
+  /**
+   * Carga TODOS los movimientos de entrada desde el API (sin filtro de fecha)
+   * para mostrar en la modal de búsqueda de lotes
+   */
+  private loadAllEntryMovements(): void {
+    // Si ya están cargados, usar los datos en caché
+    if (this.allEntryMovementsLoaded && this.allEntryMovements.length > 0) {
+      this.buildBatchSearchFromCache();
+      return;
+    }
+
+    this.batchSearchLoading = true;
+
+    // Cargar TODOS los movimientos de entrada sin filtro de fecha
+    this.invService.listWithoutDate({ movement_type: 'in' }, 500, 1).subscribe({
+      next: (res) => {
+        const data = res?.data ?? [];
+        // Enriquecer los datos con nombres de productos desde el mapa
+        this.allEntryMovements = data.map((item: any) => this.enrichWithProductData(item));
+        this.allEntryMovementsLoaded = true;
+        this.buildBatchSearchFromCache();
+      },
+      error: (err) => {
+        console.error('Error cargando movimientos de entrada:', err);
+        // Fallback: usar los movimientos actuales filtrados (ya tienen los nombres)
+        this.allEntryMovements = this.movements.filter((m: any) => {
+          const type = (m?.type || m?.movement_type || '').toLowerCase();
+          return type === 'in';
+        });
+        this.buildBatchSearchFromCache();
+      }
+    });
+  }
+
+  /**
+   * Enriquece un movimiento con los datos del producto desde el mapa de materias primas
+   */
+  private enrichWithProductData(item: any): any {
+    // Si ya tiene nombre de producto, devolverlo tal cual
+    if (item?.product_name || item?.raw_material_name) {
+      return item;
+    }
+
+    // Buscar en el mapa de materias primas
+    const productId = item?.product_id ?? item?.raw_material_id;
+    if (productId && this.rawMaterialsMap.has(Number(productId))) {
+      const product = this.rawMaterialsMap.get(Number(productId));
+      return {
+        ...item,
+        product_name: product?.name ?? null,
+        raw_material_name: product?.name ?? null,
+        product_code: product?.code ?? null,
+        raw_material_code: product?.code ?? null
+      };
+    }
+
+    return item;
+  }
+
+  /**
+   * Construye la vista de búsqueda de lotes desde el caché de entradas
+   */
+  private buildBatchSearchFromCache(): void {
+    const currentProductId = this.form.get('product_id')?.value;
+
+    // Filtrar por producto si está seleccionado en el formulario
+    let entryMovements = [...this.allEntryMovements];
+    if (currentProductId) {
+      entryMovements = entryMovements.filter((m: any) => {
+        const prodId = m?.product_id ?? m?.raw_material_id;
+        return Number(prodId) === Number(currentProductId);
+      });
+    }
+
+    // Decorar cada fila con los datos parseados
+    this.batchSearchResults = entryMovements.map((item: any) => this.decorateBatchRow(item));
+
+    // Simular meta de paginación local
+    const total = this.batchSearchResults.length;
+    this.batchSearchMeta = {
+      total: total,
+      per_page: this.batchSearchPerPage,
+      current_page: 1,
+      last_page: Math.ceil(total / this.batchSearchPerPage) || 1
+    };
+
+    this.rebuildBatchSearchView();
+    this.batchSearchLoading = false;
+  }
+
+  private decorateBatchRow(item: any): any {
+    return {
+      ...item,
+      parsed: {
+        batch: this.parseNotesField(item?.notes, 'Lote') || item?.batch_code || item?.batch || '',
+        supplier: this.parseNotesField(item?.notes, 'Proveedor') || '',
+        expiry: this.parseNotesField(item?.notes, 'Vencimiento') || '',
+        accepted: this.parseNotesField(item?.notes, 'Aceptado') || '',
+        status: this.parseNotesField(item?.notes, 'Aceptado') || ''
+      }
+    };
+  }
+
+  onBatchFiltersChange(): void {
+    this.batchSearchPage = 1;
+    this.rebuildBatchSearchView();
+  }
+
+  /**
+   * Fuerza la recarga de todos los movimientos de entrada desde el API
+   */
+  reloadBatchSearchData(): void {
+    this.allEntryMovementsLoaded = false;
+    this.allEntryMovements = [];
+    // También recargar materias primas para tener datos frescos
+    this.rawMaterialsLoaded = false;
+    this.rawMaterialsMap.clear();
+    
+    this.batchSearchLoading = true;
+    this.rawService.list({}, 1, 500).subscribe({
+      next: (res) => {
+        const items = res?.data ?? [];
+        items.forEach((item: any) => {
+          if (item?.id) {
+            this.rawMaterialsMap.set(Number(item.id), {
+              id: item.id,
+              name: item.name ?? item.product_name ?? '',
+              code: item.code ?? item.product_code ?? null,
+              unit_cost: item.unit_cost ?? item.price ?? null
+            });
+          }
+        });
+        this.rawMaterialsLoaded = true;
+        this.loadAllEntryMovements();
+      },
+      error: () => {
+        this.loadAllEntryMovements();
+      }
+    });
+  }
+
+  resetBatchFilters(): void {
+    this.batchSearchFilters = {
+      productText: '',
+      supplier: '',
+      ingressDate: '',
+      expiryDate: '',
+      status: '',
+      freeText: ''
+    };
+    this.batchSearchPage = 1;
+    this.rebuildBatchSearchView();
+  }
+
+  rebuildBatchSearchView(): void {
+    const { productText, supplier, ingressDate, expiryDate, status, freeText } = this.batchSearchFilters;
+    const norm = (v: string) => (v || '').toLowerCase();
+
+    let rows = [...this.batchSearchResults];
+
+    rows = rows.filter((row) => {
+      const productName = norm(row?.product_name ?? row?.raw_material_name ?? '');
+      const productCode = norm(row?.product_code ?? row?.raw_material_code ?? '');
+      const supplierVal = norm(row?.parsed?.supplier ?? '');
+      const acceptedVal = norm(row?.parsed?.accepted ?? row?.parsed?.status ?? '');
+      const expiryVal = (row?.parsed?.expiry ?? '').slice(0, 10);
+      const ingressVal = (row?.created_at ?? '').slice(0, 10);
+
+      if (productText && !(productName.includes(norm(productText)) || productCode.includes(norm(productText)))) {
+        return false;
+      }
+
+      if (supplier && !supplierVal.includes(norm(supplier))) {
+        return false;
+      }
+
+      if (status && acceptedVal !== norm(status)) {
+        return false;
+      }
+
+      if (expiryDate && expiryVal !== expiryDate) {
+        return false;
+      }
+
+      if (ingressDate && ingressVal !== ingressDate) {
+        return false;
+      }
+
+      if (freeText) {
+        const haystack = [
+          row?.notes,
+          row?.parsed?.batch,
+          row?.parsed?.supplier,
+          row?.parsed?.accepted,
+          row?.parsed?.expiry,
+          row?.product_name,
+          row?.product_code
+        ].map(x => norm(x || '')).join(' ');
+
+        if (!haystack.includes(norm(freeText))) {
+          return false;
+        }
+      }
+
+      return true;
+    });
+
+    // Ordenar por fecha
+    rows.sort((a, b) => {
+      const dateA = new Date(a?.created_at || a?.updated_at || 0).getTime();
+      const dateB = new Date(b?.created_at || b?.updated_at || 0).getTime();
+      return this.batchSearchSort === 'desc' ? dateB - dateA : dateA - dateB;
+    });
+
+    // Actualizar meta con los filtrados
+    const total = rows.length;
+    this.batchSearchMeta = {
+      total: total,
+      per_page: this.batchSearchPerPage,
+      current_page: this.batchSearchPage,
+      last_page: Math.ceil(total / this.batchSearchPerPage) || 1
+    };
+
+    // Aplicar paginación local
+    const start = (this.batchSearchPage - 1) * this.batchSearchPerPage;
+    const end = start + this.batchSearchPerPage;
+    this.batchSearchView = rows.slice(start, end);
+  }
+
+  toggleBatchSort(): void {
+    this.batchSearchSort = this.batchSearchSort === 'desc' ? 'asc' : 'desc';
+    this.rebuildBatchSearchView();
+  }
+
+  batchSearchPrevPage(): void {
+    if (this.batchSearchPage > 1) {
+      this.batchSearchPage--;
+      this.rebuildBatchSearchView();
+    }
+  }
+
+  batchSearchNextPage(): void {
+    const last = this.batchSearchMeta?.last_page ?? null;
+    if (!last || this.batchSearchPage < last) {
+      this.batchSearchPage++;
+      this.rebuildBatchSearchView();
+    }
+  }
+
+  selectBatchFromModal(row: any): void {
+    this.applyEntryDataToOut(row, row?.parsed?.batch ?? '');
+    this.showBatchSearchModal = false;
+  }
+
+  prefillOutByBatch(): void {
+    const batchInput = document.getElementById('batchOut') as HTMLInputElement;
+    const batchCode = (batchInput?.value || '').trim();
+
+    if (!batchCode) {
+      this.alert.warning('Falta el lote', 'Ingresa el número de lote para buscar la entrada.');
+      return;
+    }
+
+    this.loadingBatchLookup = true;
+
+    // Intentar con los movimientos ya cargados primero (más rápido)
+    const localEntry = this.findEntryByBatch(batchCode);
+    if (localEntry) {
+      this.applyEntryDataToOut(localEntry, batchCode);
+      this.loadingBatchLookup = false;
+      return;
+    }
+
+    // Si no está en memoria, consultar al backend filtrando por entrada y notas (sin forzar fecha)
+    this.invService.listWithoutDate({ movement_type: 'in', notes: batchCode }, 50, 1).subscribe({
+      next: (res) => {
+        const entries = res?.data ?? [];
+        const match = entries.find((item: any) => this.matchesBatch(item, batchCode));
+
+        if (match) {
+          this.applyEntryDataToOut(match, batchCode);
+        } else {
+          this.alert.warning('Sin coincidencias', 'No se encontró ninguna entrada con ese lote.');
+        }
+        this.loadingBatchLookup = false;
+      },
+      error: (err) => {
+        this.loadingBatchLookup = false;
+        const msg = err?.error?.message || err?.message || 'No se pudo buscar el lote en el servidor.';
+        this.alert.error('Error buscando lote', msg);
+      }
+    });
+  }
+
+  private findEntryByBatch(batchCode: string): any | undefined {
+    const target = (batchCode || '').trim().toLowerCase();
+    if (!target) return undefined;
+
+    return this.movements.find(movement => {
+      const type = (movement?.type || movement?.movement_type || '').toLowerCase();
+      if (type !== 'in') return false;
+
+      const notesBatch = (this.parseNotesField(movement?.notes, 'Lote') || '').toLowerCase();
+      const batchField = (movement?.batch_code || movement?.batch || '').toLowerCase();
+      return notesBatch === target || batchField === target;
+    });
+  }
+
+  private matchesBatch(movement: any, batchCode: string): boolean {
+    const target = (batchCode || '').trim().toLowerCase();
+    if (!target) return false;
+
+    const notesBatch = (this.parseNotesField(movement?.notes, 'Lote') || '').trim().toLowerCase();
+    const batchField = (movement?.batch_code || movement?.batch || '').toLowerCase();
+    return notesBatch === target || batchField === target;
+  }
+
+  private applyEntryDataToOut(entry: any, fallbackBatch?: string): void {
+    const supplier = this.parseNotesField(entry?.notes, 'Proveedor');
+    const expiryDate = this.parseNotesField(entry?.notes, 'Vencimiento');
+    const seals = this.parseNotesField(entry?.notes, 'Sellos');
+    const packageType = this.parseNotesField(entry?.notes, 'Tipo de Empaque');
+    const cleanPackage = this.parseNotesField(entry?.notes, 'Empaque Limpio');
+    const transportConditions = this.parseNotesField(entry?.notes, 'Condiciones de Transporte');
+    const accepted = this.parseNotesField(entry?.notes, 'Aceptado');
+    const observations = this.parseNotesField(entry?.notes, 'Observaciones');
+    const receivedBy = this.parseNotesField(entry?.notes, 'Recibido por');
+    const deliveredBy = this.parseNotesField(entry?.notes, 'Entregado por');
+    const batch = this.parseNotesField(entry?.notes, 'Lote') || fallbackBatch || '';
+
+    const setValue = (id: string, value: string | null | undefined): void => {
+      const el = document.getElementById(id) as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement | null;
+      if (el && value !== undefined && value !== null) {
+        el.value = value;
+        el.classList.remove('is-invalid');
+      }
+    };
+
+    setValue('supplierOut', supplier);
+    setValue('expiryDateOut', expiryDate);
+    setValue('sealsOut', seals);
+    setValue('packageTypeOut', packageType);
+    setValue('cleanPackageOut', cleanPackage);
+    setValue('transportConditionsOut', transportConditions);
+    setValue('acceptedOut', accepted);
+    setValue('observationsOut', observations);
+    setValue('batchOut', batch);
+    setValue('receivedByOut', receivedBy);
+    setValue('deliveredByOut', deliveredBy);
+
+    const productId = entry?.raw_material_id ?? entry?.product_id ?? null;
+    const productName = entry?.product_name ?? entry?.raw_material_name ?? '';
+    const productCode = entry?.product_code ?? entry?.raw_material_code ?? '';
+    const unitCost = entry?.unit_cost ?? entry?.price ?? entry?.cost ?? null;
+
+    this.form.patchValue({
+      type: 'out',
+      product_id: productId ?? this.form.get('product_id')?.value,
+      batch_id: entry?.batch_id ?? this.form.get('batch_id')?.value,
+      unit_cost: unitCost ?? this.form.get('unit_cost')?.value,
+      product_search: this.buildProductDisplay(productCode, productName) || this.form.get('product_search')?.value
+    });
+
+    this.updateNotesSummary();
+    this.alert.success('Datos cargados', 'Se precargaron los datos de la entrada para la liberación.');
+  }
+
+  private buildProductDisplay(code?: string, name?: string): string {
+    if (code && name) return `${code} - ${name}`;
+    if (name) return name;
+    if (code) return code;
+    return '';
+  }
+
   cancelModal(): void {
     this.showModal = false;
     this.productSuggestions = [];
@@ -560,12 +1171,12 @@ resetFilters(): void {
    */
   parseAndLoadNotes(notesText: string): void {
     const movementType = this.form.get('type')?.value;
-    
+
     // Limpiar todos los campos primero
     setTimeout(() => {
       // Campos de ENTRADA - nuevos
-      const sealsEl = document.getElementById('seals') as HTMLInputElement;
-      const packageTypeEl = document.getElementById('packageType') as HTMLInputElement;
+      const sealsEl = document.getElementById('seals') as HTMLSelectElement;
+      const packageTypeEl = document.getElementById('packageType') as HTMLSelectElement;
       const cleanPackageEl = document.getElementById('cleanPackage') as HTMLSelectElement;
       const transportConditionsEl = document.getElementById('transportConditions') as HTMLSelectElement;
       const acceptedEl = document.getElementById('accepted') as HTMLSelectElement;
@@ -625,7 +1236,7 @@ resetFilters(): void {
 
       // Parsear el texto separado por pipes
       const parts = notesText.split(' | ');
-      
+
       parts.forEach(part => {
         if (part.startsWith('Sellos:')) {
           const value = part.replace('Sellos:', '').trim();
@@ -691,8 +1302,8 @@ resetFilters(): void {
 
     if (movementType === 'in') {
       // ENTRADA: Nuevos campos en orden
-      const seals = (document.getElementById('seals') as HTMLInputElement)?.value || '';
-      const packageType = (document.getElementById('packageType') as HTMLInputElement)?.value || '';
+      const seals = (document.getElementById('seals') as HTMLSelectElement)?.value || '';
+      const packageType = (document.getElementById('packageType') as HTMLSelectElement)?.value || '';
       const cleanPackage = (document.getElementById('cleanPackage') as HTMLSelectElement)?.value || '';
       const transportConditions = (document.getElementById('transportConditions') as HTMLSelectElement)?.value || '';
       const accepted = (document.getElementById('accepted') as HTMLSelectElement)?.value || '';
@@ -773,6 +1384,87 @@ resetFilters(): void {
 
     // Actualizar el valor en el formulario
     this.form.patchValue({ notes: formattedNotes });
+
+    // Si el usuario llena campos, limpiar resaltados rojos
+    this.clearInvalidIfFilled();
+
+    // Si el campo era inválido y ahora tiene valor, reflejarlo también en el form error
+    if (this.formError) {
+      const remaining = this.validateNotesRequired();
+      if (remaining.length === 0) {
+        this.formError = null;
+      }
+    }
+  }
+
+  private requiredFieldsByType(): { id: string; label: string }[] {
+    const movementType = this.form.get('type')?.value;
+    const requiredIn = [
+      { id: 'batch', label: 'Lote' },
+      { id: 'supplier', label: 'Proveedor' },
+      { id: 'expiryDate', label: 'Fecha de Vencimiento' },
+      { id: 'seals', label: 'Sellos' },
+      { id: 'packageType', label: 'Tipo de Empaque' },
+      { id: 'cleanPackage', label: 'Empaque Limpio' },
+      { id: 'transportConditions', label: 'Condiciones de Transporte' },
+      { id: 'accepted', label: 'Aceptado' },
+      { id: 'receivedBy', label: 'Recepcionista' },
+      { id: 'deliveredBy', label: 'Quién Entrega' }
+    ];
+
+    const requiredOut = [
+      { id: 'batchOut', label: 'Lote (Detalle)' },
+      { id: 'supplierOut', label: 'Proveedor' },
+      { id: 'expiryDateOut', label: 'Fecha de Vencimiento' },
+      { id: 'sealsOut', label: 'Sellos' },
+      { id: 'packageTypeOut', label: 'Tipo de Empaque' },
+      { id: 'cleanPackageOut', label: 'Empaque Limpio' },
+      { id: 'transportConditionsOut', label: 'Condiciones de Transporte' },
+      { id: 'acceptedOut', label: 'Aceptado' },
+      { id: 'receivedByOut', label: 'Quién Recibió' },
+      { id: 'deliveredByOut', label: 'Quién Entrega' }
+    ];
+
+    return movementType === 'out' ? requiredOut : movementType === 'in' ? requiredIn : [];
+  }
+
+  private clearInvalidIfFilled(): void {
+    this.requiredFieldsByType().forEach(field => {
+      const el = document.getElementById(field.id) as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement | null;
+      if (el && (el.value || '').trim()) {
+        el.classList.remove('is-invalid');
+      }
+    });
+  }
+
+  private validateNotesRequired(): string[] {
+    const missing: string[] = [];
+    let firstMissingEl: HTMLElement | null = null;
+
+    this.requiredFieldsByType().forEach(field => {
+      const el = document.getElementById(field.id) as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement | null;
+      const value = (el?.value || '').trim();
+      const isMissing = !value;
+      if (el) {
+        el.classList.toggle('is-invalid', isMissing);
+        if (isMissing && !firstMissingEl) {
+          firstMissingEl = el;
+        }
+      }
+      if (isMissing) {
+        missing.push(field.label);
+      }
+    });
+
+    // Enfocar y desplazar al primer faltante para guiar al usuario
+    if (firstMissingEl) {
+      setTimeout(() => {
+        firstMissingEl?.focus({ preventScroll: false });
+        firstMissingEl?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 50);
+    }
+
+    return missing;
   }
 
   submit(): void {
@@ -780,6 +1472,13 @@ resetFilters(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       this.formError = 'Corrige los errores del formulario.';
+      return;
+    }
+
+    const missingNotes = this.validateNotesRequired();
+    if (missingNotes.length > 0) {
+      this.formError = `Completa los campos: ${missingNotes.join(', ')}`;
+      this.alert.warning('Faltan datos', this.formError);
       return;
     }
 
@@ -886,7 +1585,7 @@ resetFilters(): void {
   generateReport(format: 'pdf' | 'csv' | 'excel' | 'html'): void {
     console.log('generateReport llamado con formato:', format);
     console.log('Movimientos disponibles:', this.movements?.length || 0);
-    
+
     if (!this.movements || this.movements.length === 0) {
       console.warn('No hay movimientos para generar reporte');
       this.alert.warning('Sin datos', 'No hay movimientos para generar el reporte.');
@@ -902,59 +1601,59 @@ resetFilters(): void {
       headings: [
         'ID',
         'Tipo',
-        'Producto',
-        'Cantidad',
         'Línea',
+        'Recepciona',
+        'Entrega',
+        'Nombre del Producto',
+        'Proveedor',
+        'Cantidad',
+        'Lote',
+        'Fecha de Vencimiento',
         'Sellos',
-        'Empaque',
-        'Limpio',
-        'Transporte',
+        'Tipo de Empaque',
+        'Empaque Limpio',
+        'Condiciones de Transporte',
         'Aceptado',
         'Observaciones',
-        'Vencimiento',
-        'Proveedor',
-        'Lote',
-        'Recibido por',
-        'Entregado por',
         'Fecha'
       ],
       rows: this.movements.map(movement => [
         movement.id?.toString() || '',
         this.getMovementTypeText(movement),
-        movement.product_name || movement.raw_material_name || 'Sin especificar',
-        movement.quantity?.toString() || '0',
         movement.production_line || '—',
+        this.parseNotesField(movement.notes, 'Recibido por') || '—',
+        this.parseNotesField(movement.notes, 'Entregado por') || '—',
+        movement.product_name || movement.raw_material_name || 'Sin especificar',
+        this.parseNotesField(movement.notes, 'Proveedor') || '—',
+        movement.quantity?.toString() || '0',
+        this.parseNotesField(movement.notes, 'Lote') || '—',
+        this.parseNotesField(movement.notes, 'Vencimiento') || '—',
         this.parseNotesField(movement.notes, 'Sellos') || '—',
         this.parseNotesField(movement.notes, 'Tipo de Empaque') || '—',
         this.parseNotesField(movement.notes, 'Empaque Limpio') || '—',
         this.parseNotesField(movement.notes, 'Condiciones de Transporte') || '—',
         this.parseNotesField(movement.notes, 'Aceptado') || '—',
         this.parseNotesField(movement.notes, 'Observaciones') || '—',
-        this.parseNotesField(movement.notes, 'Vencimiento') || '—',
-        this.parseNotesField(movement.notes, 'Proveedor') || '—',
-        this.parseNotesField(movement.notes, 'Lote') || '—',
-        this.parseNotesField(movement.notes, 'Recibido por') || '—',
-        this.parseNotesField(movement.notes, 'Entregado por') || '—',
         movement.created_at ? new Date(movement.created_at).toLocaleDateString('es-ES') : 'Sin fecha'
       ]),
       format: format
     };
-    
+
     console.log('Report data prepared:', reportData);
 
     this.reportService.generateReport(reportData).subscribe({
       next: (blob) => {
         console.log('Reporte recibido, tamaño:', blob.size);
         this.generatingReport = false;
-        
+
         // Generar nombre de archivo con timestamp
         const timestamp = new Date().toISOString().slice(0, 16).replace(/[:T]/g, '_');
         const filename = `movimientos_inventario_${timestamp}.${format === 'excel' ? 'xlsx' : format}`;
-        
+
         console.log('Descargando archivo:', filename);
         // Descargar archivo
         this.reportService.downloadFile(blob, filename);
-        
+
         this.alert.success(
           'Reporte generado',
           `El reporte en formato ${format.toUpperCase()} se ha descargado correctamente.`
@@ -963,9 +1662,9 @@ resetFilters(): void {
       error: (error) => {
         console.error('Error en generateReport:', error);
         this.generatingReport = false;
-        
+
         let errorMessage = 'Error desconocido al generar el reporte.';
-        
+
         // Manejo de errores específicos
         if (error.status === 401) {
           errorMessage = 'Tu sesión ha expirado. Por favor, inicia sesión nuevamente.';
@@ -978,7 +1677,7 @@ resetFilters(): void {
         } else if (error.message) {
           errorMessage = error.message;
         }
-        
+
         console.error('Mensaje de error:', errorMessage);
         this.alert.error('Error al generar reporte', errorMessage);
       }
@@ -1009,9 +1708,9 @@ resetFilters(): void {
    */
   getDetailsList(notes: string): { label: string; value: string }[] {
     if (!notes) return [];
-    
+
     const details: { label: string; value: string }[] = [];
-    
+
     // Campos de entrada en orden
     const entryFields = [
       'Sellos',
