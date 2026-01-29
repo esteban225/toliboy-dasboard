@@ -30,159 +30,11 @@
                         <span></span>
                     </span>
                 </button>
-                <!-- App Search-->
-                 <!--
-                <form class="app-search d-none d-md-inline-flex">
-                    <div class="position-relative">
-                        <input type="text" class="form-control border-0" placeholder="Search for anything..." autocomplete="off" id="search-options" value="" (keyup)="Search()">
-                        <span class="ti ti-search search-widget-icon"></span>
-                        <span class="ti ti-x search-widget-icon search-widget-icon-close d-none" id="search-close-options" (click)="closeBtn()"></span>
-                    </div>
-                    <div class="dropdown-menu dropdown-menu-lg" id="search-dropdown">
-                        <ngx-simplebar style="max-height: 320px;">
-                            
-                            <div class="dropdown-header">
-                                <h6 class="text-overflow fs-sm text-muted mb-0 text-uppercase">Recent Searches</h6>
-                            </div>
-
-                            <div class="dropdown-item bg-transparent text-wrap">
-                                <a routerLink="/" class="btn btn-subtle-secondary btn-sm btn-rounded me-1">how to setup <i class="ti ti-search ms-1"></i></a>
-                                <a routerLink="/" class="btn btn-subtle-secondary btn-sm btn-rounded">buttons <i class="ti ti-search ms-1"></i></a>
-                            </div>
-                            
-                            <div class="dropdown-header mt-2">
-                                <h6 class="text-overflow fs-sm text-muted mb-1 text-uppercase">Pages</h6>
-                            </div>
-
-                            
-                            <a href="javascript:void(0);" class="dropdown-item notify-item">
-                                <i class="ri-bubble-chart-line align-middle fs-18 text-muted me-2"></i>
-                                <span>Analytics Dashboard</span>
-                            </a>
-
-                            
-                            <a href="javascript:void(0);" class="dropdown-item notify-item">
-                                <i class="ri-lifebuoy-line align-middle fs-18 text-muted me-2"></i>
-                                <span>Help Center</span>
-                            </a>
-
-                            
-                            <a href="javascript:void(0);" class="dropdown-item notify-item">
-                                <i class="ri-user-settings-line align-middle fs-18 text-muted me-2"></i>
-                                <span>My account settings</span>
-                            </a>
-
-                            <div class="dropdown-header mt-2">
-                                <h6 class="text-overflow fs-sm text-muted mb-2 text-uppercase">Members</h6>
-                            </div>
-
-                            <div class="notification-list">
-                                
-                                <a href="javascript:void(0);" class="dropdown-item notify-item py-2">
-                                    <div class="d-flex">
-                                        <img src="assets/images/users/avatar-2.jpg" class="me-3 rounded-circle avatar-xs flex-shrink-0" alt="user-pic">
-                                        <div class="flex-grow-1">
-                                            <h6 class="fs-md m-0">Angela Bernier</h6>
-                                            <span class="fs-sm mb-0 text-muted">Manager</span>
-                                        </div>
-                                    </div>
-                                </a>
-                                
-                                <a href="javascript:void(0);" class="dropdown-item notify-item py-2">
-                                    <div class="d-flex">
-                                        <img src="assets/images/users/avatar-3.jpg" class="me-3 rounded-circle avatar-xs flex-shrink-0" alt="user-pic">
-                                        <div class="flex-grow-1">
-                                            <h6 class="fs-md m-0">David Grasso</h6>
-                                            <span class="fs-sm mb-0 text-muted">Web Designer</span>
-                                        </div>
-                                    </div>
-                                </a>
-                                
-                                <a href="javascript:void(0);" class="dropdown-item notify-item py-2">
-                                    <div class="d-flex">
-                                        <img src="assets/images/users/avatar-5.jpg" class="me-3 rounded-circle avatar-xs" alt="user-pic">
-                                        <div class="flex-grow-1">
-                                            <h6 class="fs-md m-0">Mike Bunch</h6>
-                                            <span class="fs-sm mb-0 text-muted">React Developer</span>
-                                        </div>
-                                    </div>
-                                </a>
-                            </div>
-                        </ngx-simplebar>
-
-                        <div class="text-center pt-3 pb-1">
-                            <a href="javascript:void(0);" class="btn btn-primary btn-sm">View All Results <i class="ri-arrow-right-line ms-1"></i></a>
-                        </div>
-                    </div>
-                </form>
-                -->
             </div>
 
             <!--Apps Dropdown -->
             <div class="d-flex align-items-center">
-                <!--
-                <div dropdown class="dropdown topbar-head-dropdown ms-1 header-item">
-                    <button dropdownToggle type="button" class="btn btn-icon btn-topbar btn-ghost-light rounded-circle user-name-text">
-                        <i class='ti ti-category-2 fs-3xl'></i>
-                    </button>
-                    <div *dropdownMenu class="dropdown-menu dropdown-menu-lg p-0 dropdown-menu-end">
-                        <div class="p-3 border-top-0 border-start-0 border-end-0 border-dashed border">
-                            <div class="row align-items-center">
-                                <div class="col">
-                                    <h6 class="m-0 fw-semibold fs-base"> Browse by Apps </h6>
-                                </div>
-                                <div class="col-auto">
-                                    <a href="javascript:void(0);" class="btn btn-sm btn-subtle-info"> View All Apps
-                                        <i class="ri-arrow-right-s-line align-middle"></i></a>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="p-2">
-                            <div class="row g-0">
-                                <div class="col">
-                                    <a class="dropdown-icon-item" href="javascript:void(0);">
-                                        <img src="assets/images/brands/github.png" alt="Github">
-                                        <span>GitHub</span>
-                                    </a>
-                                </div>
-                                <div class="col">
-                                    <a class="dropdown-icon-item" href="javascript:void(0);">
-                                        <img src="assets/images/brands/bitbucket.png" alt="bitbucket">
-                                        <span>Bitbucket</span>
-                                    </a>
-                                </div>
-                                <div class="col">
-                                    <a class="dropdown-icon-item" href="javascript:void(0);">
-                                        <img src="assets/images/brands/dribbble.png" alt="dribbble">
-                                        <span>Dribbble</span>
-                                    </a>
-                                </div>
-                            </div>
-
-                            <div class="row g-0">
-                                <div class="col">
-                                    <a class="dropdown-icon-item" href="javascript:void(0);">
-                                        <img src="assets/images/brands/dropbox.png" alt="dropbox">
-                                        <span>Dropbox</span>
-                                    </a>
-                                </div>
-                                <div class="col">
-                                    <a class="dropdown-icon-item" href="javascript:void(0);">
-                                        <img src="assets/images/brands/mail_chimp.png" alt="mail_chimp">
-                                        <span>Mail Chimp</span>
-                                    </a>
-                                </div>
-                                <div class="col">
-                                    <a class="dropdown-icon-item" href="javascript:void(0);">
-                                        <img src="assets/images/brands/slack.png" alt="slack">
-                                        <span>Slack</span>
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>-->
+   
 
                 <div dropdown class="dropdown ms-1 topbar-head-dropdown header-item">
                     <button dropdownToggle type="button" class="btn btn-icon btn-topbar btn-ghost-secondary rounded-circle">
@@ -193,106 +45,6 @@
                         }
                     </button>
                 </div>
-                <!--- Cart Dropdown -->
-                <!---
-                <div dropdown [insideClick]="true" class="dropdown topbar-head-dropdown ms-1 header-item">
-                    <button dropdownToggle type="button" class="btn btn-icon btn-topbar btn-ghost-light rounded-circle user-name-text" id="page-header-cart-dropdown">
-                        <i class='ti ti-shopping-cart fs-3xl'></i>
-                        <span class="position-absolute topbar-badge cartitem-badge fs-3xs translate-middle badge rounded-pill bg-info">{{cartData?.length}}</span>
-                    </button>
-                    <div *bsDropdownMenu class="dropdown-menu dropdown-menu-xl dropdown-menu-end p-0 product-list">
-                        <div class="p-3 border-bottom">
-                            <div class="row align-items-center">
-                                <div class="col">
-                                    <h6 class="m-0 fs-lg fw-semibold"> My Cart <span class="badge bg-secondary fs-sm cartitem-badge ms-1">{{cartData?.length}}</span></h6>
-                                </div>
-                                <div class="col-auto">
-                                    <a href="javascript:void(0);">View All</a>
-                                </div>
-                            </div>
-                        </div>
-                        <ngx-simplebar data-simplebar-track="light" style="max-height: 300px;">
-                            <div class="p-3">
-                                @if(cartData?.length == 0){
-                                <div class="text-center empty-cart" id="empty-cart">
-                                    <div class="avatar-md mx-auto my-3">
-                                        <div class="avatar-title bg-info-subtle text-info fs-2 rounded-circle">
-                                            <i class='bx bx-cart'></i>
-                                        </div>
-                                    </div>
-                                    <h6 class="mb-3">Your Cart is Empty!</h6>
-                                    <a href="javascript:void(0);" class="btn btn-success w-md mb-3">Shop Now</a>
-                                </div>
-                                }
-                                @for (data of cartData; track $index) {
-                                <div class="d-block dropdown-item product text-wrap p-2">
-                                    <div class="d-flex">
-                                        <div class="avatar-sm me-3 flex-shrink-0">
-                                            <div class="avatar-title bg-light rounded">
-                                                <img src="{{data.img}}" class="avatar-xs" alt="user-pic">
-                                            </div>
-                                        </div>
-                                        <div class="flex-grow-1">
-                                            <p class="mb-1 fs-sm text-muted">{{data.category}}</p>
-                                            <h6 class="mt-0 mb-3 fs-md">
-                                                <a href="javascript:void(0);" class="text-reset">{{data.title}}</a>
-                                            </h6>
-                                            <div class="text-muted fw-medium d-none">$<span class="product-price">{{data.price}}</span></div>
-                                            <div class="input-step">
-                                                <button type="button" class="minus" (click)="increment(data.qty,$index,'0')">–</button>
-                                                <input type="number" class="product-quantity" [(ngModel)]="data.qty" min="0" max="100" readonly>
-                                                <button type="button" class="plus" (click)="increment(data.qty,$index,'1')">+</button>
-                                            </div>
-                                        </div>
-                                        <div class="ps-2 d-flex flex-column justify-content-between align-items-end">
-                                            <button type="button" class="btn btn-icon btn-sm btn-ghost-primary remove-cart-btn" (click)="removeCart($index)"><i class="ri-close-fill fs-lg"></i></button>
-                                            <h6 class="mb-0">$ <span class="product-line-price">{{data.total}}</span></h6>
-                                        </div>
-                                    </div>
-                                </div>}
-                                @if(cartData?.length != 0){
-                                <div id="count-table">
-                                    <table class="table table-borderless mb-0  fw-semibold">
-                                        <tbody>
-                                            <tr>
-                                                <td>Sub Total :</td>
-                                                <td class="text-end cart-subtotal">${{subtotal}}</td>
-                                            </tr>
-                                            <tr>
-                                                <td>Discount <span class="text-muted">(VIXON30)</span>:</td>
-                                                <td class="text-end cart-discount">- ${{discount}}</td>
-                                            </tr>
-                                            <tr>
-                                                <td>Shipping Charge :</td>
-                                                <td class="text-end cart-shipping">${{shippingRate}}</td>
-                                            </tr>
-                                            <tr>
-                                                <td>Estimated Tax (12.5%) : </td>
-                                                <td class="text-end cart-tax">${{tax}}</td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                                }
-
-                            </div>
-                        </ngx-simplebar>
-                        @if(cartData?.length != 0){
-                        <div class="p-3 border-bottom-0 border-start-0 border-end-0 border-dashed border" id="checkout-elem">
-                            <div class="d-flex justify-content-between align-items-center pb-3">
-                                <h6 class="m-0 text-muted">Total:</h6>
-                                <div class="px-2">
-                                    <h6 class="m-0 cart-total">${{totalsum}}</h6>
-                                </div>
-                            </div>
-
-                            <a href="javascript:void(0);" class="btn btn-info text-center w-100">
-                                Checkout
-                            </a>
-                        </div>
-                        }
-                    </div>
-                </div>-->
 
                 <!--- Fullscreen Toggle -->
                 <div class="ms-1 header-item d-none d-sm-flex">
@@ -327,13 +79,18 @@
                                         <h6 class="mb-0 fs-lg fw-semibold"> Notificaciones <span class="badge bg-danger-subtle text-danger fs-sm notification-badge"> {{totalNotify}}</span></h6>
                                         <p class="fs-md text-muted mt-1 mb-0">Tienes <span class="fw-semibold notification-unread">{{newNotify}}</span> mensajes no leídos</p>
                                     </div>
-                                    <div dropdown [container]="'body'" class="col-auto dropdown">
-                                        <a dropdownToggle href="javascript:void(0);" data-bs-toggle="dropdown" class="link-secondary fs-md"><i class="bi bi-three-dots-vertical"></i></a>
-                                        <ul *dropdownMenu class="dropdown-menu">
-                                            <li><a class="dropdown-item" href="javascript:void(0);" (click)="clearAll()">Todo claro</a></li>
-                                            <li><a class="dropdown-item" href="javascript:void(0);" (click)="markAllAsRead()">Marcar todo como leído</a></li>
-                                            <li><a class="dropdown-item" href="javascript:void(0);">Archivar todo</a></li>
-                                        </ul>
+                                    <div class="col-auto d-flex align-items-start">
+                                        <button type="button" class="btn btn-sm btn-ghost-secondary me-2" title="Recargar notificaciones" (click)="reloadNotifications()">
+                                            <i class="bi bi-arrow-clockwise"></i>
+                                        </button>
+                                        <div dropdown [container]="'body'" class="dropdown">
+                                            <a dropdownToggle href="javascript:void(0);" data-bs-toggle="dropdown" class="link-secondary fs-md"><i class="bi bi-three-dots-vertical"></i></a>
+                                            <ul *dropdownMenu class="dropdown-menu">
+                                                <li><a class="dropdown-item" href="javascript:void(0);" (click)="clearAll()">Todo claro</a></li>
+                                                <li><a class="dropdown-item" href="javascript:void(0);" (click)="markAllAsRead()">Marcar todo como leído</a></li>
+                                                <li><a class="dropdown-item" href="javascript:void(0);">Archivar todo</a></li>
+                                            </ul>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -346,58 +103,83 @@
                                 <div>
                                     @if(data.items.length > 0){
                                     <h6 class="text-overflow text-muted fs-sm my-2 text-uppercase notification-title">{{data.title}}</h6>}
-                                    @for (item of data.items; track $index) {
-                                    <div class="text-reset notification-item d-block dropdown-item position-relative" [ngClass]="!item.isRead ? 'unread-message' : ''">
-                                        <div class="d-flex">
 
-                                            @if(item.avatar){
-                                            <div class="position-relative me-3 flex-shrink-0">
-                                                <img src="{{item.avatar}}" class="rounded-circle avatar-xs" alt="user-pic">
-                                                <span class="active-badge position-absolute start-100 translate-middle p-1 bg-success rounded-circle">
-                                                    <span class="visually-hidden">activo</span>
-                                                </span>
-                                            </div>
-                                            }@else {
-                                            <div class="avatar-xs me-3 flex-shrink-0">
-                                                <span class="avatar-title bg-{{item.type}}-subtle text-{{item.type}} rounded-circle fs-lg">
-                                                    <i class='{{item.icon}}'></i>
-                                                </span>
-                                            </div>
-                                            }
+                                    <ul class="list-group list-group-flush mb-2">
+                                    @for (item of data.items; track $index) {
+                                    <li class="list-group-item list-group-item-action d-flex align-items-start gap-2 py-2 notification-list-item"
+                                        [ngClass]="{ 'bg-light': !item.isRead, 'border-start border-4 border-primary': !item.isRead }"
+                                        (click)="callMarkAsRead(item.id)">
+
+                                        @if(item.avatar){
+                                        <img src="{{item.avatar}}" class="rounded-circle me-2" alt="user-pic" width="44" height="44">
+                                        }@else{
+                                        <span class="d-inline-flex align-items-center justify-content-center rounded-circle me-2" style="width:44px;height:44px;background-color:var(--bs-light);">
+                                            <i class='{{item.icon}}'></i>
+                                        </span>
+                                        }
+
                                             <div class="flex-grow-1">
-                                                <a href="javascript:void(0);" class="stretched-link">
-                                                    @if(item.title){
-                                                    <a href="javascript:void(0);" class="stretched-link">
-                                                        <h6 class="mt-0 mb-1 fs-md fw-semibold">{{item.title}}</h6>
-                                                    </a>}@else{
-                                                    <h6 class="mt-0 fs-md mb-2 lh-base">{{item.message}}</h6>
-                                                    }
-                                                </a>
-                                                @if(item.title){
-                                                <div class="fs-sm text-muted">
-                                                    <p class="mb-1">{{item.message}}</p>
+                                            @if(item.title){
+                                            <div class="d-flex justify-content-between align-items-start">
+                                                <div class="me-2">
+                                                    <h6 class="mb-1 fs-6 fw-semibold text-truncate">{{item.title}}</h6>
+                                                    <p class="mb-0 text-muted small text-truncate">{{item.message}}</p>
                                                 </div>
-                                                }
-                                                <p class="mb-0 fs-xs fw-medium text-uppercase text-muted">
-                                                    <span><i class="ti ti-clock-hour-4"></i> {{item.timestamp}}</span>
-                                                </p>
+                                                <small class="text-muted ms-2 text-nowrap d-none d-sm-block">{{item.timestamp}}</small>
                                             </div>
-                                            <div class="px-2 fs-base">
-                                                <div class="form-check notification-check">
-                                                    <input class="form-check-input" type="checkbox" value="{{item.id}}" [(ngModel)]="item.selected" (change)="toggleNotificationSelection(item.id)" id="notification-{{item.id}}">
-                                                    <label class="form-check-label" for="notification-{{item.id}}"></label>
-                                                </div>
+                                            <small class="text-muted d-block d-sm-none mt-1">{{item.timestamp}}</small>
+                                            }@else{
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <p class="mb-0 text-truncate">{{item.message}}</p>
+                                                <small class="text-muted ms-2 d-none d-sm-block">{{item.timestamp}}</small>
+                                            </div>
+                                            <small class="text-muted d-block d-sm-none mt-1">{{item.timestamp}}</small>
+                                            }
+                                        </div>
+
+                                        <div class="ms-2 d-flex flex-column align-items-center actions-desktop">
+                                            <button class="btn btn-sm btn-outline-success mb-1" (click)="callMarkAsRead(item.id); $event.stopPropagation()" title="Marcar leído"><i class="bi bi-check-lg"></i></button>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" value="{{item.id}}" [(ngModel)]="item.selected" (change)="toggleNotificationSelection(item.id)" id="notification-{{item.id}}">
                                             </div>
                                         </div>
-                                    </div>
+
+                                        <div class="ms-2 d-flex align-items-center d-sm-none actions-mobile">
+                                            <div class="dropdown">
+                                                <button class="btn btn-sm btn-ghost-secondary" type="button" data-bs-toggle="dropdown" aria-expanded="false" (click)="$event.stopPropagation()">
+                                                    <i class="bi bi-three-dots-vertical"></i>
+                                                </button>
+                                                <ul class="dropdown-menu dropdown-menu-end p-1">
+                                                    <li><button class="dropdown-item small" (click)="callMarkAsRead(item.id); $event.stopPropagation()">Marcar leído</button></li>
+                                                    <li><label class="dropdown-item small d-flex align-items-center"><input class="form-check-input me-2" type="checkbox" [(ngModel)]="item.selected" (change)="toggleNotificationSelection(item.id)"/> Seleccionar</label></li>
+                                                </ul>
+                                            </div>
+                                        </div>
+
+                                    </li>
                                     }
+                                    </ul>
                                 </div>
                                 }
+                                
                             </ngx-simplebar>
+
+                            @if(totalNotify == 0){
+                            <div class="text-center py-4 text-muted notification-empty">
+                                <i class="bi bi-bell-slash fs-2 mb-2"></i>
+                                <p class="mb-1 fw-semibold">No hay notificaciones</p>
+                                <p class="small">Cuando lleguen nuevas notificaciones, las verás aquí.</p>
+                            </div>
+                            }
+
                             <div class="notification-actions" id="notification-actions" style="display: none;">
                                 <div class="d-flex text-muted justify-content-center align-items-center">
                                     seleccionar <div id="select-content" class="text-body fw-semibold px-1">{{checkedValGet.length}}</div> Resultados <button type="button" class="btn btn-link link-danger p-0 ms-2" (click)="removeNotificationModal.show()">Eliminar</button>
                                 </div>
+                            </div>
+                            <div class="dropdown-foot p-2 border-top text-center">
+                                <button class="btn btn-sm btn-outline-secondary me-2" (click)="markAllAsRead()">Marcar todo leído</button>
+                                <a class="btn btn-sm btn-primary" routerLink="/pages/notifications">Ver todas</a>
                             </div>
                         </div>
                     </div>
@@ -453,30 +235,3 @@
     </div>
 </div><!-- /.modal -->
 
-<!-- removeCartModal -->
-<!---
-<div bsModal #removeCartModal="bs-modal" id="removeCartModal" class="modal fade zoomIn" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" id="close-cartmodal"></button>
-            </div>
-            <div class="modal-body p-md-5">
-                <div class="text-center">
-                    <div class="text-danger">
-                        <i class="bi bi-trash display-5"></i>
-                    </div>
-                    <div class="mt-4">
-                        <h4>Are you sure ?</h4>
-                        <p class="text-muted mx-4 mb-0">Are you sure you want to remove this product ?</p>
-                    </div>
-                </div>
-                <div class="d-flex gap-2 justify-content-center mt-4 mb-2">
-                    <button type="button" class="btn w-sm btn-light" (click)="removeCartModal.hide()">Close</button>
-                    <button type="button" class="btn w-sm btn-danger" id="remove-cartproduct" (click)="confirmDelete()">Yes, Delete It!</button>
-                </div>
-            </div>
-
-        </div>
-    </div>
-</div>-->

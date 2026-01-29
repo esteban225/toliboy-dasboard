@@ -1,7 +1,10 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { BehaviorSubject, Observable, Subject, of } from 'rxjs';
+import { tap, catchError, map } from 'rxjs/operators';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import Pusher, { Channel } from 'pusher-js';
 import { environment } from '../../../environments/environment';
+import { AuthenticationService } from './auth.service';
 
 export interface NotificationItem {
   id: string | number;
@@ -12,8 +15,8 @@ export interface NotificationItem {
   icon?: string;
   timestamp?: string;
   isRead: boolean;
-  selected?: boolean; // Para la selección en el UI
-  data?: any; // Datos adicionales específicos de cada notificación
+  selected?: boolean;
+  data?: any;
   actions?: NotificationAction[];
 }
 
@@ -28,61 +31,40 @@ export interface NotificationGroup {
   items: NotificationItem[];
 }
 
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable({ providedIn: 'root' })
 export class NotificationService {
   private readonly STORAGE_KEY = 'app_notifications';
   private notificationsSubject = new BehaviorSubject<NotificationGroup[]>([]);
   private pusher?: Pusher;
-  private userChannelName?: string;
-  private subscribedChannels: string[] = [];
+  private subscribedChannels = new Set<string>();
   private bindings: Array<{ channel: Channel; event: string; handler: (...args: any[]) => void }> = [];
-  
-  public notifications$ = this.notificationsSubject.asObservable();
 
-  constructor() {
+  public notifications$ = this.notificationsSubject.asObservable();
+  private incomingSubject = new Subject<NotificationItem>();
+  public incoming$ = this.incomingSubject.asObservable();
+
+  constructor(private authService: AuthenticationService, private http: HttpClient) {
     this.loadNotifications();
   }
 
-  /**
-   * Obtiene todas las notificaciones
-   */
+  /* ----------------------------- PUBLIC API ----------------------------- */
+
   getNotifications(): Observable<NotificationGroup[]> {
     return this.notifications$;
   }
 
-  /**
-   * Obtiene el conteo total de notificaciones
-   */
   getTotalCount(): number {
-    const notifications = this.notificationsSubject.value;
-    return notifications.reduce((total, group) => total + group.items.length, 0);
+    return this.notificationsSubject.value.reduce((t, g) => t + g.items.length, 0);
   }
 
-  /**
-   * Obtiene el conteo de notificaciones no leídas
-   */
   getUnreadCount(): number {
-    const notifications = this.notificationsSubject.value;
-    return notifications.reduce((total, group) => 
-      total + group.items.filter(item => !item.isRead).length, 0
-    );
+    return this.notificationsSubject.value.reduce((t, g) => t + g.items.filter(i => !i.isRead).length, 0);
   }
 
-  /**
-   * Obtiene el conteo de notificaciones leídas
-   */
   getReadCount(): number {
-    const notifications = this.notificationsSubject.value;
-    return notifications.reduce((total, group) => 
-      total + group.items.filter(item => item.isRead).length, 0
-    );
+    return this.notificationsSubject.value.reduce((t, g) => t + g.items.filter(i => i.isRead).length, 0);
   }
 
-  /**
-   * Agrega una nueva notificación
-   */
   addNotification(
     notification: Omit<NotificationItem, 'id' | 'timestamp' | 'isRead' | 'selected'> &
       Partial<Pick<NotificationItem, 'id' | 'timestamp' | 'isRead' | 'selected'>>
@@ -95,281 +77,331 @@ export class NotificationService {
       selected: notification.selected ?? false
     };
 
-    // Evitar duplicados si llega un mismo ID
-    const alreadyExists = this.notificationsSubject.value.some(group =>
-      group.items.some(item => item.id === newNotification.id)
+    const exists = this.notificationsSubject.value.some(g =>
+      g.items.some(i => i.id === newNotification.id)
     );
-    if (alreadyExists) {
-      return;
-    }
+    if (exists) return;
 
-    const currentNotifications = this.notificationsSubject.value;
-    let newGroup = currentNotifications.find(group => group.title === 'Nuevas');
-    
-    if (!newGroup) {
-      newGroup = { title: 'Nuevas', items: [] };
-      currentNotifications.unshift(newGroup);
+    const current = [...this.notificationsSubject.value];
+    let group = current.find(g => g.title === 'Nuevas');
+    if (!group) {
+      group = { title: 'Nuevas', items: [] };
+      current.unshift(group);
     }
-
-    newGroup.items.unshift(newNotification);
-    this.updateNotifications(currentNotifications);
+    group.items.unshift(newNotification);
+    this.updateNotifications(current);
   }
 
-  /**
-   * Marca una notificación como leída
-   */
   markAsRead(notificationId: string | number): void {
-    const currentNotifications = this.notificationsSubject.value;
-    let notificationFound = false;
-
-    for (const group of currentNotifications) {
-      const notification = group.items.find(item => item.id === notificationId);
-      if (notification) {
-        notification.isRead = true;
-        notificationFound = true;
+    const current = [...this.notificationsSubject.value];
+    for (const group of current) {
+      const n = group.items.find(i => i.id === notificationId);
+      if (n) {
+        n.isRead = true;
         break;
       }
     }
-
-    if (notificationFound) {
-      this.reorganizeGroups(currentNotifications);
-      this.updateNotifications(currentNotifications);
-    }
+    this.reorganizeGroups(current);
+    this.updateNotifications(current);
   }
 
-  /**
-   * Marca todas las notificaciones como leídas
-   */
   markAllAsRead(): void {
-    const currentNotifications = this.notificationsSubject.value;
-    
-    for (const group of currentNotifications) {
-      for (const notification of group.items) {
-        notification.isRead = true;
-      }
-    }
-
-    this.reorganizeGroups(currentNotifications);
-    this.updateNotifications(currentNotifications);
+    const current = [...this.notificationsSubject.value];
+    for (const g of current) for (const n of g.items) n.isRead = true;
+    this.reorganizeGroups(current);
+    this.updateNotifications(current);
   }
 
-  /**
-   * Elimina una notificación
-   */
   removeNotification(notificationId: string | number): void {
-    const currentNotifications = this.notificationsSubject.value;
-    
-    for (const group of currentNotifications) {
-      const index = group.items.findIndex(item => item.id === notificationId);
-      if (index !== -1) {
-        group.items.splice(index, 1);
-        break;
-      }
-    }
-
-    // Eliminar grupos vacíos
-    const filteredNotifications = currentNotifications.filter(group => group.items.length > 0);
-    this.updateNotifications(filteredNotifications);
+    const current = this.notificationsSubject.value
+      .map(g => ({ ...g, items: g.items.filter(i => i.id !== notificationId) }))
+      .filter(g => g.items.length > 0);
+    this.updateNotifications(current);
   }
 
-  /**
-   * Elimina múltiples notificaciones
-   */
   removeNotifications(notificationIds: (string | number)[]): void {
-    const currentNotifications = this.notificationsSubject.value;
-    
-    for (const group of currentNotifications) {
-      group.items = group.items.filter(item => !notificationIds.includes(item.id));
-    }
-
-    // Eliminar grupos vacíos
-    const filteredNotifications = currentNotifications.filter(group => group.items.length > 0);
-    this.updateNotifications(filteredNotifications);
+    const set = new Set(notificationIds);
+    const current = this.notificationsSubject.value
+      .map(g => ({ ...g, items: g.items.filter(i => !set.has(i.id)) }))
+      .filter(g => g.items.length > 0);
+    this.updateNotifications(current);
   }
 
-  /**
-   * Limpia todas las notificaciones
-   */
   clearAll(): void {
     this.updateNotifications([]);
   }
 
-  /**
-   * Alterna la selección de una notificación
-   */
   toggleNotificationSelection(notificationId: string | number): void {
-    const currentNotifications = this.notificationsSubject.value;
-    
-    for (const group of currentNotifications) {
-      const notification = group.items.find(item => item.id === notificationId);
-      if (notification) {
-        notification.selected = !notification.selected;
+    const current = [...this.notificationsSubject.value];
+    for (const g of current) {
+      const n = g.items.find(i => i.id === notificationId);
+      if (n) {
+        n.selected = !n.selected;
         break;
       }
     }
-
-    this.updateNotifications(currentNotifications);
+    this.updateNotifications(current);
   }
 
-  /**
-   * Obtiene las notificaciones seleccionadas
-   */
   getSelectedNotifications(): NotificationItem[] {
-    const currentNotifications = this.notificationsSubject.value;
-    const selected: NotificationItem[] = [];
-    
-    for (const group of currentNotifications) {
-      selected.push(...group.items.filter(item => item.selected));
-    }
-    
-    return selected;
+    return this.notificationsSubject.value.flatMap(g => g.items.filter(i => i.selected));
   }
 
-  /**
-   * Deselecciona todas las notificaciones
-   */
   clearAllSelections(): void {
-    const currentNotifications = this.notificationsSubject.value;
-    
-    for (const group of currentNotifications) {
-      for (const notification of group.items) {
-        notification.selected = false;
-      }
-    }
-
-    this.updateNotifications(currentNotifications);
+    const current = [...this.notificationsSubject.value];
+    for (const g of current) for (const n of g.items) n.selected = false;
+    this.updateNotifications(current);
   }
 
-  /**
-   * Elimina las notificaciones seleccionadas
-   */
   removeSelectedNotifications(): void {
-    const selectedIds = this.getSelectedNotifications().map(n => n.id);
-    this.removeNotifications(selectedIds);
+    this.removeNotifications(this.getSelectedNotifications().map(n => n.id));
   }
 
-  /**
-   * Crea una notificación de éxito
-   */
   success(message: string, title?: string, data?: any): void {
-    this.addNotification({
-      type: 'success',
-      title,
-      message,
-      icon: 'ti ti-check-circle',
-      data
-    });
+    this.addNotification({ type: 'success', title, message, icon: 'ti ti-check-circle', data });
   }
 
-  /**
-   * Crea una notificación de error
-   */
   error(message: string, title?: string, data?: any): void {
-    this.addNotification({
-      type: 'danger',
-      title,
-      message,
-      icon: 'ti ti-alert-circle',
-      data
-    });
+    this.addNotification({ type: 'danger', title, message, icon: 'ti ti-alert-circle', data });
   }
 
-  /**
-   * Crea una notificación de advertencia
-   */
   warning(message: string, title?: string, data?: any): void {
-    this.addNotification({
-      type: 'warning',
-      title,
-      message,
-      icon: 'ti ti-alert-triangle',
-      data
-    });
+    this.addNotification({ type: 'warning', title, message, icon: 'ti ti-alert-triangle', data });
   }
 
-  /**
-   * Crea una notificación de información
-   */
   info(message: string, title?: string, data?: any): void {
-    this.addNotification({
-      type: 'info',
-      title,
-      message,
-      icon: 'ti ti-info-circle',
-      data
-    });
+    this.addNotification({ type: 'info', title, message, icon: 'ti ti-info-circle', data });
   }
 
-  /**
-   * Inicializa la conexión con Pusher y se suscribe a los canales de notificaciones
-   */
-  initPusher(userId: string | number): void {
-    const config = (environment as any).pusher;
+  /* --------------------------- PUSHER / REALTIME -------------------------- */
 
+  initPusher(userId?: string | number): void {
+    const config = (environment as any).pusher;
     if (!config?.key || !config?.cluster) {
-      console.warn('Pusher no está configurado en environment.');
+      console.warn('[Pusher] No configurado en environment.');
       return;
     }
+    console.debug('[Pusher] initPusher config:', config);
 
     this.disconnectPusher();
 
-    if (config.logToConsole) {
+    if (!environment.production && config.logToConsole) {
       Pusher.logToConsole = true;
     }
 
+    const token = this.authService.getToken ? this.authService.getToken() : null;
+    if (!token) {
+      console.warn('[Pusher] No JWT token disponible desde AuthenticationService.');
+      return;
+    }
+
+    console.debug('[Pusher] Using token available:', !!token);
+
     this.pusher = new Pusher(config.key, {
       cluster: config.cluster,
-      forceTLS: config.forceTLS ?? true
+      forceTLS: true,
+      authEndpoint:environment.authEndpoint,
+      auth: {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: 'application/json'
+        }
+      },
+      enabledTransports: ['ws', 'wss'],
+      disabledTransports: ['xhr_streaming', 'xhr_polling']
     });
 
     this.pusher.connection.bind('error', (err: any) => {
-      console.error('Pusher connection error:', err);
+      console.error('[Pusher] connection error:', err);
     });
 
-    this.userChannelName = `${config.channelPrefix}.${userId}`;
-    const globalChannelName = config.globalChannel ?? `${config.channelPrefix}.global`;
-
-    const userChannel = this.subscribeChannel(this.userChannelName);
-    const globalChannel = this.subscribeChannel(globalChannelName);
-
-    if (userChannel) {
-      this.bindNotificationChannel(userChannel, this.userChannelName);
+    let resolvedUserId = userId;
+    if (!resolvedUserId) {
+      const sessionUser = this.authService.getCurrentUser?.() || this.authService.currentUserValue;
+      resolvedUserId = sessionUser?.id;
     }
-    if (globalChannel) {
-      this.bindNotificationChannel(globalChannel, globalChannelName);
+
+    const channelPrefix = config.channelPrefix ?? 'notifications';
+    const globalChannelName = config.globalChannel ?? `${channelPrefix}.global`;
+
+    const globalChannel = this.subscribeChannel(globalChannelName);
+    this.bindNotificationChannel(globalChannel, globalChannelName);
+    console.debug(`[Pusher] Subscribed to global channel: ${globalChannelName}`);
+
+    if (resolvedUserId) {
+      const privateChannelName = `private-${channelPrefix}.${resolvedUserId}`;
+      const userChannel = this.subscribeChannel(privateChannelName);
+      this.bindNotificationChannel(userChannel, privateChannelName);
+      console.debug(`[Pusher] Subscribed to private channel: ${privateChannelName}`);
+    } else {
+      console.warn('[Pusher] No userId disponible, no se suscribe al canal privado.');
     }
   }
 
-  /**
-   * Desconecta la sesión actual de Pusher
-   */
   disconnectPusher(): void {
     this.unbindAll();
-
     if (this.pusher) {
-      this.subscribedChannels.forEach(name => this.pusher?.unsubscribe(name));
-      this.subscribedChannels = [];
+      this.subscribedChannels.forEach(name => this.pusher!.unsubscribe(name));
+      this.subscribedChannels.clear();
       this.pusher.disconnect();
       this.pusher = undefined;
     }
   }
 
-  private bindNotificationChannel(channel: Channel, origin: string): void {
-    this.bindEvent(channel, 'pusher:subscription_succeeded', () =>
-      console.log(`Pusher suscrito: ${origin}`)
-    );
-    this.bindEvent(channel, 'pusher:subscription_error', (status: any) =>
-      console.error(`Pusher error ${origin}:`, status)
-    );
-    this.bindEvent(channel, 'notification.created', (data: any) =>
-      this.handleIncomingNotification(data, origin)
+  /**
+   * Debug helper: return current pusher status and subscribed channels
+   */
+  public getPusherStatus(): { initialized: boolean; connectionState?: string; channels: string[] } {
+    const initialized = !!this.pusher;
+    const connectionState = initialized ? (this.pusher as any).connection?.state : undefined;
+    return { initialized, connectionState, channels: Array.from(this.subscribedChannels) };
+  }
+
+  /**
+   * Forzar re-inicialización de Pusher (útil en debugging después del login)
+   */
+  public reinitPusher(userId?: string | number): void {
+    console.debug('[Pusher] reinitPusher called with userId:', userId);
+    this.initPusher(userId);
+  }
+
+  /**
+   * Marca una notificación como leída en el backend y actualiza el estado local
+   */
+  public markAsReadOnServer(notificationId: string | number): Observable<any> {
+    const base = (environment as any).AUTH_API || '';
+    const url = `${base.replace(/\/$/, '')}/notifications/${notificationId}/read`;
+    const token = this.authService.getToken ? this.authService.getToken() : null;
+    const headers = token ? new HttpHeaders({ Authorization: `Bearer ${token}` }) : undefined;
+
+    console.debug('[NotificationService] markAsReadOnServer url:', url, 'id:', notificationId);
+
+    return this.http.post(url, {}, { headers }).pipe(
+      tap(() => {
+        try {
+          this.markAsRead(notificationId);
+          console.debug('[NotificationService] markAsReadOnServer: marked locally', notificationId);
+        } catch (err) {
+          console.error('[NotificationService] markAsReadOnServer local update error:', err);
+        }
+      }),
+      catchError(err => {
+        console.error('[NotificationService] markAsReadOnServer error:', err);
+        return of(null);
+      })
     );
   }
 
-  private subscribeChannel(name: string): Channel | undefined {
-    if (!this.pusher) return undefined;
+  /**
+   * Limpia notificaciones expiradas en el backend y actualiza el estado local
+   */
+  public cleanExpiredOnServer(): Observable<any> {
+    const base = (environment as any).AUTH_API || '';
+    const url = `${base.replace(/\/$/, '')}/notifications/actions/clean-expired`;
+    const token = this.authService.getToken ? this.authService.getToken() : null;
+    const headers = token ? new HttpHeaders({ Authorization: `Bearer ${token}` }) : undefined;
+
+    console.debug('[NotificationService] cleanExpiredOnServer url:', url);
+
+    return this.http.post<any>(url, {}, { headers }).pipe(
+      tap((res) => {
+        try {
+          // Si el backend devuelve una lista de ids eliminados, limpiarlas localmente
+          const removedIds: (string | number)[] = res?.removedIds || res?.deleted || [];
+          if (Array.isArray(removedIds) && removedIds.length > 0) {
+            this.removeNotifications(removedIds);
+            console.debug('[NotificationService] cleanExpiredOnServer removedIds:', removedIds.length);
+            return;
+          }
+
+          // Si no devuelve ids, refrescar la lista desde API
+          this.fetchNotificationsFromApi().subscribe();
+        } catch (err) {
+          console.error('[NotificationService] cleanExpiredOnServer local update error:', err);
+        }
+      }),
+      catchError(err => {
+        console.error('[NotificationService] cleanExpiredOnServer error:', err);
+        return of(null);
+      })
+    );
+  }
+
+  /**
+   * Obtiene una notificación por id desde el backend, actualiza el estado local y la retorna
+   */
+  public getNotificationByIdFromApi(notificationId: string | number): Observable<NotificationItem | null> {
+    const base = (environment as any).AUTH_API || '';
+    const url = `${base.replace(/\/$/, '')}/notifications/${notificationId}`;
+    const token = this.authService.getToken ? this.authService.getToken() : null;
+    const headers = token ? new HttpHeaders({ Authorization: `Bearer ${token}` }) : undefined;
+
+    console.debug('[NotificationService] getNotificationByIdFromApi url:', url);
+
+    return this.http.get<any>(url, { headers }).pipe(
+      map((res: any) => {
+        const data = res?.data ?? res;
+        const mapped = this.mapIncomingNotification(data, 'api');
+        const full: NotificationItem = {
+          ...mapped,
+          id: mapped.id ?? this.generateId(),
+          timestamp: mapped.timestamp ?? this.formatTimestamp(new Date()),
+          isRead: mapped.isRead ?? false,
+          selected: false
+        } as NotificationItem;
+
+        // Update local notifications: replace if exists, otherwise add to Nuevas
+        const current = [...this.notificationsSubject.value];
+        let updated = false;
+        for (const g of current) {
+          const idx = g.items.findIndex(i => i.id === full.id);
+          if (idx >= 0) {
+            g.items[idx] = full;
+            updated = true;
+            break;
+          }
+        }
+        if (!updated) {
+          let group = current.find(g => g.title === 'Nuevas');
+          if (!group) {
+            group = { title: 'Nuevas', items: [] };
+            current.unshift(group);
+          }
+          group.items.unshift(full);
+        }
+        this.reorganizeGroups(current);
+        this.updateNotifications(current);
+
+        return full;
+      }),
+      catchError(err => {
+        console.error('[NotificationService] getNotificationByIdFromApi error:', err);
+        return of(null);
+      })
+    );
+  }
+
+  private bindNotificationChannel(channel: Channel, origin: string): void {
+    this.bindEvent(channel, 'pusher:subscription_succeeded', () => {
+      if (!environment.production) console.log(`[Pusher] Suscrito: ${origin}`);
+    });
+
+    this.bindEvent(channel, 'pusher:subscription_error', (status: any) => {
+      console.error(`[Pusher] Error suscripción ${origin}:`, status);
+    });
+
+    this.bindEvent(channel, 'NotificationCreated', (data: any) => {
+      this.handleIncomingNotification(data, origin);
+    });
+  }
+
+  private subscribeChannel(name: string): Channel {
+    if (!this.pusher) throw new Error('Pusher no inicializado');
+    if (this.subscribedChannels.has(name)) {
+      return this.pusher.channel(name) as Channel;
+    }
     const channel = this.pusher.subscribe(name);
-    this.subscribedChannels.push(name);
+    this.subscribedChannels.add(name);
     return channel;
   }
 
@@ -386,6 +418,68 @@ export class NotificationService {
   private handleIncomingNotification(data: any, origin: string): void {
     const notification = this.mapIncomingNotification(data, origin);
     this.addNotification(notification);
+
+    const fullNotification: NotificationItem = {
+      ...notification,
+      id: notification.id ?? this.generateId(),
+      timestamp: notification.timestamp ?? this.formatTimestamp(new Date()),
+      isRead: notification.isRead ?? false,
+      selected: notification.selected ?? false
+    };
+
+    try {
+      this.incomingSubject.next(fullNotification);
+    } catch {}
+  }
+
+  /**
+   * Obtiene las notificaciones desde el backend y actualiza el estado local
+   */
+  public fetchNotificationsFromApi(): Observable<any> {
+    const base = (environment as any).AUTH_API || '';
+    const url = `${base.replace(/\/$/, '')}/notifications`;
+    const token = this.authService.getToken ? this.authService.getToken() : null;
+    const headers = token ? new HttpHeaders({ Authorization: `Bearer ${token}` }) : undefined;
+
+    console.debug('[NotificationService] fetchNotificationsFromApi url:', url);
+
+    return this.http.get<any>(url, { headers }).pipe(
+      tap((res: any) => {
+        let list: any[] = [];
+        if (Array.isArray(res)) {
+          list = res;
+        } else if (res && Array.isArray(res.data)) {
+          list = res.data;
+        } else if (res && Array.isArray(res.notifications)) {
+          list = res.notifications;
+        }
+
+        if (!list.length) {
+          console.debug('[NotificationService] No notifications returned from API');
+          return;
+        }
+
+        const items = list.map(item => {
+          const mapped = this.mapIncomingNotification(item, 'api');
+          const full: NotificationItem = {
+            ...mapped,
+            id: mapped.id ?? this.generateId(),
+            timestamp: mapped.timestamp ?? this.formatTimestamp(new Date()),
+            isRead: mapped.isRead ?? false,
+            selected: false
+          } as NotificationItem;
+          return full;
+        });
+
+        const group = { title: 'Nuevas', items } as NotificationGroup;
+        this.updateNotifications([group]);
+        console.debug('[NotificationService] Loaded notifications from API, count:', items.length);
+      }),
+      catchError(err => {
+        console.error('[NotificationService] fetchNotificationsFromApi error:', err);
+        return of(null);
+      })
+    );
   }
 
   private mapIncomingNotification(
@@ -407,17 +501,14 @@ export class NotificationService {
     };
   }
 
-  /**
-   * Carga las notificaciones desde localStorage
-   */
+  /* ------------------------------ STORAGE ------------------------------- */
+
   private loadNotifications(): void {
     try {
       const stored = localStorage.getItem(this.STORAGE_KEY);
       if (stored) {
-        const notifications = JSON.parse(stored);
-        this.notificationsSubject.next(notifications);
+        this.notificationsSubject.next(JSON.parse(stored));
       } else {
-        // Cargar notificaciones por defecto si no hay datos guardados
         this.loadDefaultNotifications();
       }
     } catch (error) {
@@ -426,9 +517,6 @@ export class NotificationService {
     }
   }
 
-  /**
-   * Carga notificaciones por defecto
-   */
   private loadDefaultNotifications(): void {
     const defaultNotifications: NotificationGroup[] = [
       {
@@ -484,17 +572,11 @@ export class NotificationService {
     this.updateNotifications(defaultNotifications);
   }
 
-  /**
-   * Actualiza las notificaciones y las guarda
-   */
   private updateNotifications(notifications: NotificationGroup[]): void {
     this.notificationsSubject.next(notifications);
     this.saveNotifications(notifications);
   }
 
-  /**
-   * Guarda las notificaciones en localStorage
-   */
   private saveNotifications(notifications: NotificationGroup[]): void {
     try {
       localStorage.setItem(this.STORAGE_KEY, JSON.stringify(notifications));
@@ -503,44 +585,20 @@ export class NotificationService {
     }
   }
 
-  /**
-   * Reorganiza los grupos de notificaciones (nuevas vs leídas)
-   */
   private reorganizeGroups(notifications: NotificationGroup[]): void {
-    const allItems: NotificationItem[] = [];
-    
-    // Recolectar todas las notificaciones
-    for (const group of notifications) {
-      allItems.push(...group.items);
-    }
+    const allItems = notifications.flatMap(g => g.items);
+    const unreadItems = allItems.filter(i => !i.isRead);
+    const readItems = allItems.filter(i => i.isRead);
 
-    // Separar por estado de lectura
-    const unreadItems = allItems.filter(item => !item.isRead);
-    const readItems = allItems.filter(item => item.isRead);
-
-    // Limpiar array original
     notifications.length = 0;
-
-    // Agregar grupos si tienen elementos
-    if (unreadItems.length > 0) {
-      notifications.push({ title: 'Nuevas', items: unreadItems });
-    }
-    
-    if (readItems.length > 0) {
-      notifications.push({ title: 'Leídas Anteriormente', items: readItems });
-    }
+    if (unreadItems.length) notifications.push({ title: 'Nuevas', items: unreadItems });
+    if (readItems.length) notifications.push({ title: 'Leídas Anteriormente', items: readItems });
   }
 
-  /**
-   * Genera un ID único para las notificaciones
-   */
   private generateId(): string {
-    return Date.now().toString() + Math.random().toString(36).substr(2, 9);
+    return `${Date.now()}${Math.random().toString(36).slice(2, 10)}`;
   }
 
-  /**
-   * Formatea el timestamp de la notificación
-   */
   private formatTimestamp(date: Date): string {
     const now = new Date();
     const diffMs = now.getTime() - date.getTime();
@@ -548,14 +606,9 @@ export class NotificationService {
     const diffHours = Math.floor(diffMs / 3600000);
     const diffDays = Math.floor(diffMs / 86400000);
 
-    if (diffMins < 1) {
-      return 'Ahora mismo';
-    } else if (diffMins < 60) {
-      return `Hace ${diffMins} min`;
-    } else if (diffHours < 24) {
-      return `Hace ${diffHours} hr${diffHours > 1 ? 's' : ''}`;
-    } else {
-      return `Hace ${diffDays} día${diffDays > 1 ? 's' : ''}`;
-    }
+    if (diffMins < 1) return 'Ahora mismo';
+    if (diffMins < 60) return `Hace ${diffMins} min`;
+    if (diffHours < 24) return `Hace ${diffHours} hr${diffHours > 1 ? 's' : ''}`;
+    return `Hace ${diffDays} día${diffDays > 1 ? 's' : ''}`;
   }
 }

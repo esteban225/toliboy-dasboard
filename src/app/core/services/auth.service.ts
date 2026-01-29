@@ -289,6 +289,21 @@ export class AuthenticationService {
   }
 
   /**
+   * Obtener token de forma centralizada.
+   * Preferimos `currentUserValue.token` y como fallback leer localStorage (único punto).
+   */
+  public getToken(): string | null {
+    try {
+      const current = this.currentUserSubject?.value;
+      if (current && current.token) return current.token;
+      const stored = localStorage.getItem('token');
+      return stored ?? null;
+    } catch (e) {
+      return localStorage.getItem('token');
+    }
+  }
+
+  /**
    * Verificar si el usuario está autenticado
    */
   isAuthenticated(): boolean {

@@ -82,14 +82,14 @@ export class TopbarComponent {
 
     // Configurar idioma por defecto: Español
     this.cookieValue = this._cookiesService.get('lang') || 'es';
-    
+
     // Si no hay cookie de idioma o no es español, establecer español por defecto
     if (this.cookieValue !== 'es') {
       this.cookieValue = 'es';
       this._cookiesService.set('lang', 'es');
       this.languageService.setLanguage('es');
     }
-    
+
     // Establecer valores para español
     this.countryName = 'Español (Colombia)';
     this.flagvalue = 'assets/images/flags/co.svg';
@@ -98,7 +98,31 @@ export class TopbarComponent {
     this.notificationService.getNotifications().subscribe(notifications => {
       this.notificationList = notifications;
       this.updateNotificationCounts();
+      // Log de depuración: mostrar notificaciones recibidas desde Pusher
+      console.debug('Pusher notifications received:', notifications);
     });
+    this.notificationService.initPusher();
+
+    // Cargar notificaciones desde el backend al iniciar
+    this.notificationService.fetchNotificationsFromApi().subscribe(() => {
+      // La suscripción a getNotifications() actualizará `notificationList`
+      this.updateNotificationCounts();
+    });
+
+  }
+
+  /**
+   * Depuración: muestra las notificaciones actuales en la consola
+   */
+  showNotifications(): void {
+    console.group('Topbar Pusher Notifications');
+    console.debug('notificationList:', this.notificationList);
+    try {
+      console.table(this.notificationList || []);
+    } catch (e) {
+      console.log(this.notificationList);
+    }
+    console.groupEnd();
   }
 
   /**
@@ -298,7 +322,7 @@ export class TopbarComponent {
     // Usar el nuevo servicio para manejar la selección
     const selectedNotifications = this.notificationService.getSelectedNotifications();
     this.checkedValGet = selectedNotifications.map(n => n.id);
-    
+
     const actionsElement = document.getElementById("notification-actions") as HTMLElement;
     if (actionsElement) {
       actionsElement.style.display = this.checkedValGet.length > 0 ? 'block' : 'none';
@@ -314,12 +338,12 @@ export class TopbarComponent {
   calculatenotification() {
     this.updateNotificationCounts();
     this.checkedValGet = [];
-    
+
     const actionsElement = document.getElementById("notification-actions") as HTMLElement;
     if (actionsElement) {
       actionsElement.style.display = 'none';
     }
-    
+
     if (this.totalNotify == 0) {
       document.querySelector('.empty-notification-elem')?.classList.remove('d-none');
     }
@@ -340,6 +364,37 @@ export class TopbarComponent {
   }
 
   /**
+   * Llama al endpoint para marcar una notificación como leída
+   */
+  callMarkAsRead(notificationId: string | number): void {
+    this.notificationService.markAsReadOnServer(notificationId).subscribe(() => {
+      this.updateNotificationCounts();
+    });
+  }
+
+  /**
+   * Llama al endpoint para limpiar notificaciones expiradas
+   */
+  callCleanExpired(): void {
+    this.notificationService.cleanExpiredOnServer().subscribe(() => {
+      this.updateNotificationCounts();
+    });
+  }
+
+  /**
+   * Obtener detalles de una notificación desde el backend
+   */
+  viewNotification(notificationId: string | number): void {
+    this.notificationService.getNotificationByIdFromApi(notificationId).subscribe((n) => {
+      if (n) {
+        console.debug('Notification details:', n);
+      } else {
+        console.warn('No se pudo obtener la notificación desde el servidor:', notificationId);
+      }
+    });
+  }
+
+  /**
    * Maneja el toggle de selección de notificación
    */
   toggleNotificationSelection(notificationId: string | number) {
@@ -347,7 +402,7 @@ export class TopbarComponent {
     // Actualizar el array de seleccionados
     const selectedNotifications = this.notificationService.getSelectedNotifications();
     this.checkedValGet = selectedNotifications.map(n => n.id);
-    
+
     const actionsElement = document.getElementById("notification-actions") as HTMLElement;
     if (actionsElement) {
       actionsElement.style.display = this.checkedValGet.length > 0 ? 'block' : 'none';
@@ -359,5 +414,14 @@ export class TopbarComponent {
    */
   logoutUser() {
     this.store.dispatch(logout());
+  }
+
+  /**
+   * Recarga manual de notificaciones desde el backend
+   */
+  reloadNotifications(): void {
+    this.notificationService.fetchNotificationsFromApi().subscribe(() => {
+      this.updateNotificationCounts();
+    });
   }
 }
