@@ -640,9 +640,11 @@
                                     </label>
                                     <input type="date" class="form-control" id="expiryDate"
                                         (change)="updateNotesSummary()">
+                                    <button class="btn btn-sm btn-outline-secondary mt-2" type="button" (click)="setExpiryDateNA()">
+                                        NA 
+                                    </button>
                                 </div>
                             </div>
-
                             <!-- Verificación -->
                             <div class="d-flex align-items-center mb-3 pb-2 border-bottom">
                                 <i class="bi bi-clipboard-check text-info fs-5 me-2"></i>

@@ -1265,7 +1265,7 @@ export class InventoryMovementComponent implements OnInit, OnDestroy {
           if (additionalNotesEl) additionalNotesEl.value = value;
           if (observationsOutEl) observationsOutEl.value = value;
         } else if (part.startsWith('Vencimiento:')) {
-          const value = part.replace('Vencimiento:', '').trim();
+          const value = part.replace('Vencimiento:', 'NA').trim();
           if (expiryDateEl) expiryDateEl.value = value;
           if (expiryDateOutEl) expiryDateOutEl.value = value;
         } else if (part.startsWith('Proveedor:')) {
@@ -1399,6 +1399,45 @@ export class InventoryMovementComponent implements OnInit, OnDestroy {
     }
   }
 
+  /**
+   * Marca/Desmarca la fecha de vencimiento como 'NA' (no aplica) en el formulario y en el DOM.
+   * Si ya está en 'NA' la limpia y habilita el input.
+   */
+  setExpiryDateNA(): void {
+    try {
+      // Determinar el tipo de movimiento y el campo objetivo (in/out)
+      const movementType = this.form.get('type')?.value;
+      const fieldId = movementType === 'out' ? 'expiryDateOut' : 'expiryDate';
+
+      // Intentar obtener el elemento objetivo; si no existe, intentar el opuesto
+      let el = document.getElementById(fieldId) as HTMLInputElement | null;
+      if (!el) {
+        const altId = movementType === 'out' ? 'expiryDate' : 'expiryDateOut';
+        el = document.getElementById(altId) as HTMLInputElement | null;
+        if (!el) return;
+      }
+
+      const isNA = el.getAttribute('data-na') === 'true' || (el.value || '').toUpperCase() === 'NA';
+      if (!isNA) {
+        // Marcar como NA y deshabilitar la edición
+        el.value = 'NA';
+        el.setAttribute('data-na', 'true');
+        el.disabled = true;
+      } else {
+        // Restaurar a vacío y habilitar
+        el.value = '';
+        el.removeAttribute('data-na');
+        el.disabled = false;
+      }
+
+      // Quitar clase de error si corresponde y actualizar el resumen de notas
+      try { el.classList.remove('is-invalid'); } catch (e) { /* noop */ }
+      this.updateNotesSummary();
+    } catch (err) {
+      console.error('setExpiryDateNA error:', err);
+    }
+  }
+
   private requiredFieldsByType(): { id: string; label: string }[] {
     const movementType = this.form.get('type')?.value;
     const requiredIn = [
@@ -1433,7 +1472,11 @@ export class InventoryMovementComponent implements OnInit, OnDestroy {
   private clearInvalidIfFilled(): void {
     this.requiredFieldsByType().forEach(field => {
       const el = document.getElementById(field.id) as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement | null;
-      if (el && (el.value || '').trim()) {
+      if (!el) return;
+      const raw = (el.value || '').toString();
+      const v = raw.trim();
+      const isNA = el.getAttribute('data-na') === 'true' || v.toUpperCase() === 'NA';
+      if (v || isNA) {
         el.classList.remove('is-invalid');
       }
     });
@@ -1445,8 +1488,10 @@ export class InventoryMovementComponent implements OnInit, OnDestroy {
 
     this.requiredFieldsByType().forEach(field => {
       const el = document.getElementById(field.id) as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement | null;
-      const value = (el?.value || '').trim();
-      const isMissing = !value;
+      const raw = (el?.value ?? '').toString();
+      const value = raw.trim();
+      const isNA = el?.getAttribute('data-na') === 'true' || (value && value.toUpperCase() === 'NA');
+      const isMissing = !value && !isNA;
       if (el) {
         el.classList.toggle('is-invalid', isMissing);
         if (isMissing && !firstMissingEl) {

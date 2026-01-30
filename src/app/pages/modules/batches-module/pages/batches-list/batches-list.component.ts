@@ -2,6 +2,7 @@ import { Component, effect, signal, Signal, OnInit, OnDestroy } from '@angular/c
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { BatchesService } from '../../services/batches.service';
+import { ProductsService } from 'src/app/pages/modules/product-module/services/products.service';
 import { AlertService } from 'src/app/core/services/alert.service';
 import { AuthenticationService } from 'src/app/core/services/auth.service';
 import { Subject } from 'rxjs';
@@ -12,7 +13,8 @@ import { Batch, PaginationMeta } from '../../models/batch.model';
   selector: 'app-batches-list',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
-  templateUrl: './batches-list.component.html'
+  templateUrl: './batches-list.component.html',
+  styleUrls: ['./batches-list.component.scss']
 })
 export class BatchesListComponent implements OnInit, OnDestroy {
   // Estados con Signals (Angular 17)
@@ -34,17 +36,21 @@ export class BatchesListComponent implements OnInit, OnDestroy {
   private service: BatchesService;
   private alert: AlertService;
   private authService: AuthenticationService;
+  private productsService: ProductsService;
   private destroy$ = new Subject<void>();
+  
 
   constructor(
     private fb: FormBuilder,
     batchesService: BatchesService,
     alertService: AlertService,
     authService: AuthenticationService
+    ,productsService: ProductsService
   ) {
     this.service = batchesService;
     this.alert = alertService;
     this.authService = authService;
+    this.productsService = productsService;
     this.form = this.buildForm();
     this.filterForm = this.buildFilterForm();
 
@@ -59,6 +65,29 @@ export class BatchesListComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     // La carga inicial es manejada por el effect
+    this.loadProducts();
+  }
+
+  loadProducts(filters: Record<string, any> = {}, page = 1, perPage = 99) {
+    this.products.set([]);
+    console.debug('[Batches] loadProducts: requesting products', { filters, page, perPage });
+    this.productsService
+      .list(filters, page, perPage)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (res) => {
+          console.debug('[Batches] loadProducts: response', res);
+          this.products.set(res.data || []);
+        },
+        error: (err) => {
+          console.error('[Batches] loadProducts: error', err);
+          // Mostrar alerta breve pero no bloquear la UI principal
+          const message = err?.message || 'Error cargando productos';
+          this.error.set(message);
+          // mantiene la alerta para el usuario pero no lanza múltiples modales
+          this.alert.error('Error cargando productos', message);
+        }
+      });
   }
 
   trackById(index: number, item: Batch) {
@@ -121,7 +150,7 @@ export class BatchesListComponent implements OnInit, OnDestroy {
       actual_end_date: [''],
       status: ['planned'],
       quantity: [1, [Validators.required, Validators.min(1)]],
-      defect_quantity: [0, [Validators.min(0)]],
+      defect_quantity: [0],
       notes: [''],
       created_by: [createdBy, [Validators.required]]
     });
@@ -152,7 +181,12 @@ export class BatchesListComponent implements OnInit, OnDestroy {
   select(batch: Batch | null) {
     this.selected.set(batch);
     if (batch) {
-      this.form.patchValue(batch);
+      // Convertir fechas al formato compatible con `input[type=datetime-local]`
+      const patched = { ...batch } as any;
+      patched.start_date = this.formatForInputDatetimeLocal(batch.start_date) ?? '';
+      patched.expected_end_date = this.formatForInputDatetimeLocal(batch.expected_end_date) ?? '';
+      if (batch.actual_end_date) patched.actual_end_date = this.formatForInputDatetimeLocal(batch.actual_end_date) ?? '';
+      this.form.patchValue(patched);
       this.showForm.set(true);
     } else {
       const currentUser = this.authService.currentUserValue;
@@ -166,6 +200,21 @@ export class BatchesListComponent implements OnInit, OnDestroy {
       this.showForm.set(false);
     }
   }
+
+  private formatForInputDatetimeLocal(date?: string | null): string | null {
+    if (!date) return null;
+    const d = new Date(date);
+    if (isNaN(d.getTime())) return null;
+    const pad = (n: number) => n.toString().padStart(2, '0');
+    const year = d.getFullYear();
+    const month = pad(d.getMonth() + 1);
+    const day = pad(d.getDate());
+    const hours = pad(d.getHours());
+    const minutes = pad(d.getMinutes());
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+  }
+
+  
 
   save() {
     if (this.form.invalid) {
@@ -281,6 +330,10 @@ export class BatchesListComponent implements OnInit, OnDestroy {
 
   get showForm$(): boolean {
     return this.showForm();
+  }
+
+  get products$(): any[] {
+    return this.products();
   }
 
   get meta$(): PaginationMeta {

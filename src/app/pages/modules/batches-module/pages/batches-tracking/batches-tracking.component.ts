@@ -13,6 +13,7 @@ interface BatchTimeline {
   daysElapsed: number;
   estimatedDaysRemaining: number;
   statusLabel: string;
+
 }
 
 @Component({
@@ -29,10 +30,14 @@ export class BatchesTrackingComponent implements OnInit, OnDestroy {
   error = signal<string | null>(null);
   searchFilter = signal('');
   statusFilter = signal('all'); // all, active, completed, at-risk
+  isModalOpenDetail?: boolean;
+  isModalOpen?: boolean;
+  selectedBatchId?: number;
+  batchData?: any = null;
 
   private destroy$ = new Subject<void>();
 
-  constructor(private batchesService: BatchesService, private alert: AlertService) {}
+  constructor(private batchesService: BatchesService, private alert: AlertService) { }
 
   ngOnInit(): void {
     this.loadBatches();
@@ -158,5 +163,43 @@ export class BatchesTrackingComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  viewBatchTimeline(batchId: number): void {
+    // Lógica para abrir el modal de seguimiento del lote
+    this.isModalOpen = true;
+    this.selectedBatchId = batchId;
+  }
+
+  viewBatchDetails(batchId: number): void {
+    // Lógica para abrir el modal de detalles del lote
+    // asignamos el id inmediatamente y solicitamos los datos; abrimos la modal
+    // sólo cuando tengamos la información para mostrar en el header.
+    this.selectedBatchId = batchId;
+    this.batchData = null;
+
+    this.batchesService.getById(batchId).pipe(takeUntil(this.destroy$)).subscribe({
+      next: (res) => {
+        const batchData = res.data;
+        if (batchData) {
+          // Asignar los datos para que el template pueda mostrarlos
+          this.batchData = batchData;
+          this.selectedBatchId = batchData.id;
+          this.isModalOpenDetail = true;
+        } else {
+          this.alert.error('Error', 'No se encontraron detalles del lote');
+        }
+      },
+      error: (err) => {
+        const message = err?.message || 'Error cargando detalles del lote';
+        this.alert.error('Error', message);
+      }
+    });
+  }
+
+  closeModal(): void {
+    this.isModalOpen = false;
+    this.isModalOpenDetail = false;
+    this.batchData = null;
   }
 }
