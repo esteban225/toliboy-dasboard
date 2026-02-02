@@ -34,6 +34,8 @@ export class BatchesTrackingComponent implements OnInit, OnDestroy {
   isModalOpen?: boolean;
   selectedBatchId?: number;
   batchData?: any = null;
+  editBatch: any = {};
+  isSaving = signal(false);
 
   private destroy$ = new Subject<void>();
 
@@ -79,11 +81,24 @@ export class BatchesTrackingComponent implements OnInit, OnDestroy {
       const daysRemaining = Math.max(0, totalDaysPlanned - daysElapsed);
       const progress = totalDaysPlanned > 0 ? Math.min(100, (daysElapsed / totalDaysPlanned) * 100) : 0;
 
+      // Mapear el estado del backend a una etiqueta legible y priorizar estado real/fecha
       let statusLabel = 'En Progreso';
+      const s = batch.status;
       if (endDate) {
         statusLabel = 'Completado';
-      } else if (now > expectedEnd) {
+      } else if (s === 'cancelled') {
+        statusLabel = 'Cancelado';
+      } else if (s === 'delivered') {
+        statusLabel = 'Entregado';
+      } else if (now > expectedEnd && s !== 'completed') {
         statusLabel = 'Retrasado';
+      } else {
+        // Fallback mapping
+        if (s === 'planned') statusLabel = 'Planificado';
+        else if (s === 'in_process') statusLabel = 'En Progreso';
+        else if (s === 'paused') statusLabel = 'Pausado';
+        else if (s === 'completed') statusLabel = 'Completado';
+        else statusLabel = 'En Progreso';
       }
 
       return {
@@ -148,13 +163,55 @@ export class BatchesTrackingComponent implements OnInit, OnDestroy {
   }
 
   getStatusBadgeClass(timeline: BatchTimeline): string {
-    if (timeline.statusLabel === 'Retrasado') return 'bg-danger';
-    if (timeline.statusLabel === 'Completado') return 'bg-success';
-    return 'bg-info';
-  }
+    const batch = timeline.batch || ({} as Batch);
+    const raw = (batch.status ?? '').toString();
 
+    // Calcular etiqueta en español de forma determinista según campos actuales
+    let spanishLabel = 'En Progreso';
+    const now = new Date();
+    const expected = batch.expected_end_date ? new Date(batch.expected_end_date) : null;
+
+    if (batch.actual_end_date) {
+      spanishLabel = 'Completado';
+    } else if (raw === 'cancelled') {
+      spanishLabel = 'Cancelado';
+    } else if (raw === 'delivered') {
+      spanishLabel = 'Entregado';
+    } else if (expected && now > expected && raw !== 'completed') {
+      spanishLabel = 'Retrasado';
+    } else {
+      switch (raw) {
+        case 'planned': spanishLabel = 'Planificado'; break;
+        case 'in_process': spanishLabel = 'En Progreso'; break;
+        case 'paused': spanishLabel = 'Pausado'; break;
+        case 'completed': spanishLabel = 'Completado'; break;
+        default: spanishLabel = 'En Progreso';
+      }
+    }
+
+    // Guardar el label calculado en el timeline para uso posterior en template
+    timeline.statusLabel = spanishLabel;
+
+    // Seleccionar clase de badge según la etiqueta en español
+    switch (spanishLabel) {
+      case 'Retrasado':
+      case 'Cancelado':
+        return 'bg-danger';
+      case 'Completado':
+      case 'Entregado':
+        return 'bg-success';
+      case 'Pausado':
+        return 'bg-warning';
+      case 'Planificado':
+        return 'bg-secondary';
+      default:
+        return 'bg-info';
+    }
+  }
   getDefectBadgeClass(batch: Batch): string {
-    const defectRate = batch.quantity ? ((batch.defect_quantity ?? 0) / batch.quantity) * 100 : 0;
+    const qty = Number(batch.quantity) || 0;
+    const defects = Number(batch.defect_quantity) || 0;
+    const defectRate = qty > 0 ? (defects / qty) * 100 : 0;
     if (defectRate > 10) return 'bg-danger';
     if (defectRate > 5) return 'bg-warning';
     return 'bg-success';
@@ -166,9 +223,102 @@ export class BatchesTrackingComponent implements OnInit, OnDestroy {
   }
 
   viewBatchTimeline(batchId: number): void {
-    // Lógica para abrir el modal de seguimiento del lote
+    // Abrir modal y poblar sólo los campos que maneja el formulario
     this.isModalOpen = true;
     this.selectedBatchId = batchId;
+
+    const found = this.batches().find(b => b.id === batchId);
+    if (found) {
+      // solo llevamos actual_end_date y defect_quantity (y id)
+      const edit: any = { id: found.id };
+      if (found.actual_end_date) {
+        // Convertir ISO a formato compatible con datetime-local: yyyy-MM-ddTHH:mm
+        const d = new Date(found.actual_end_date);
+        const pad = (n: number) => n.toString().padStart(2, '0');
+        const local = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+        edit.actual_end_date = local;
+      }
+      edit.defect_quantity = found.defect_quantity ?? 0;
+      // inicializar estado actual para que el select muestre el valor correcto
+      if (found.status !== undefined) {
+        edit.status = found.status;
+      }
+      this.editBatch = edit;
+    } else {
+      this.editBatch = { id: batchId, defect_quantity: 0 };
+    }
+  }
+
+  onSaveBatch(): void {
+    // Construir objeto con los campos a actualizar
+    const updates: any = {};
+    if (this.editBatch.actual_end_date) {
+      const dt = new Date(this.editBatch.actual_end_date);
+      updates.actual_end_date = dt.toISOString();
+    }
+    if (this.editBatch.defect_quantity !== undefined) {
+      updates.defect_quantity = Number(this.editBatch.defect_quantity) || 0;
+    }
+
+    if (!this.editBatch.id) {
+      this.alert.error('Error', 'ID de lote inválido');
+      return;
+    }
+
+    // Preparar payload completo (fusión con datos actuales)
+    const existing = this.batches().find(b => b.id === this.editBatch.id) || ({} as Batch);
+    const payload = { ...existing, ...updates };
+
+    // Incluir status si el usuario lo cambió en el formulario
+    if (this.editBatch.status !== undefined && this.editBatch.status !== existing.status) {
+      payload.status = this.editBatch.status;
+      updates.status = this.editBatch.status;
+    }
+
+    console.debug('Payload to update batch:', payload);
+
+    // Indicar estado de guardado y deshabilitar controles
+    this.isSaving.set(true);
+
+    // Llamar al servicio para persistir los cambios; no cerramos la modal
+    // hasta confirmar que la operación fue exitosa.
+    const batchId = Number(this.editBatch.id);
+    this.batchesService.update(batchId, payload).pipe(takeUntil(this.destroy$)).subscribe({
+      next: (res) => {
+        console.debug('Batches update response:', res);
+        const updated = res.data;
+        if (updated) {
+          // Reemplazar en la lista local con la respuesta normalizada del servidor
+          const idx = this.batches().findIndex(b => b.id === updated.id);
+          if (idx !== -1) {
+            const current = [...this.batches()];
+            current[idx] = { ...current[idx], ...updated };
+            this.batches.set(current);
+          }
+          this.buildTimelines(this.batches());
+          this.applyFilters();
+          this.alert.success('Guardado', 'Los cambios del lote se guardaron en el servidor.');
+        } else {
+          this.alert.success('Guardado', 'Actualizado localmente (sin datos de respuesta).');
+        }
+        this.isSaving.set(false);
+        this.isModalOpen = false;
+        this.editBatch = {};
+      },
+      error: (err) => {
+        const message = err?.message || 'Error guardando los cambios';
+        console.error('Error update batch:', err);
+        this.alert.error('Error', message);
+        // Recargar lista para sincronizar estado con servidor
+        this.isSaving.set(false);
+        this.loadBatches();
+      }
+    });
+  }
+
+  onCancelEdit(): void {
+    this.editBatch = {};
+    this.isModalOpen = false;
   }
 
   viewBatchDetails(batchId: number): void {

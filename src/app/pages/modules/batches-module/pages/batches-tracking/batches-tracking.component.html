@@ -72,7 +72,7 @@
                             <div class="d-flex align-items-center gap-2 mb-1">
                                 <h5 class="mb-0 fw-bold">{{ timeline.batch.name }}</h5>
                                 <span class="badge" [ngClass]="getStatusBadgeClass(timeline)">
-                                    {{ timeline.statusLabel }}
+                                    {{ timeline.batch.status }}
                                 </span>
                             </div>
                             <small class="text-muted">
@@ -225,7 +225,42 @@
                 <button type="button" class="btn-close" (click)="closeModal()" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <app-batch-timeline [batchId]="selectedBatchId" (close)="closeModal()"></app-batch-timeline>
+                <form #batchForm="ngForm" (ngSubmit)="onSaveBatch()">
+                    <input type="hidden" name="id" [(ngModel)]="editBatch.id" />
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Fecha de fin real</label>
+                            <input type="datetime-local" class="form-control" name="actual_end_date" required [(ngModel)]="editBatch.actual_end_date" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Cantidad de defectos</label>
+                            <input type="number" class="form-control" name="defect_quantity" [(ngModel)]="editBatch.defect_quantity" />
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Estado del lote</label>
+                            <select class="form-select" name="status" [(ngModel)]="editBatch.status">
+                                <option value="planned">Planificado</option>
+                                <option value="in_process">En Progreso</option>
+                                <option value="paused">Pausado</option>
+                                <option value="completed">Completado</option>
+                                <option value="delivered">Entregado</option>
+                                <option value="cancelled">Cancelado</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 text-end">
+                        <button type="button" class="btn btn-outline-secondary me-2" (click)="onCancelEdit()">Cancelar</button>
+                        <button type="submit" class="btn btn-primary" [disabled]="batchForm.invalid || isSaving()">
+                            <span *ngIf="isSaving()" class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                            <i class="bi bi-save me-1"></i>
+                            <span *ngIf="!isSaving()">Guardar</span>
+                            <span *ngIf="isSaving()">Guardando...</span>
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>

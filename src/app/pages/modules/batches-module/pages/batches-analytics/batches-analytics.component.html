@@ -1,6 +1,6 @@
 <div class="container-fluid px-4 py-4">
     <!-- Header -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-4 border rounded-4 p-3 bg-white shadow-sm">
         <div>
             <h2 class="mb-1 fw-bold">
                 <i class="bi bi-graph-up text-primary me-2"></i>Análisis de Lotes
@@ -28,7 +28,7 @@
     <!-- Key Metrics -->
     <div class="row g-3 mb-4" *ngIf="!loading()">
         <div class="col-sm-6 col-lg-3">
-            <div class="card shadow-sm border-0">
+            <div class="card shadow-sm border rounded-4 bg-body">
                 <div class="card-body">
                     <div class="d-flex align-items-center">
                         <div class="flex-grow-1">
@@ -46,7 +46,7 @@
         </div>
 
         <div class="col-sm-6 col-lg-3">
-            <div class="card shadow-sm border-0">
+            <div class="card shadow-sm border rounded-4 bg-body">
                 <div class="card-body">
                     <div class="d-flex align-items-center">
                         <div class="flex-grow-1">
@@ -64,7 +64,7 @@
         </div>
 
         <div class="col-sm-6 col-lg-3">
-            <div class="card shadow-sm border-0">
+            <div class="card shadow-sm border rounded-4 bg-body">
                 <div class="card-body">
                     <div class="d-flex align-items-center">
                         <div class="flex-grow-1">
@@ -82,7 +82,7 @@
         </div>
 
         <div class="col-sm-6 col-lg-3">
-            <div class="card shadow-sm border-0">
+            <div class="card shadow-sm border rounded-4 bg-body">
                 <div class="card-body">
                     <div class="d-flex align-items-center">
                         <div class="flex-grow-1">
@@ -102,8 +102,8 @@
 
     <!-- Production Stats -->
     <div class="row g-3 mb-4" *ngIf="!loading()">
-        <div class="col-lg-6">
-            <div class="card shadow-sm border-0">
+        <div class="col-lg-6 ">
+            <div class="card shadow-sm border rounded-4 p-3 bg-body shadow-sm">
                 <div class="card-header bg-light border-0">
                     <h6 class="mb-0 fw-semibold">
                         <i class="bi bi-percent text-primary me-2"></i>Estadísticas de Calidad
@@ -139,8 +139,8 @@
         </div>
 
         <!-- Status Distribution -->
-        <div class="col-lg-6">
-            <div class="card shadow-sm border-0">
+        <div class="col-lg-6 ">
+            <div class="card shadow-sm border rounded-4 p-3 bg-body shadow-sm">
                 <div class="card-header bg-light border-0">
                     <h6 class="mb-0 fw-semibold">
                         <i class="bi bi-pie-chart text-info me-2"></i>Distribución de Estados
