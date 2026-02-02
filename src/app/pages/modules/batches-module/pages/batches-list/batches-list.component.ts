@@ -60,6 +60,7 @@ export class BatchesListComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     // La carga inicial es manejada por el effect
   }
+  
 
   trackById(index: number, item: Batch) {
     return item?.id ?? index;
