@@ -89,6 +89,7 @@ export class BatchesListComponent implements OnInit, OnDestroy {
         }
       });
   }
+  
 
   trackById(index: number, item: Batch) {
     return item?.id ?? index;

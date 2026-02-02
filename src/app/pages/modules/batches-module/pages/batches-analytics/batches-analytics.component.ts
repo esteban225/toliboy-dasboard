@@ -55,7 +55,7 @@ export class BatchesAnalyticsComponent implements OnInit, OnDestroy {
 
   private destroy$ = new Subject<void>();
 
-  constructor(private batchesService: BatchesService, private alert: AlertService) {}
+  constructor(private batchesService: BatchesService, private alert: AlertService) { }
 
   ngOnInit(): void {
     this.loadAnalytics();
@@ -101,8 +101,15 @@ export class BatchesAnalyticsComponent implements OnInit, OnDestroy {
     }
 
     const totalBatches = batches.length;
-    const activeBatches = batches.filter(b => b.status).length;
-    const completedBatches = batches.filter(b => !b.status).length;
+    const activeBatches = batches.filter(
+      b => b.status === 'in_process' || b.status === 'planned'
+    ).length;
+
+    const completedBatches = batches.filter(
+      b => b.status === 'completed'
+    ).length;
+
+
     const totalDefects = batches.reduce((sum, b) => sum + (b.defect_quantity ?? 0), 0);
     const totalProduced = batches.reduce((sum, b) => sum + (b.quantity ?? 0), 0);
     const batchesWithDefects = batches.filter(b => (b.defect_quantity ?? 0) > 0).length;
@@ -122,11 +129,17 @@ export class BatchesAnalyticsComponent implements OnInit, OnDestroy {
 
   private calculateBatchStatuses(batches: Batch[]): void {
     const statuses: Record<string, number> = {
-      'Activos': batches.filter(b => b.status).length,
-      'Completados': batches.filter(b => !b.status).length,
-      'Con Defectos': batches.filter(b => (b.defect_quantity ?? 0) > 0).length
+      'Activos': batches.filter(
+        b => b.status === 'in_process' || b.status === 'planned'
+      ).length,
+      'Completados': batches.filter(
+        b => b.status === 'completed'
+      ).length,
+      'Con Defectos': batches.filter(
+        b => (b.defect_quantity ?? 0) > 0
+      ).length
     };
-
+    
     const total = batches.length;
     const statusArray: BatchStatus[] = Object.entries(statuses).map(([status, count]) => ({
       status,
