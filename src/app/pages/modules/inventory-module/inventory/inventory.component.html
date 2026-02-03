@@ -40,7 +40,7 @@
   <ng-container *ngIf="!loading">
 
     <div
-      class="d-flex flex-column flex-wrap justify-content-center align-items-center gap-3 mb-4 p-4 rounded-4 shadow-sm border  bg-body">
+      class="d-flex flex-column flex-wrap justify-content-center align-items-center gap-2 mb-4 p-4 rounded-4 shadow-sm border  bg-body">
       <h2 class="text-center">
         Mensaje de producción diaria
       </h2>
@@ -53,6 +53,91 @@
           Mensaje: {{ dailyMessage }}
         </p>
       </div>
+
+      <div class="w-100 mt-4">
+
+        <!-- Header -->
+        <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+          <div>
+            <h4 class="fw-bold mb-1">Notificaciones recientes</h4>
+            <p class="text-muted small mb-0">Últimas alertas del usuario</p>
+          </div>
+
+          <button class="btn btn-primary btn-sm d-flex align-items-center" (click)="refreshNotifications()"
+            [disabled]="notificationLoading">
+            <span *ngIf="notificationLoading" class="spinner-border spinner-border-sm me-2" role="status">
+            </span>
+            <i *ngIf="!notificationLoading" class="bi bi-arrow-repeat me-2"></i>
+            {{ notificationLoading ? 'Actualizando...' : 'Refrescar' }}
+          </button>
+        </div>
+
+        <!-- Error -->
+        <div *ngIf="notificationError" class="alert alert-danger d-flex align-items-center shadow-sm rounded-3"
+          role="alert">
+          <i class="bi bi-exclamation-triangle-fill me-2 fs-5"></i>
+          <span class="fw-semibold">{{ notificationError }}</span>
+        </div>
+
+        <!-- No notifications -->
+        <div *ngIf="!notificationError && notificationDisplayList.length === 0 && !notificationLoading"
+          class="alert alert-light border shadow-sm d-flex align-items-center rounded-3" role="alert">
+          <i class="bi bi-inbox me-2 fs-5"></i>
+          <span>No hay notificaciones recientes.</span>
+        </div>
+
+        <!-- Notification list -->
+        <div *ngIf="notificationDisplayList.length > 0" class="list-group rounded-4 shadow-sm overflow-hidden">
+
+          <div class="list-group-item py-3"
+            *ngFor="let item of notificationDisplayList | slice:0:5; trackBy: trackNotification">
+
+            <div class="d-flex justify-content-between">
+              <div class="me-3">
+
+                <div class="d-flex align-items-center mb-1">
+                  <span class="badge me-2" [ngClass]="mapNotificationBadge(item.notification.type)">
+                    {{ item.notification.type | titlecase }}
+                  </span>
+
+                  <span class="fw-semibold">
+                    {{ item.notification.title || 'Notificación' }}
+                  </span>
+                </div>
+
+                <p class="text-muted small mb-2">
+                  {{ item.summary }}
+                </p>
+
+                <div *ngIf="item.details.length" class="d-flex flex-wrap gap-2">
+                  <div class="px-3 py-1 rounded-pill bg-light border small fw-medium"
+                    *ngFor="let detail of item.details">
+                    <span class="text-muted">{{ detail.label }}:</span>
+                    <span class="ms-1">{{ detail.value }}</span>
+                  </div>
+                </div>
+
+              </div>
+
+              <div class="d-flex flex-column align-items-end text-end ms-2 gap-2">
+                <small class="text-muted text-nowrap">
+                  {{ formatNotificationTimestamp(item.notification.timestamp) }}
+                </small>
+                <button *ngIf="canUpdateBatch(item)" class="btn btn-outline-success btn-sm"
+                  (click)="updateBatchStatus(item)" [disabled]="isBatchUpdating(item)">
+                  <span *ngIf="isBatchUpdating(item)" class="spinner-border spinner-border-sm me-2" role="status"
+                    aria-hidden="true"></span>
+                  <i *ngIf="!isBatchUpdating(item)" class="bi bi-play-circle me-1"></i>
+                  {{ isBatchUpdating(item) ? 'Actualizando...' : 'Marcar en proceso' }}
+                </button>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+      </div>
+
 
     </div>
 

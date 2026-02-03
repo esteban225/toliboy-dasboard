@@ -5,6 +5,7 @@ import { BatchesService } from '../../services/batches.service';
 import { ProductsService } from 'src/app/pages/modules/product-module/services/products.service';
 import { AlertService } from 'src/app/core/services/alert.service';
 import { AuthenticationService } from 'src/app/core/services/auth.service';
+import { NotificationsApiService } from 'src/app/core/services/notifications-api.service';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { Batch, PaginationMeta } from '../../models/batch.model';
@@ -37,20 +38,24 @@ export class BatchesListComponent implements OnInit, OnDestroy {
   private alert: AlertService;
   private authService: AuthenticationService;
   private productsService: ProductsService;
+  private notificationsApi: NotificationsApiService;
+  private readonly batchNotificationUserId = 46;
   private destroy$ = new Subject<void>();
-  
+
 
   constructor(
     private fb: FormBuilder,
     batchesService: BatchesService,
     alertService: AlertService,
-    authService: AuthenticationService
-    ,productsService: ProductsService
+    authService: AuthenticationService,
+    productsService: ProductsService,
+    notificationsApi: NotificationsApiService
   ) {
     this.service = batchesService;
     this.alert = alertService;
     this.authService = authService;
     this.productsService = productsService;
+    this.notificationsApi = notificationsApi;
     this.form = this.buildForm();
     this.filterForm = this.buildFilterForm();
 
@@ -89,7 +94,7 @@ export class BatchesListComponent implements OnInit, OnDestroy {
         }
       });
   }
-  
+
 
   trackById(index: number, item: Batch) {
     return item?.id ?? index;
@@ -215,7 +220,7 @@ export class BatchesListComponent implements OnInit, OnDestroy {
     return `${year}-${month}-${day}T${hours}:${minutes}`;
   }
 
-  
+
 
   save() {
     if (this.form.invalid) {
@@ -240,10 +245,14 @@ export class BatchesListComponent implements OnInit, OnDestroy {
 
     operation$.pipe(takeUntil(this.destroy$)).subscribe({
       next: (result) => {
+        const isUpdate = !!payload.id;
         this.alert.success(
-          payload.id ? 'Actualizado' : 'Creado',
-          `El lote se ${payload.id ? 'actualizó' : 'creó'} correctamente.`
+          isUpdate ? 'Actualizado' : 'Creado',
+          `El lote se ${isUpdate ? 'actualizó' : 'creó'} correctamente.`
         );
+        if (!isUpdate) {
+          this.notifyBatchCreation(result?.data ?? null, payload);
+        }
         this.select(null);
         this.loading.set(false);
         this.loadList(this.filters(), this.page(), this.perPage());
@@ -353,7 +362,7 @@ export class BatchesListComponent implements OnInit, OnDestroy {
   getStatusBadgeClass(batch: Batch): string {
     const status = batch.status;
     const statusStr = String(status || '').toLowerCase().trim();
-    
+
     switch (statusStr) {
       case 'planned':
         return 'bg-secondary bg-opacity-10 text-secondary border border-secondary';
@@ -379,7 +388,7 @@ export class BatchesListComponent implements OnInit, OnDestroy {
 
   getStatusLabel(status?: string | boolean): string {
     const statusStr = String(status || '').toLowerCase().trim();
-    
+
     switch (statusStr) {
       case 'planned':
         return 'Planificado';
@@ -402,6 +411,111 @@ export class BatchesListComponent implements OnInit, OnDestroy {
       default:
         return statusStr || '-';
     }
+  }
+
+  private notifyBatchCreation(createdBatch?: Partial<Batch> | null, fallback?: Partial<Batch>) {
+    const source = createdBatch ?? fallback;
+    const userId = this.toNumber(this.batchNotificationUserId);
+    if (!source || userId === null || !this.notificationsApi) {
+      return;
+    }
+
+    const relatedId = this.toNumber(source.id);
+    const payload: any = {
+      // Datos de la notificación
+      title: 'Nuevo lote creado',
+      message: this.buildBatchNotificationMessage(source),
+      type: 'info',
+      scope: 'individual',
+
+      // SOLO este user_id (obligatorio)
+      user_id: userId,
+
+      // Datos adicionales
+      data: {
+        batch_id: relatedId ?? null,
+        product: this.resolveProductLabel(source),
+        quantity: source.quantity ?? 0,
+        start_date: source.start_date ?? null,
+        expected_end_date: source.expected_end_date ?? null
+      }
+    };
+
+
+    if (relatedId !== null) {
+      payload.related_id = relatedId;
+      payload.related_table = 'batches';
+    }
+
+    this.notificationsApi.createNotification(payload)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => console.debug('[Batches] Notificación enviada para el lote', relatedId ?? source.name ?? source.code, payload),
+        error: (err) => {
+          console.error('[Batches] Error enviando notificación de lote', err, payload);
+          const apiMessage = err?.error?.message || 'No se pudo notificar al usuario 46 sobre el nuevo lote.';
+          this.alert.warning('Notificación pendiente', apiMessage);
+        }
+      });
+  }
+
+  private buildBatchNotificationMessage(batch: Partial<Batch>): string {
+    const label = batch.name || batch.code || (batch.id ? `Lote #${batch.id}` : 'Nuevo lote');
+    const productLabel = this.resolveProductLabel(batch);
+    const fragments = [
+      `Producto: ${productLabel}`,
+      `Cantidad: ${batch.quantity ?? 0}`
+    ];
+
+    if (batch.start_date) {
+      fragments.push(`Inicio: ${this.formatDateTimeForNotification(batch.start_date)}`);
+    }
+    if (batch.expected_end_date) {
+      fragments.push(`Fin estimado: ${this.formatDateTimeForNotification(batch.expected_end_date)}`);
+    }
+
+    return `${label} creado. ${fragments.join(' | ')}`;
+  }
+
+  private resolveProductLabel(batch: Partial<Batch>): string {
+    if (batch.product_name) {
+      return batch.product_name;
+    }
+
+    const productId = this.toNumber(batch.product_id);
+    if (productId !== null) {
+      const product = this.products().find((p: any) => this.toNumber(p?.id) === productId);
+      if (product) {
+        if (product.name && product.code) {
+          return `${product.name} (${product.code})`;
+        }
+        return product.name ?? `Producto #${productId}`;
+      }
+      return `Producto #${productId}`;
+    }
+
+    return 'Producto sin especificar';
+  }
+
+  private formatDateTimeForNotification(value?: string | null): string {
+    if (!value) {
+      return 'sin fecha';
+    }
+
+    const date = new Date(value);
+    if (isNaN(date.getTime())) {
+      return String(value);
+    }
+
+    return date.toLocaleString('es-ES', { dateStyle: 'medium', timeStyle: 'short' });
+  }
+
+  private toNumber(value: any): number | null {
+    if (value === null || value === undefined || value === '') {
+      return null;
+    }
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : null;
   }
 
   ngOnDestroy(): void {

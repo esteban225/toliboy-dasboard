@@ -1,9 +1,11 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RawMaterialsService } from '../services/raw-materials.service';
 import { InventoryMovementService } from '../services/inventory-movement.service';
-import { forkJoin, of } from 'rxjs';
-import { catchError, tap } from 'rxjs/operators';
+import { forkJoin, of, Subject } from 'rxjs';
+import { catchError, finalize, switchMap, takeUntil, tap } from 'rxjs/operators';
+import { NotificationGroup, NotificationItem, NotificationService } from 'src/app/core/services/notification.service';
+import { BatchesService } from '../../batches-module/services/batches.service';
 
 interface StatCard {
   title: string;
@@ -44,6 +46,17 @@ interface MovementUiMeta {
   prefix: string;
 }
 
+interface NotificationDetail {
+  label: string;
+  value: string;
+}
+
+interface NotificationDisplay {
+  notification: NotificationItem;
+  summary: string;
+  details: NotificationDetail[];
+}
+
 const MOVEMENT_TYPE_META: Record<MovementTypeKey, MovementUiMeta> = {
   in: {
     label: 'Entrada',
@@ -78,9 +91,11 @@ const MOVEMENT_TYPE_META: Record<MovementTypeKey, MovementUiMeta> = {
   templateUrl: './inventory.component.html',
   styleUrl: './inventory.component.scss'
 })
-export class InventoryComponent implements OnInit {
+export class InventoryComponent implements OnInit, OnDestroy {
   loading = true;
   error: string | null = null;
+  notificationLoading = false;
+  notificationError: string | null = null;
   
   // Estadísticas principales
   statsCards: StatCard[] = [];
@@ -91,14 +106,29 @@ export class InventoryComponent implements OnInit {
   lowStockProducts: any[] = [];
   topMovedProducts: any[] = [];
   movementSummary: MovementSummaryItem[] = [];
+  notifications: NotificationItem[] = [];
+  notificationGroups: NotificationGroup[] = [];
+  notificationDisplayList: NotificationDisplay[] = [];
+
+  private destroy$ = new Subject<void>();
+  private batchUpdates = new Set<number>();
 
   constructor(
     private rawMaterialsService: RawMaterialsService,
-    private inventoryMovementService: InventoryMovementService
+    private inventoryMovementService: InventoryMovementService,
+    private notificationService: NotificationService,
+    private batchesService: BatchesService
   ) {}
 
   ngOnInit(): void {
     this.loadStatistics();
+    this.subscribeToNotifications();
+    this.loadNotifications();
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   private loadStatistics(): void {
@@ -186,6 +216,37 @@ export class InventoryComponent implements OnInit {
     this.updateStatsCards(totalProducts, activeProducts, lowStockCount, totalMovements);
   }
 
+  private subscribeToNotifications(): void {
+    this.notificationService
+      .getNotifications()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((groups) => {
+        this.notificationGroups = groups;
+        this.notifications = groups.reduce<NotificationItem[]>((acc, group) => acc.concat(group.items), []);
+        this.notificationDisplayList = this.notifications.map((n) => this.buildNotificationDisplay(n));
+      });
+  }
+
+  private loadNotifications(): void {
+    this.notificationLoading = true;
+    this.notificationError = null;
+
+    this.notificationService
+      .fetchNotificationsFromApi()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          this.notificationError = null;
+          this.notificationLoading = false;
+        },
+        error: (err) => {
+          console.error('Error fetching notifications:', err);
+          this.notificationError = err?.error?.message || err?.message || 'Error cargando notificaciones';
+          this.notificationLoading = false;
+        }
+      });
+  }
+
   private updateStatsCards(
     totalProducts: number, 
     activeProducts: number, 
@@ -219,6 +280,138 @@ export class InventoryComponent implements OnInit {
 
   refresh(): void {
     this.loadStatistics();
+    this.loadNotifications();
+  }
+
+  refreshNotifications(): void {
+    this.loadNotifications();
+  }
+
+  trackNotification(index: number, item: NotificationDisplay): string | number {
+    return item.notification.id;
+  }
+
+  mapNotificationBadge(type: NotificationItem['type']): string {
+    switch (type) {
+      case 'success':
+        return 'bg-success text-white';
+      case 'warning':
+        return 'bg-warning text-dark';
+      case 'danger':
+        return 'bg-danger text-white';
+      case 'primary':
+        return 'bg-primary text-white';
+      default:
+        return 'bg-info text-white';
+    }
+  }
+
+  formatNotificationTimestamp(timestamp?: string): string {
+    if (!timestamp) {
+      return '';
+    }
+    const date = new Date(timestamp);
+    if (isNaN(date.getTime())) {
+      return timestamp;
+    }
+    return date.toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' });
+  }
+
+  canUpdateBatch(item: NotificationDisplay): boolean {
+    return this.extractBatchId(item) !== null;
+  }
+
+  isBatchUpdating(item: NotificationDisplay): boolean {
+    const batchId = this.extractBatchId(item);
+    return batchId !== null && this.batchUpdates.has(batchId);
+  }
+
+  updateBatchStatus(item: NotificationDisplay): void {
+    const batchId = this.extractBatchId(item);
+    if (batchId === null) {
+      this.notificationService.warning('No se puede actualizar porque la notificación no incluye el ID del lote.', 'Sin ID de lote');
+      return;
+    }
+
+    if (this.batchUpdates.has(batchId)) {
+      return;
+    }
+
+    this.batchUpdates.add(batchId);
+    this.batchesService.getById(batchId).pipe(
+      switchMap(res => {
+        const current = res?.data;
+        if (!current) {
+          throw new Error(`No se encontró el lote #${batchId}`);
+        }
+        const payload = { ...current, status: 'in_process' };
+        return this.batchesService.update(batchId, payload);
+      }),
+      takeUntil(this.destroy$),
+      finalize(() => this.batchUpdates.delete(batchId))
+    )
+      .subscribe({
+        next: () => {
+          this.notificationService.success(`Lote #${batchId} actualizado a En Proceso.`, 'Estado actualizado');
+        },
+        error: (err) => {
+          const status = err?.status;
+          let title = 'No se pudo actualizar el lote';
+          let message = err?.error?.message || err?.message || 'Error actualizando el lote';
+          if (status === 404) {
+            title = 'Lote no disponible';
+            message = `El lote #${batchId} ya no existe o fue eliminado.`;
+            this.removeNotificationFromUi(item.notification.id);
+          }
+          this.notificationService.error(message, title);
+        }
+      });
+  }
+
+  private removeNotificationFromUi(notificationId: string | number): void {
+    this.notificationService.removeNotification(notificationId);
+  }
+
+  private buildNotificationDisplay(notification: NotificationItem): NotificationDisplay {
+    const message = notification.message || '';
+    const parts = message.split('|').map(part => part.trim()).filter(Boolean);
+    let summary = '';
+    const details: NotificationDetail[] = [];
+
+    parts.forEach((part, index) => {
+      const separatorIndex = part.indexOf(':');
+      if (index === 0 && separatorIndex === -1) {
+        summary = part;
+      } else if (separatorIndex > -1) {
+        const label = this.capitalizeLabel(part.substring(0, separatorIndex).trim());
+        const value = part.substring(separatorIndex + 1).trim();
+        details.push({ label, value });
+      } else if (!summary) {
+        summary = part;
+      } else {
+        details.push({ label: 'Detalle', value: part });
+      }
+    });
+
+    if (!summary) {
+      summary = message;
+    }
+
+    return { notification, summary, details };
+  }
+
+  private capitalizeLabel(label: string): string {
+    if (!label) {
+      return label;
+    }
+    return label.charAt(0).toUpperCase() + label.slice(1);
+  }
+
+  private extractBatchId(item: NotificationDisplay): number | null {
+    const data = item.notification?.data || {};
+    const candidate = data.batch_id ?? data.id ?? data.related_id ?? item.notification.id;
+    const parsed = Number(candidate);
+    return Number.isFinite(parsed) ? parsed : null;
   }
 
   getMovementTypePercentage(type: keyof MovementsByType): number {

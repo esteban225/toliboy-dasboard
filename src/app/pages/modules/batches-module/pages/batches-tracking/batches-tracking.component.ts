@@ -12,8 +12,13 @@ interface BatchTimeline {
   progress: number;
   daysElapsed: number;
   estimatedDaysRemaining: number;
+  delayDays: number;
   statusLabel: string;
-
+  statusClass: string;
+  progressBarClass: string;
+  defectBadgeClass: string;
+  defectRate: number;
+  isDelayed: boolean;
 }
 
 @Component({
@@ -37,6 +42,7 @@ export class BatchesTrackingComponent implements OnInit, OnDestroy {
   editBatch: any = {};
   isSaving = signal(false);
 
+  private readonly DAY_IN_MS = 1000 * 60 * 60 * 24;
   private destroy$ = new Subject<void>();
 
   constructor(private batchesService: BatchesService, private alert: AlertService) { }
@@ -72,41 +78,46 @@ export class BatchesTrackingComponent implements OnInit, OnDestroy {
   private buildTimelines(batches: Batch[]): void {
     const now = new Date();
     const timelines: BatchTimeline[] = batches.map(batch => {
-      const startDate = batch.start_date ? new Date(batch.start_date) : now;
-      const endDate = batch.actual_end_date ? new Date(batch.actual_end_date) : null;
-      const expectedEnd = batch.expected_end_date ? new Date(batch.expected_end_date) : now;
+      const startDate = this.toDate(batch.start_date) ?? now;
+      const expectedEnd = this.toDate(batch.expected_end_date);
+      const actualEnd = this.toDate(batch.actual_end_date);
+      const activeReference = actualEnd ?? now;
 
-      const daysElapsed = Math.floor((now.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
-      const totalDaysPlanned = Math.floor((expectedEnd.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
-      const daysRemaining = Math.max(0, totalDaysPlanned - daysElapsed);
-      const progress = totalDaysPlanned > 0 ? Math.min(100, (daysElapsed / totalDaysPlanned) * 100) : 0;
+      const plannedDurationDays = expectedEnd
+        ? Math.max(1, Math.ceil((expectedEnd.getTime() - startDate.getTime()) / this.DAY_IN_MS))
+        : Math.max(1, Math.ceil((activeReference.getTime() - startDate.getTime()) / this.DAY_IN_MS));
 
-      // Mapear el estado del backend a una etiqueta legible y priorizar estado real/fecha
-      let statusLabel = 'En Progreso';
-      const s = batch.status;
-      if (endDate) {
-        statusLabel = 'Completado';
-      } else if (s === 'cancelled') {
-        statusLabel = 'Cancelado';
-      } else if (s === 'delivered') {
-        statusLabel = 'Entregado';
-      } else if (now > expectedEnd && s !== 'completed') {
-        statusLabel = 'Retrasado';
-      } else {
-        // Fallback mapping
-        if (s === 'planned') statusLabel = 'Planificado';
-        else if (s === 'in_process') statusLabel = 'En Progreso';
-        else if (s === 'paused') statusLabel = 'Pausado';
-        else if (s === 'completed') statusLabel = 'Completado';
-        else statusLabel = 'En Progreso';
+      const daysElapsed = Math.max(0, Math.ceil((activeReference.getTime() - startDate.getTime()) / this.DAY_IN_MS));
+      let progress = Math.min(100, (daysElapsed / plannedDurationDays) * 100);
+      if (actualEnd) {
+        progress = 100;
       }
+
+      const estimatedDaysRemaining = actualEnd || !expectedEnd
+        ? 0
+        : Math.max(0, Math.ceil((expectedEnd.getTime() - now.getTime()) / this.DAY_IN_MS));
+
+      const delayDays = actualEnd || !expectedEnd
+        ? 0
+        : Math.max(0, Math.ceil((now.getTime() - expectedEnd.getTime()) / this.DAY_IN_MS));
+
+      const isDelayed = delayDays > 0;
+      const { label: statusLabel, badgeClass: statusClass } = this.resolveStatus(batch, actualEnd, isDelayed);
+      const progressBarClass = actualEnd ? 'bg-success' : isDelayed ? 'bg-danger' : progress >= 90 ? 'bg-warning' : 'bg-primary';
+      const { defectBadgeClass, defectRate } = this.resolveDefects(batch);
 
       return {
         batch,
         progress: Math.round(progress),
-        daysElapsed: Math.max(0, daysElapsed),
-        estimatedDaysRemaining: daysRemaining,
-        statusLabel
+        daysElapsed,
+        estimatedDaysRemaining,
+        delayDays,
+        statusLabel,
+        statusClass,
+        progressBarClass,
+        defectBadgeClass,
+        defectRate,
+        isDelayed
       };
     });
 
@@ -115,28 +126,50 @@ export class BatchesTrackingComponent implements OnInit, OnDestroy {
 
   applyFilters(): void {
     let filtered = this.timelines();
-    const search = this.searchFilter().toLowerCase();
+    const search = this.searchFilter().trim().toLowerCase();
     const status = this.statusFilter();
 
     // Filtro de búsqueda
     if (search) {
-      filtered = filtered.filter(
-        t =>
-          t.batch.name?.toLowerCase().includes(search) ||
-          t.batch.code?.toLowerCase().includes(search) ||
-          t.batch.id?.toString().includes(search)
-      );
+      filtered = filtered.filter(t => {
+        const pool = [
+          t.batch.name,
+          t.batch.code,
+          t.batch.product_name,
+          t.batch.product_id ? t.batch.product_id.toString() : undefined,
+          t.batch.id ? t.batch.id.toString() : undefined,
+          t.statusLabel,
+          t.batch.notes
+        ];
+        return pool.some(value => value?.toLowerCase().includes(search));
+      });
     }
 
     // Filtro de estado
     if (status !== 'all') {
       filtered = filtered.filter(t => {
-        if (status === 'active') return t.batch.status === 'in_progress';
-        if (status === 'completed') return t.batch.status === 'completed';
-        if (status === 'at-risk') return t.statusLabel === 'Retrasado';
+        if (status === 'active') {
+          return ['Planificado', 'En Progreso', 'Pausado'].includes(t.statusLabel);
+        }
+        if (status === 'completed') {
+          return ['Completado', 'Entregado', 'Cancelado'].includes(t.statusLabel);
+        }
+        if (status === 'at-risk') {
+          return t.isDelayed;
+        }
         return true;
       });
     }
+
+    filtered.sort((a, b) => {
+      if (a.isDelayed !== b.isDelayed) {
+        return a.isDelayed ? -1 : 1;
+      }
+      if (!!a.batch.actual_end_date !== !!b.batch.actual_end_date) {
+        return a.batch.actual_end_date ? 1 : -1;
+      }
+      return (a.batch.start_date || '').localeCompare(b.batch.start_date || '');
+    });
 
     this.filteredTimelines.set(filtered);
   }
@@ -155,66 +188,69 @@ export class BatchesTrackingComponent implements OnInit, OnDestroy {
     this.applyFilters();
   }
 
-  getProgressBarClass(timeline: BatchTimeline): string {
-    if (timeline.statusLabel === 'Retrasado') return 'bg-danger';
-    if (timeline.statusLabel === 'Completado') return 'bg-success';
-    if (timeline.progress >= 75) return 'bg-warning';
-    return 'bg-primary';
-  }
+  private resolveStatus(batch: Batch, actualEnd: Date | null, isDelayed: boolean) {
+    const raw = batch.status ?? '';
+    let label = 'En Progreso';
 
-  getStatusBadgeClass(timeline: BatchTimeline): string {
-    const batch = timeline.batch || ({} as Batch);
-    const raw = (batch.status ?? '').toString();
-
-    // Calcular etiqueta en español de forma determinista según campos actuales
-    let spanishLabel = 'En Progreso';
-    const now = new Date();
-    const expected = batch.expected_end_date ? new Date(batch.expected_end_date) : null;
-
-    if (batch.actual_end_date) {
-      spanishLabel = 'Completado';
+    if (actualEnd) {
+      label = 'Completado';
     } else if (raw === 'cancelled') {
-      spanishLabel = 'Cancelado';
+      label = 'Cancelado';
     } else if (raw === 'delivered') {
-      spanishLabel = 'Entregado';
-    } else if (expected && now > expected && raw !== 'completed') {
-      spanishLabel = 'Retrasado';
+      label = 'Entregado';
+    } else if (isDelayed) {
+      label = 'Retrasado';
     } else {
       switch (raw) {
-        case 'planned': spanishLabel = 'Planificado'; break;
-        case 'in_process': spanishLabel = 'En Progreso'; break;
-        case 'paused': spanishLabel = 'Pausado'; break;
-        case 'completed': spanishLabel = 'Completado'; break;
-        default: spanishLabel = 'En Progreso';
+        case 'planned':
+          label = 'Planificado';
+          break;
+        case 'in_process':
+          label = 'En Progreso';
+          break;
+        case 'paused':
+          label = 'Pausado';
+          break;
+        case 'completed':
+          label = 'Completado';
+          break;
+        default:
+          label = 'En Progreso';
       }
     }
 
-    // Guardar el label calculado en el timeline para uso posterior en template
-    timeline.statusLabel = spanishLabel;
+    const badgeMap: Record<string, string> = {
+      Retrasado: 'bg-danger',
+      Cancelado: 'bg-danger',
+      Completado: 'bg-success',
+      Entregado: 'bg-success',
+      Planificado: 'bg-secondary',
+      Pausado: 'bg-warning',
+      'En Progreso': 'bg-info'
+    };
 
-    // Seleccionar clase de badge según la etiqueta en español
-    switch (spanishLabel) {
-      case 'Retrasado':
-      case 'Cancelado':
-        return 'bg-danger';
-      case 'Completado':
-      case 'Entregado':
-        return 'bg-success';
-      case 'Pausado':
-        return 'bg-warning';
-      case 'Planificado':
-        return 'bg-secondary';
-      default:
-        return 'bg-info';
-    }
+    return { label, badgeClass: badgeMap[label] || 'bg-info' };
   }
-  getDefectBadgeClass(batch: Batch): string {
+
+  private resolveDefects(batch: Batch) {
     const qty = Number(batch.quantity) || 0;
     const defects = Number(batch.defect_quantity) || 0;
     const defectRate = qty > 0 ? (defects / qty) * 100 : 0;
-    if (defectRate > 10) return 'bg-danger';
-    if (defectRate > 5) return 'bg-warning';
-    return 'bg-success';
+    let defectBadgeClass = 'bg-success';
+    if (defectRate > 10) {
+      defectBadgeClass = 'bg-danger';
+    } else if (defectRate > 5) {
+      defectBadgeClass = 'bg-warning';
+    }
+    return { defectBadgeClass, defectRate };
+  }
+
+  private toDate(value?: string | null): Date | null {
+    if (!value) {
+      return null;
+    }
+    const parsed = new Date(value);
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
   }
 
   ngOnDestroy(): void {
