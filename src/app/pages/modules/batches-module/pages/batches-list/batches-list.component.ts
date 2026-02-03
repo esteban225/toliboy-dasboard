@@ -39,7 +39,6 @@ export class BatchesListComponent implements OnInit, OnDestroy {
   private authService: AuthenticationService;
   private productsService: ProductsService;
   private notificationsApi: NotificationsApiService;
-  private readonly batchNotificationUserId = 46;
   private destroy$ = new Subject<void>();
 
 
@@ -415,48 +414,64 @@ export class BatchesListComponent implements OnInit, OnDestroy {
 
   private notifyBatchCreation(createdBatch?: Partial<Batch> | null, fallback?: Partial<Batch>) {
     const source = createdBatch ?? fallback;
-    const userId = this.toNumber(this.batchNotificationUserId);
-    if (!source || userId === null || !this.notificationsApi) {
+    if (!source || !this.notificationsApi) {
       return;
     }
 
     const relatedId = this.toNumber(source.id);
     const payload: any = {
-      // Datos de la notificación
       title: 'Nuevo lote creado',
       message: this.buildBatchNotificationMessage(source),
       type: 'info',
-      scope: 'individual',
-
-      // SOLO este user_id (obligatorio)
-      user_id: userId,
-
-      // Datos adicionales
-      data: {
-        batch_id: relatedId ?? null,
-        product: this.resolveProductLabel(source),
-        quantity: source.quantity ?? 0,
-        start_date: source.start_date ?? null,
-        expected_end_date: source.expected_end_date ?? null
-      }
+      scope: 'group',
+      roles: ['OP'], 
     };
-
 
     if (relatedId !== null) {
       payload.related_id = relatedId;
       payload.related_table = 'batches';
     }
 
+    this.sendNotificationPayload(payload, source, relatedId);
+  }
+
+  private sendNotificationPayload(
+    payload: any,
+    source: Partial<Batch>,
+    relatedId: number | null
+  ) {
     this.notificationsApi.createNotification(payload)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: () => console.debug('[Batches] Notificación enviada para el lote', relatedId ?? source.name ?? source.code, payload),
+        next: () => {
+          console.debug('[Batches] Notificación enviada para el lote', relatedId ?? source.name ?? source.code, payload);
+        },
         error: (err) => {
+          const apiMessage = this.resolveNotificationError(err);
           console.error('[Batches] Error enviando notificación de lote', err, payload);
-          const apiMessage = err?.error?.message || 'No se pudo notificar al usuario 46 sobre el nuevo lote.';
           this.alert.warning('Notificación pendiente', apiMessage);
         }
       });
+  }
+
+  private resolveNotificationError(err: any): string {
+    const validationErrors = err?.error?.errors;
+    if (validationErrors && typeof validationErrors === 'object') {
+      const messages: string[] = [];
+      Object.keys(validationErrors).forEach((field) => {
+        const fieldErrors = validationErrors[field];
+        if (Array.isArray(fieldErrors)) {
+          messages.push(...fieldErrors.map((msg) => String(msg)));
+        } else if (fieldErrors) {
+          messages.push(String(fieldErrors));
+        }
+      });
+      if (messages.length) {
+        return messages.join(' | ');
+      }
+    }
+
+    return err?.error?.message || err?.message || 'No se pudo notificar al grupo OP sobre el nuevo lote.';
   }
 
   private buildBatchNotificationMessage(batch: Partial<Batch>): string {

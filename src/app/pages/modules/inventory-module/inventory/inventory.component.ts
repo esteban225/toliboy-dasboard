@@ -3,9 +3,8 @@ import { CommonModule } from '@angular/common';
 import { RawMaterialsService } from '../services/raw-materials.service';
 import { InventoryMovementService } from '../services/inventory-movement.service';
 import { forkJoin, of, Subject } from 'rxjs';
-import { catchError, finalize, switchMap, takeUntil, tap } from 'rxjs/operators';
+import { catchError, finalize, takeUntil, tap } from 'rxjs/operators';
 import { NotificationGroup, NotificationItem, NotificationService } from 'src/app/core/services/notification.service';
-import { BatchesService } from '../../batches-module/services/batches.service';
 
 interface StatCard {
   title: string;
@@ -111,13 +110,12 @@ export class InventoryComponent implements OnInit, OnDestroy {
   notificationDisplayList: NotificationDisplay[] = [];
 
   private destroy$ = new Subject<void>();
-  private batchUpdates = new Set<number>();
+  private deletingNotifications = new Set<string | number>();
 
   constructor(
     private rawMaterialsService: RawMaterialsService,
     private inventoryMovementService: InventoryMovementService,
-    private notificationService: NotificationService,
-    private batchesService: BatchesService
+    private notificationService: NotificationService
   ) {}
 
   ngOnInit(): void {
@@ -317,59 +315,27 @@ export class InventoryComponent implements OnInit, OnDestroy {
     return date.toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' });
   }
 
-  canUpdateBatch(item: NotificationDisplay): boolean {
-    return this.extractBatchId(item) !== null;
-  }
-
-  isBatchUpdating(item: NotificationDisplay): boolean {
-    const batchId = this.extractBatchId(item);
-    return batchId !== null && this.batchUpdates.has(batchId);
-  }
-
-  updateBatchStatus(item: NotificationDisplay): void {
-    const batchId = this.extractBatchId(item);
-    if (batchId === null) {
-      this.notificationService.warning('No se puede actualizar porque la notificación no incluye el ID del lote.', 'Sin ID de lote');
+  deleteNotification(item: NotificationDisplay): void {
+    const notificationId = item.notification.id;
+    if (!notificationId || this.deletingNotifications.has(notificationId)) {
       return;
     }
 
-    if (this.batchUpdates.has(batchId)) {
-      return;
-    }
-
-    this.batchUpdates.add(batchId);
-    this.batchesService.getById(batchId).pipe(
-      switchMap(res => {
-        const current = res?.data;
-        if (!current) {
-          throw new Error(`No se encontró el lote #${batchId}`);
-        }
-        const payload = { ...current, status: 'in_process' };
-        return this.batchesService.update(batchId, payload);
-      }),
-      takeUntil(this.destroy$),
-      finalize(() => this.batchUpdates.delete(batchId))
-    )
-      .subscribe({
-        next: () => {
-          this.notificationService.success(`Lote #${batchId} actualizado a En Proceso.`, 'Estado actualizado');
-        },
-        error: (err) => {
-          const status = err?.status;
-          let title = 'No se pudo actualizar el lote';
-          let message = err?.error?.message || err?.message || 'Error actualizando el lote';
-          if (status === 404) {
-            title = 'Lote no disponible';
-            message = `El lote #${batchId} ya no existe o fue eliminado.`;
-            this.removeNotificationFromUi(item.notification.id);
-          }
-          this.notificationService.error(message, title);
+    this.deletingNotifications.add(notificationId);
+    this.notificationService.deleteNotificationOnServer(notificationId)
+      .pipe(
+        takeUntil(this.destroy$),
+        finalize(() => this.deletingNotifications.delete(notificationId))
+      )
+      .subscribe((deleted) => {
+        if (!deleted) {
+          console.warn('[Inventory] No se pudo eliminar la notificación desde el servidor');
         }
       });
   }
 
-  private removeNotificationFromUi(notificationId: string | number): void {
-    this.notificationService.removeNotification(notificationId);
+  isNotificationDeleting(item: NotificationDisplay): boolean {
+    return this.deletingNotifications.has(item.notification.id);
   }
 
   private buildNotificationDisplay(notification: NotificationItem): NotificationDisplay {
@@ -405,13 +371,6 @@ export class InventoryComponent implements OnInit, OnDestroy {
       return label;
     }
     return label.charAt(0).toUpperCase() + label.slice(1);
-  }
-
-  private extractBatchId(item: NotificationDisplay): number | null {
-    const data = item.notification?.data || {};
-    const candidate = data.batch_id ?? data.id ?? data.related_id ?? item.notification.id;
-    const parsed = Number(candidate);
-    return Number.isFinite(parsed) ? parsed : null;
   }
 
   getMovementTypePercentage(type: keyof MovementsByType): number {

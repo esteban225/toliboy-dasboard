@@ -293,6 +293,34 @@ export class NotificationService {
   }
 
   /**
+   * Elimina una notificación en el backend y la quita del estado local
+   */
+  public deleteNotificationOnServer(notificationId: string | number): Observable<boolean> {
+    const base = (environment as any).AUTH_API || '';
+    const url = `${base.replace(/\/$/, '')}/notifications/${notificationId}`;
+    const token = this.authService.getToken ? this.authService.getToken() : null;
+    const headers = token ? new HttpHeaders({ Authorization: `Bearer ${token}` }) : undefined;
+
+    console.debug('[NotificationService] deleteNotificationOnServer url:', url, 'id:', notificationId);
+
+    return this.http.delete(url, { headers }).pipe(
+      tap(() => {
+        try {
+          this.removeNotification(notificationId);
+          console.debug('[NotificationService] deleteNotificationOnServer: removed locally', notificationId);
+        } catch (err) {
+          console.error('[NotificationService] deleteNotificationOnServer local update error:', err);
+        }
+      }),
+      map(() => true),
+      catchError(err => {
+        console.error('[NotificationService] deleteNotificationOnServer error:', err);
+        return of(false);
+      })
+    );
+  }
+
+  /**
    * Limpia notificaciones expiradas en el backend y actualiza el estado local
    */
   public cleanExpiredOnServer(): Observable<any> {
@@ -611,4 +639,9 @@ export class NotificationService {
     if (diffHours < 24) return `Hace ${diffHours} hr${diffHours > 1 ? 's' : ''}`;
     return `Hace ${diffDays} día${diffDays > 1 ? 's' : ''}`;
   }
+
+  deleteNotification(id: string | number): void {
+    this.removeNotification(id);
+  }
 }
+

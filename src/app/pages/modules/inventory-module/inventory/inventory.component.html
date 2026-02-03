@@ -105,10 +105,6 @@
                   </span>
                 </div>
 
-                <p class="text-muted small mb-2">
-                  {{ item.summary }}
-                </p>
-
                 <div *ngIf="item.details.length" class="d-flex flex-wrap gap-2">
                   <div class="px-3 py-1 rounded-pill bg-light border small fw-medium"
                     *ngFor="let detail of item.details">
@@ -123,12 +119,12 @@
                 <small class="text-muted text-nowrap">
                   {{ formatNotificationTimestamp(item.notification.timestamp) }}
                 </small>
-                <button *ngIf="canUpdateBatch(item)" class="btn btn-outline-success btn-sm"
-                  (click)="updateBatchStatus(item)" [disabled]="isBatchUpdating(item)">
-                  <span *ngIf="isBatchUpdating(item)" class="spinner-border spinner-border-sm me-2" role="status"
-                    aria-hidden="true"></span>
-                  <i *ngIf="!isBatchUpdating(item)" class="bi bi-play-circle me-1"></i>
-                  {{ isBatchUpdating(item) ? 'Actualizando...' : 'Marcar en proceso' }}
+                <button class="btn btn-outline-danger btn-sm" (click)="deleteNotification(item)"
+                  [disabled]="isNotificationDeleting(item)">
+                  <span *ngIf="isNotificationDeleting(item)" class="spinner-border spinner-border-sm me-2"
+                    role="status" aria-hidden="true"></span>
+                  <i *ngIf="!isNotificationDeleting(item)" class="bi bi-trash me-1"></i>
+                  {{ isNotificationDeleting(item) ? 'Eliminando...' : 'Eliminar notificación' }}
                 </button>
               </div>
             </div>
