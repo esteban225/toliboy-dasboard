@@ -61,7 +61,8 @@
               "ev-emitter/ev-emitter",
               "prismjs",
               "lodash",
-              "dropzone"
+              "dropzone",
+              "pusher-js"
             ]
           },
           "configurations": {

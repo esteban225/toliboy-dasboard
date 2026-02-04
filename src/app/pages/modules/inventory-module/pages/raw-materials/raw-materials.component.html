@@ -273,8 +273,18 @@
                                 <span class="input-group-text bg-body-secondary">
                                     <i class="bi bi-rulers"></i>
                                 </span>
-                                <input formControlName="unit_of_measure" class="form-control rounded-end-3"
-                                    placeholder="Ej: kg, litros, unidades" />
+                                <select formControlName="unit_of_measure" class="form-select rounded-end-3">
+                                    <option value="" >Seleccione una unidad</option>
+                                    <option value="kg">kg - Kilogramos</option>
+                                    <option value="g">g - Gramos</option>
+                                    <option value="lb">lb - Libras</option>
+                                    <option value="m">m - Metros</option>
+                                    <option value="cm">cm - Centímetros</option>
+                                    <option value="mm">mm - Milímetros</option>
+                                    <option value="unidad">unidad - Unidades</option>
+                                    <option value="litro">litro - Litros</option>
+                                    <option value="ml">ml - Mililitros</option>
+                                </select>
                             </div>
                             <div class="form-text">
                                 <i class="bi bi-info-circle me-1"></i>Unidad para medir el inventario

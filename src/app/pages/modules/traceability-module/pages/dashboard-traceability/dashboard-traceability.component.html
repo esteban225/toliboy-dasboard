@@ -1,1 +1,80 @@
-<p>dashboard-traceability works!</p>
+<div class="container">
+	<div class="card shadow-sm mt-3">
+		<div class="card-body">
+			<h4 class="card-title mb-3">Crear notificación</h4>
+
+			<form [formGroup]="form" (ngSubmit)="submit()" class="row g-3">
+				<div class="col-12">
+					<label class="form-label">Título</label>
+					<input class="form-control" type="text" formControlName="title" placeholder="Título" />
+					<div *ngIf="form.get('title')?.touched && form.get('title')?.invalid" class="form-text text-danger">
+						<small *ngIf="form.get('title')?.errors?.['required']">Título es requerido</small>
+						<small *ngIf="form.get('title')?.errors?.['maxlength']">Máx 255 caracteres</small>
+					</div>
+				</div>
+
+				<div class="col-12">
+					<label class="form-label">Mensaje</label>
+					<textarea class="form-control" rows="3" formControlName="message" placeholder="Mensaje"></textarea>
+					<div *ngIf="form.get('message')?.touched && form.get('message')?.invalid" class="form-text text-danger">
+						<small>Mensaje es requerido</small>
+					</div>
+				</div>
+
+				<div class="col-md-6">
+					<label class="form-label">Tipo</label>
+					<select class="form-select" formControlName="type">
+						<option *ngFor="let t of types" [value]="t">{{ t }}</option>
+					</select>
+				</div>
+
+				<div class="col-md-6">
+					<label class="form-label">Ámbito (scope)</label>
+					<select class="form-select" formControlName="scope">
+						<option *ngFor="let s of scopes" [value]="s">{{ s }}</option>
+					</select>
+				</div>
+
+				<div class="col-md-6" *ngIf="form.get('scope')?.value === 'individual'">
+					<label class="form-label">User ID (individual)</label>
+					<input class="form-control" type="number" formControlName="user_id" placeholder="ID de usuario" />
+				</div>
+
+				<div class="col-md-6" *ngIf="form.get('scope')?.value === 'group'">
+					<label class="form-label">Role (group)</label>
+					<select class="form-select" formControlName="role">
+						<option value="DEV">DEV</option>
+						<option value="INGPL">INGPL</option>
+						<option value="INGPR">INGPR</option>
+						<option value="GG">GG</option>
+						<option value="TRZ">TRZ</option>
+						<option value="OP">OP</option>
+					</select>
+				</div>
+
+				<div class="col-md-6">
+					<label class="form-label">Related table</label>
+					<input class="form-control" type="text" formControlName="related_table" placeholder="Tabla relacionada (opcional)" />
+				</div>
+
+				<div class="col-md-6">
+					<label class="form-label">Related id</label>
+					<input class="form-control" type="number" formControlName="related_id" placeholder="ID relacionado (opcional)" />
+				</div>
+
+				<div class="col-md-6">
+					<label class="form-label">Expires at</label>
+					<input class="form-control" type="date" formControlName="expires_at" />
+				</div>
+
+				<div class="col-12 text-end mt-2">
+					<button class="btn btn-secondary me-2" type="button" (click)="form.reset({ type: 'info', scope: 'individual' })">Limpiar</button>
+					<button class="btn btn-primary" type="submit" [disabled]="submitting">
+						<span *ngIf="!submitting">Enviar</span>
+						<span *ngIf="submitting" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+					</button>
+				</div>
+			</form>
+		</div>
+	</div>
+</div>

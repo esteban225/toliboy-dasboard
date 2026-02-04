@@ -28,6 +28,8 @@ export class InventoryMovementComponent implements OnInit, OnDestroy {
   perPage = 99;
   meta: any = null;
   hasActiveFilters = false;
+  totalRawMaterialsOut = 0;
+  totalRawMaterialsIn = 0;
 
   filters = {
     type: '',
@@ -1263,7 +1265,7 @@ export class InventoryMovementComponent implements OnInit, OnDestroy {
           if (additionalNotesEl) additionalNotesEl.value = value;
           if (observationsOutEl) observationsOutEl.value = value;
         } else if (part.startsWith('Vencimiento:')) {
-          const value = part.replace('Vencimiento:', '').trim();
+          const value = part.replace('Vencimiento:', 'NA').trim();
           if (expiryDateEl) expiryDateEl.value = value;
           if (expiryDateOutEl) expiryDateOutEl.value = value;
         } else if (part.startsWith('Proveedor:')) {
@@ -1397,6 +1399,45 @@ export class InventoryMovementComponent implements OnInit, OnDestroy {
     }
   }
 
+  /**
+   * Marca/Desmarca la fecha de vencimiento como 'NA' (no aplica) en el formulario y en el DOM.
+   * Si ya está en 'NA' la limpia y habilita el input.
+   */
+  setExpiryDateNA(): void {
+    try {
+      // Determinar el tipo de movimiento y el campo objetivo (in/out)
+      const movementType = this.form.get('type')?.value;
+      const fieldId = movementType === 'out' ? 'expiryDateOut' : 'expiryDate';
+
+      // Intentar obtener el elemento objetivo; si no existe, intentar el opuesto
+      let el = document.getElementById(fieldId) as HTMLInputElement | null;
+      if (!el) {
+        const altId = movementType === 'out' ? 'expiryDate' : 'expiryDateOut';
+        el = document.getElementById(altId) as HTMLInputElement | null;
+        if (!el) return;
+      }
+
+      const isNA = el.getAttribute('data-na') === 'true' || (el.value || '').toUpperCase() === 'NA';
+      if (!isNA) {
+        // Marcar como NA y deshabilitar la edición
+        el.value = 'NA';
+        el.setAttribute('data-na', 'true');
+        el.disabled = true;
+      } else {
+        // Restaurar a vacío y habilitar
+        el.value = '';
+        el.removeAttribute('data-na');
+        el.disabled = false;
+      }
+
+      // Quitar clase de error si corresponde y actualizar el resumen de notas
+      try { el.classList.remove('is-invalid'); } catch (e) { /* noop */ }
+      this.updateNotesSummary();
+    } catch (err) {
+      console.error('setExpiryDateNA error:', err);
+    }
+  }
+
   private requiredFieldsByType(): { id: string; label: string }[] {
     const movementType = this.form.get('type')?.value;
     const requiredIn = [
@@ -1431,7 +1472,11 @@ export class InventoryMovementComponent implements OnInit, OnDestroy {
   private clearInvalidIfFilled(): void {
     this.requiredFieldsByType().forEach(field => {
       const el = document.getElementById(field.id) as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement | null;
-      if (el && (el.value || '').trim()) {
+      if (!el) return;
+      const raw = (el.value || '').toString();
+      const v = raw.trim();
+      const isNA = el.getAttribute('data-na') === 'true' || v.toUpperCase() === 'NA';
+      if (v || isNA) {
         el.classList.remove('is-invalid');
       }
     });
@@ -1443,8 +1488,10 @@ export class InventoryMovementComponent implements OnInit, OnDestroy {
 
     this.requiredFieldsByType().forEach(field => {
       const el = document.getElementById(field.id) as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement | null;
-      const value = (el?.value || '').trim();
-      const isMissing = !value;
+      const raw = (el?.value ?? '').toString();
+      const value = raw.trim();
+      const isNA = el?.getAttribute('data-na') === 'true' || (value && value.toUpperCase() === 'NA');
+      const isMissing = !value && !isNA;
       if (el) {
         el.classList.toggle('is-invalid', isMissing);
         if (isMissing && !firstMissingEl) {
@@ -1778,4 +1825,82 @@ export class InventoryMovementComponent implements OnInit, OnDestroy {
     this.currentDetailsModal = [];
   }
 
+  /**
+   * total de cantidades de movimientos
+   */
+  get totalQuantities(): { in: number; out: number; adjustment: number } {
+    let totalIn = 0;
+    let totalOut = 0;
+    let totalAdjustment = 0;
+
+    this.movements.forEach(movement => {
+      const type = (movement?.type || movement?.movement_type)?.toLowerCase();
+      const quantity = Number(movement?.quantity) || 0;
+
+      if (type === 'in') {
+        totalIn += quantity;
+      } else if (type === 'out') {
+        totalOut += quantity;
+      } else if (type === 'adjustment') {
+        totalAdjustment += quantity;
+      }
+    });
+
+    return {
+      in: totalIn,
+      out: totalOut,
+      adjustment: totalAdjustment
+    };
+  }
+
+  /**
+   * Suma las cantidades aplicando los filtros actuales o los sobrescritos.
+   * @param overrideFilters Filtros parciales ({ type, date, product, production_line, general })
+   */
+  sumQuantitiesByFilters(overrideFilters?: Partial<{ type: string; date: string; product: string | number; production_line: string; general: string }>): { in: number; out: number; adjustment: number; total: number } {
+    const f = { ...this.filters, ...(overrideFilters || {}) } as any;
+
+    const norm = (v: any) => (v === null || v === undefined) ? '' : String(v).toLowerCase();
+
+    let totalIn = 0;
+    let totalOut = 0;
+    let totalAdjustment = 0;
+
+    (this.movements || []).forEach(movement => {
+      const type = norm(movement?.type || movement?.movement_type);
+
+      // filtro por tipo
+      if (f.type && type !== norm(f.type)) return;
+
+      // filtro por fecha (comparar YYYY-MM-DD)
+      if (f.date) {
+        const created = (movement?.created_at || movement?.updated_at || '').toString().slice(0, 10);
+        if (created !== f.date) return;
+      }
+
+      // filtro por linea de producción
+      if (f.production_line && norm(movement?.production_line) !== norm(f.production_line)) return;
+
+      // filtro por producto (comparar id)
+      if (f.product) {
+        const pid = movement?.raw_material_id ?? movement?.product_id;
+        if (String(pid) !== String(f.product)) return;
+      }
+
+      // filtro general (busca en notas, nombre o codigo)
+      if (f.general) {
+        const haystack = [movement?.notes, movement?.product_name, movement?.product_code, movement?.raw_material_name, movement?.raw_material_code]
+          .map(x => norm(x || ''))
+          .join(' ');
+        if (!haystack.includes(norm(f.general))) return;
+      }
+
+      const qty = Number(movement?.quantity) || 0;
+      if (type === 'in') totalIn += qty;
+      else if (type === 'out') totalOut += qty;
+      else if (type === 'adjustment') totalAdjustment += qty;
+    });
+
+    return { in: totalIn, out: totalOut, adjustment: totalAdjustment, total: totalIn - totalOut + totalAdjustment };
+  }
 }

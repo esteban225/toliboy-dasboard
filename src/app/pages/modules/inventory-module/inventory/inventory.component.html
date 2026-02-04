@@ -1,18 +1,16 @@
 <div class="container-fluid p-4 inventory-dashboard">
   <!-- Header -->
-  <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4 p-4 rounded-4 bg-body shadow-sm border">
+  <div
+    class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4 p-4 rounded-4 bg-body shadow-sm border">
     <div>
       <p class="text-muted text-uppercase small mb-1 fw-semibold" style="letter-spacing: 1.2px;">Panel del día</p>
       <h1 class="fw-bold mb-0" style="font-size: 2rem;">
         Dashboard de Inventario
       </h1>
     </div>
-    <button class="btn btn-primary btn-lg px-4 py-2 shadow-sm rounded-3 fw-semibold" 
-            (click)="refresh()" 
-            [disabled]="loading"
-            style="transition: transform 0.2s;"
-            onmouseover="this.style.transform='translateY(-2px)'"
-            onmouseout="this.style.transform='translateY(0)'">
+    <button class="btn btn-primary btn-lg px-4 py-2 shadow-sm rounded-3 fw-semibold" (click)="refresh()"
+      [disabled]="loading" style="transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'"
+      onmouseout="this.style.transform='translateY(0)'">
       <i class="bi bi-arrow-clockwise me-2"></i>
       Actualizar
     </button>
@@ -40,21 +38,118 @@
 
   <!-- Contenido Principal -->
   <ng-container *ngIf="!loading">
-    
+
+    <div
+      class="d-flex flex-column flex-wrap justify-content-center align-items-center gap-2 mb-4 p-4 rounded-4 shadow-sm border  bg-body">
+      <h2 class="text-center">
+        Mensaje de producción diaria
+      </h2>
+      <div class="border-1 rounded-3 p-3 d-flex flex-column align-items-start bg-light bg-opacity-50">
+        <i class="bi bi-info-circle-fill text-primary fs-5 me-2"></i>
+        <p><strong class="fw-semibold">Info:</strong> Recuerda revisar las alertas de stock bajo y los movimientos
+          recientes para mantener tu inventario actualizado.</p>
+        <p *ngFor="let message of dailyMessages" class="text-muted">
+          <span class="fw-semibold">Titulo:</span> {{ message.title }} <br>
+          <span class="fw-semibold">Mensaje:</span> {{ message.message }}
+        </p>
+      </div>
+
+      <div class="w-100 mt-4">
+
+        <!-- Header -->
+        <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+          <div>
+            <h4 class="fw-bold mb-1">Notificaciones recientes</h4>
+            <p class="text-muted small mb-0">Últimas alertas del usuario</p>
+          </div>
+
+          <button class="btn btn-primary btn-sm d-flex align-items-center" (click)="refreshNotifications()"
+            [disabled]="notificationLoading">
+            <span *ngIf="notificationLoading" class="spinner-border spinner-border-sm me-2" role="status">
+            </span>
+            <i *ngIf="!notificationLoading" class="bi bi-arrow-repeat me-2"></i>
+            {{ notificationLoading ? 'Actualizando...' : 'Refrescar' }}
+          </button>
+        </div>
+
+        <!-- Error -->
+        <div *ngIf="notificationError" class="alert alert-danger d-flex align-items-center shadow-sm rounded-3"
+          role="alert">
+          <i class="bi bi-exclamation-triangle-fill me-2 fs-5"></i>
+          <span class="fw-semibold">{{ notificationError }}</span>
+        </div>
+
+        <!-- No notifications -->
+        <div *ngIf="!notificationError && notificationDisplayList.length === 0 && !notificationLoading"
+          class="alert alert-light border shadow-sm d-flex align-items-center rounded-3" role="alert">
+          <i class="bi bi-inbox me-2 fs-5"></i>
+          <span>No hay notificaciones recientes.</span>
+        </div>
+
+        <!-- Notification list -->
+        <div *ngIf="notificationDisplayList.length > 0" class="list-group rounded-4 shadow-sm overflow-hidden">
+
+          <div class="list-group-item py-3"
+            *ngFor="let item of notificationDisplayList | slice:0:5; trackBy: trackNotification">
+
+            <div class="d-flex justify-content-between">
+              <div class="me-3">
+
+                <div class="d-flex align-items-center mb-1">
+                  <span class="badge me-2" [ngClass]="mapNotificationBadge(item.notification.type)">
+                    {{ item.notification.type | titlecase }}
+                  </span>
+
+                  <span class="fw-semibold">
+                    {{ item.notification.title || 'Notificación' }}
+                  </span>
+                </div>
+
+                <div *ngIf="item.details.length" class="d-flex flex-wrap gap-2">
+                  <div class="px-3 py-1 rounded-pill bg-light border small fw-medium"
+                    *ngFor="let detail of item.details">
+                    <span class="text-muted">{{ detail.label }}:</span>
+                    <span class="ms-1">{{ detail.value }}</span>
+                  </div>
+                </div>
+
+              </div>
+
+              <div class="d-flex flex-column align-items-end text-end ms-2 gap-2">
+                <small class="text-muted text-nowrap">
+                  {{ formatNotificationTimestamp(item.notification.timestamp) }}
+                </small>
+                <button class="btn btn-outline-danger btn-sm" (click)="deleteNotification(item)"
+                  [disabled]="isNotificationDeleting(item)">
+                  <span *ngIf="isNotificationDeleting(item)" class="spinner-border spinner-border-sm me-2"
+                    role="status" aria-hidden="true"></span>
+                  <i *ngIf="!isNotificationDeleting(item)" class="bi bi-trash me-1"></i>
+                  {{ isNotificationDeleting(item) ? 'Eliminando...' : 'Eliminar notificación' }}
+                </button>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+      </div>
+
+
+    </div>
+
     <!-- Stats Cards -->
-    <div class="row g-4 mb-4">
-      <div class="col-12 col-md-6 col-xl-3" *ngFor="let stat of statsCards; let i = index">
-        <div class="card border-0 shadow-sm h-100 rounded-4" 
-             style="transition: transform 0.2s, box-shadow 0.2s;"
-             onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 8px 16px rgba(0,0,0,0.1)'"
-             onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow=''">
+    <div class="row g-4 mb-4 mt-2 d-flex flex-wrapalign-items-center mb-4 p-4 rounded-4 bg-body shadow-sm border">
+      <div class="col-15 col-md-6 col-xl-4 " *ngFor="let stat of statsCards; let i = index">
+        <div class="card border-0 shadow-sm h-100 rounded-4" style="transition: transform 0.2s, box-shadow 0.2s;"
+          onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 8px 16px rgba(0,0,0,0.1)'"
+          onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow=''">
           <div class="card-body p-4">
             <div class="d-flex justify-content-between align-items-start mb-3">
               <span class="text-muted text-uppercase small fw-bold" style="letter-spacing: 1px;">
                 {{ stat.title }}
               </span>
-              <div class="rounded-3 d-flex align-items-center justify-content-center bg-primary bg-opacity-10" 
-                   style="width: 48px; height: 48px;">
+              <div class="rounded-3 d-flex align-items-center justify-content-center bg-primary bg-opacity-10"
+                style="width: 48px; height: 48px;">
                 <i class="bi fs-5 text-primary" [ngClass]="stat.icon"></i>
               </div>
             </div>
@@ -69,8 +164,8 @@
     </div>
 
     <!-- Sección de Detalles -->
-    <div class="row g-4">
-      
+    <div class="row g-4 mt-2 d-flex flex-wrap align-items-center mb-4 p-4 rounded-4 bg-body shadow-sm border">
+
       <!-- Distribución por Tipo -->
       <div class="col-12 col-lg-4">
         <div class="card border-0 shadow-sm h-100 rounded-4">
@@ -88,8 +183,8 @@
             <div class="d-flex flex-column gap-4">
               <div *ngFor="let item of movementSummary">
                 <div class="d-flex align-items-center gap-3">
-                  <div class="rounded-3 d-flex align-items-center justify-content-center bg-primary bg-opacity-10" 
-                       style="width: 48px; height: 48px; min-width: 48px;">
+                  <div class="rounded-3 d-flex align-items-center justify-content-center bg-primary bg-opacity-10"
+                    style="width: 48px; height: 48px; min-width: 48px;">
                     <i class="bi text-primary" [ngClass]="item.icon"></i>
                   </div>
                   <div class="flex-grow-1">
@@ -98,12 +193,8 @@
                       <span class="fw-bold fs-5 text-primary">{{ item.value }}</span>
                     </div>
                     <div class="progress rounded-pill" style="height: 6px;">
-                      <div class="progress-bar bg-primary" 
-                           role="progressbar"
-                           [style.width.%]="item.percentage"
-                           [attr.aria-valuenow]="item.percentage"
-                           aria-valuemin="0" 
-                           aria-valuemax="100"></div>
+                      <div class="progress-bar bg-primary" role="progressbar" [style.width.%]="item.percentage"
+                        [attr.aria-valuenow]="item.percentage" aria-valuemin="0" aria-valuemax="100"></div>
                     </div>
                     <small class="text-muted fw-medium mt-1 d-block">{{ item.percentage }}% del total</small>
                   </div>
@@ -123,15 +214,16 @@
                 <p class="text-muted text-uppercase small fw-bold mb-1" style="letter-spacing: 1px;">Alertas</p>
                 <h5 class="fw-bold mb-0">Bajo Stock</h5>
               </div>
-              <span class="badge rounded-pill px-3 py-2 fw-semibold" 
-                    [ngClass]="lowStockProducts.length ? 'bg-warning text-dark' : 'bg-success'">
+              <span class="badge rounded-pill px-3 py-2 fw-semibold"
+                [ngClass]="lowStockProducts.length ? 'bg-warning text-dark' : 'bg-success'">
                 {{ lowStockProducts.length || '✓ OK' }}
               </span>
             </div>
 
             <div *ngIf="lowStockProducts.length === 0" class="text-center py-5">
-              <div class="rounded-circle d-inline-flex align-items-center justify-content-center mb-3 bg-success bg-opacity-10" 
-                   style="width: 70px; height: 70px;">
+              <div
+                class="rounded-circle d-inline-flex align-items-center justify-content-center mb-3 bg-success bg-opacity-10"
+                style="width: 70px; height: 70px;">
                 <i class="bi bi-check-circle-fill text-success" style="font-size: 2rem;"></i>
               </div>
               <p class="fw-bold mb-1">¡Todo perfecto!</p>
@@ -140,24 +232,24 @@
 
             <div *ngIf="lowStockProducts.length > 0" class="d-flex flex-column gap-3">
               <div class="p-3 rounded-3 bg-warning bg-opacity-10 border-start border-warning border-4"
-                   *ngFor="let product of lowStockProducts">
+                *ngFor="let product of lowStockProducts">
                 <div class="d-flex justify-content-between align-items-start mb-2">
                   <div class="flex-grow-1">
                     <p class="fw-bold mb-1">{{ product?.name || 'Sin nombre' }}</p>
-                    <small class="text-muted d-block">Código: <span class="fw-semibold">{{ product?.code || 'N/A' }}</span></small>
-                    <small class="text-muted d-block">ID: <span class="fw-semibold">{{ product?.id || 'N/A' }}</span></small>
+                    <small class="text-muted d-block">Código: <span class="fw-semibold">{{ product?.code || 'N/A'
+                        }}</span></small>
+                    <small class="text-muted d-block">ID: <span class="fw-semibold">{{ product?.id || 'N/A'
+                        }}</span></small>
                   </div>
                   <span class="badge rounded-pill px-3 py-2 bg-warning text-dark fw-bold">
                     {{ product?.current_stock || 0 }}/{{ product?.min_stock || 0 }}
                   </span>
                 </div>
                 <div class="progress rounded-pill" style="height: 5px;">
-                  <div class="progress-bar bg-warning" 
-                       role="progressbar"
-                       [style.width.%]="(product?.current_stock || 0) * 100 / (product?.min_stock || 1)"
-                       [attr.aria-valuenow]="(product?.current_stock || 0) * 100 / (product?.min_stock || 1)"
-                       aria-valuemin="0" 
-                       aria-valuemax="100"></div>
+                  <div class="progress-bar bg-warning" role="progressbar"
+                    [style.width.%]="(product?.current_stock || 0) * 100 / (product?.min_stock || 1)"
+                    [attr.aria-valuenow]="(product?.current_stock || 0) * 100 / (product?.min_stock || 1)"
+                    aria-valuemin="0" aria-valuemax="100"></div>
                 </div>
               </div>
             </div>
@@ -175,8 +267,9 @@
             </div>
 
             <div *ngIf="recentMovements.length === 0" class="text-center py-5">
-              <div class="rounded-circle d-inline-flex align-items-center justify-content-center mb-3 bg-secondary bg-opacity-10" 
-                   style="width: 70px; height: 70px;">
+              <div
+                class="rounded-circle d-inline-flex align-items-center justify-content-center mb-3 bg-secondary bg-opacity-10"
+                style="width: 70px; height: 70px;">
                 <i class="bi bi-inbox text-muted" style="font-size: 2rem;"></i>
               </div>
               <p class="fw-bold mb-1">Sin actividad reciente</p>
@@ -185,20 +278,20 @@
 
             <div *ngIf="recentMovements.length > 0" class="position-relative">
               <!-- Línea vertical del timeline -->
-              <div class="position-absolute top-0 bottom-0 bg-secondary bg-opacity-25" 
-                   style="left: 15px; width: 2px;"></div>
-              
+              <div class="position-absolute top-0 bottom-0 bg-secondary bg-opacity-25" style="left: 15px; width: 2px;">
+              </div>
+
               <div class="d-flex flex-column gap-3">
                 <div class="position-relative" *ngFor="let movement of recentMovements">
                   <!-- Punto del timeline -->
-                  <div class="position-absolute rounded-circle bg-primary" 
-                       style="left: 0; top: 8px; width: 32px; height: 32px; border: 3px solid var(--bs-body-bg); box-shadow: 0 2px 8px rgba(0,0,0,0.1); z-index: 1;"></div>
-                  
+                  <div class="position-absolute rounded-circle bg-primary"
+                    style="left: 0; top: 8px; width: 32px; height: 32px; border: 3px solid var(--bs-body-bg); box-shadow: 0 2px 8px rgba(0,0,0,0.1); z-index: 1;">
+                  </div>
+
                   <!-- Contenido -->
                   <div class="ms-5 p-3 rounded-3 bg-body-secondary">
                     <div class="d-flex justify-content-between align-items-center mb-2">
-                      <span class="badge rounded-pill px-3 py-2" 
-                            [ngClass]="movement.uiBadgeClass">
+                      <span class="badge rounded-pill px-3 py-2" [ngClass]="movement.uiBadgeClass">
                         <i class="bi me-1" [ngClass]="movement.uiIcon"></i>
                         {{ movement.uiType }}
                       </span>
@@ -207,7 +300,8 @@
                       </span>
                     </div>
                     <p class="mb-0 small text-muted fw-medium">
-                      ID: <span class="fw-semibold">{{ movement?.raw_material_id || movement?.product_id || '-' }}</span>
+                      ID: <span class="fw-semibold">{{ movement?.raw_material_id || movement?.product_id || '-'
+                        }}</span>
                     </p>
                   </div>
                 </div>

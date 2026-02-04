@@ -1,0 +1,80 @@
+<ng-container *ngIf="hasData; else emptyState">
+  <div class="row g-3">
+    <div class="col-md-6">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <h6 class="text-uppercase text-muted fw-semibold small">Información General</h6>
+          <h4 class="fw-bold mb-1">{{ batch?.name }}</h4>
+          <p class="text-muted mb-2">Código: {{ batch?.code || 'N/A' }}</p>
+          <span class="badge" [ngClass]="statusClass">{{ statusLabel }}</span>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <h6 class="text-uppercase text-muted fw-semibold small">Producto</h6>
+          <p class="mb-1 fw-semibold">{{ batch?.product_name || 'Sin nombre' }}</p>
+          <p class="text-muted mb-0">ID: {{ batch?.product_id || 'Sin ID' }}</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-4" *ngFor="let block of [
+      { label: 'Inicio', value: batch?.start_date },
+      { label: 'Fin Esperado', value: batch?.expected_end_date },
+      { label: 'Fin Real', value: batch?.actual_end_date }
+    ]">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <small class="text-muted text-uppercase fw-semibold">{{ block.label }}</small>
+          <p class="mb-0 fw-bold" *ngIf="block.value; else noDate">{{ block.value | date: 'medium' }}</p>
+          <ng-template #noDate>
+            <span class="text-muted">Sin fecha</span>
+          </ng-template>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <small class="text-muted text-uppercase fw-semibold">Cantidad</small>
+          <p class="mb-0 display-6 fw-bold text-success">{{ batch?.quantity ?? 0 }}</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <small class="text-muted text-uppercase fw-semibold">Defectos</small>
+          <p class="mb-0 display-6 fw-bold text-danger">{{ batch?.defect_quantity ?? 0 }}</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <small class="text-muted text-uppercase fw-semibold">Notas</small>
+          <p class="mb-0" *ngIf="batch?.notes; else noNotes">{{ batch?.notes }}</p>
+          <ng-template #noNotes>
+            <span class="text-muted">Sin notas</span>
+          </ng-template>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="text-end mt-4">
+    <button type="button" class="btn btn-outline-secondary" (click)="emitClose()">
+      <i class="bi bi-x-circle me-1"></i>Cerrar
+    </button>
+  </div>
+</ng-container>
+
+<ng-template #emptyState>
+  <div class="text-center text-muted py-5">
+    <div class="spinner-border text-primary mb-3" role="status" *ngIf="batchId"></div>
+    <p class="mb-0">No hay datos disponibles para el lote seleccionado.</p>
+  </div>
+</ng-template>

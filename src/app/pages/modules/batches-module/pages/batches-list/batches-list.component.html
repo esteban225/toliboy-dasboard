@@ -1,6 +1,6 @@
 <div class="container-fluid px-4 py-4">
     <!-- Header con título y acciones -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-4 rounded-4 bg-body p-4 shadow-sm border efect-3d">
         <div>
             <h2 class="mb-1 fw-bold">
                 <i class="bi bi-boxes text-primary me-2"></i>Lotes
@@ -18,7 +18,7 @@
     </div>
 
     <!-- Filtros -->
-    <div class="card shadow-sm border-0 mb-4">
+    <div class="card shadow-sm mb-4 p-4 rounded-4 bg-body border">
         <div class="card-header bg-light border-0">
             <h6 class="mb-0 fw-semibold">
                 <i class="bi bi-funnel me-2"></i>Filtros de búsqueda
@@ -59,7 +59,7 @@
                                 <i class="bi bi-search me-1"></i>Buscar
                             </button>
                             <button type="button" class="btn btn-outline-secondary" (click)="clearFilters()">
-                                <i class="bi bi-x-lg"></i>
+                                <i class="bi bi-x-lg">Limpiar filtros</i>
                             </button>
                         </div>
                     </div>
@@ -82,7 +82,7 @@
     </div>
 
     <!-- Tabla de lotes -->
-    <div class="card shadow-sm border-0">
+    <div class="card shadow-sm border rounded-4 bg-body ">
         <div class="card-body p-0">
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0">
@@ -123,7 +123,7 @@
                                 #{{ b.id }}
                             </td>
                             <td class="px-3 py-3">
-                                <div class="fw-semibold text-dark">{{ b.name ?? '-' }}</div>
+                                <div class="fw-semibold ">{{ b.name ?? '-' }}</div>
                                 <small class="text-muted">Prod ID: {{ b.product_id ?? '-' }}</small>
                             </td>
                             <td class="px-3 py-3 d-none d-lg-table-cell">
@@ -139,7 +139,8 @@
                                 <span class="badge bg-success">{{ b.quantity ?? 0 }}</span>
                             </td>
                             <td class="px-3 py-3 d-none d-lg-table-cell">
-                                <span class="badge" [ngClass]="(b.defect_quantity ?? 0) > 0 ? 'bg-danger' : 'bg-secondary'">
+                                <span class="badge"
+                                    [ngClass]="(b.defect_quantity ?? 0) > 0 ? 'bg-danger' : 'bg-secondary'">
                                     {{ b.defect_quantity ?? 0 }}
                                 </span>
                             </td>
@@ -205,142 +206,180 @@
     </div>
 
     <!-- Modal de formulario -->
-    <div *ngIf="showForm$" class="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center"
-         style="z-index: 9999; background: rgba(0,0,0,0.5);">
+    <div *ngIf="showForm$"
+        class="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center bg-dark bg-opacity-75">
         <!-- Backdrop -->
         <div class="position-absolute top-0 start-0 w-100 h-100" (click)="select(null)"></div>
 
         <!-- Modal -->
         <div class="modal d-block position-relative" tabindex="-1" role="dialog" aria-modal="true">
-            <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
-                <div class="modal-content">
-                    <div class="modal-header" [ngClass]="form.get('id')?.value ? 'bg-primary' : 'bg-success'" style="color: white;">
-                        <h5 class="modal-title fw-bold mb-0">
-                            <i class="bi me-2" [ngClass]="form.get('id')?.value ? 'bi-pencil-square' : 'bi-plus-square-fill'"></i>
-                            {{ form.get('id')?.value ? 'Editar' : 'Nuevo' }} Lote
-                        </h5>
+            <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable" role="document">
+                <div class="modal-content shadow-lg border-0 rounded-3 overflow-hidden">
+                    <!-- Header mejorado -->
+                    <div class="modal-header border-0 py-3"
+                        [ngClass]="form.get('id')?.value ? 'bg-primary text-white' : 'bg-success text-white'">
+                        <div class="d-flex align-items-center w-100">
+                            <div class="rounded-circle bg-white bg-opacity-25 d-flex align-items-center justify-content-center me-3"
+                                style="width: 45px; height: 45px;">
+                                <i class="bi fs-5"
+                                    [ngClass]="form.get('id')?.value ? 'bi-pencil-square' : 'bi-plus-circle-fill'"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <h5 class="modal-title fw-bold mb-0">
+                                    {{ form.get('id')?.value ? 'Editar Lote' : 'Crear Nuevo Lote' }}
+                                </h5>
+                                <small class="opacity-75">Complete la información del lote</small>
+                            </div>
+                        </div>
                         <button type="button" class="btn-close btn-close-white" aria-label="Cerrar"
-                                (click)="select(null)"></button>
+                            (click)="select(null)"></button>
                     </div>
-                    <div class="modal-body">
+
+                    <!-- Body con mejor espaciado -->
+                    <div class="modal-body p-4 bg-light">
                         <form [formGroup]="form" (ngSubmit)="save()">
-                            <!-- Nombre -->
-                            <div class="mb-3">
-                                <label class="form-label fw-semibold">
-                                    <i class="bi bi-tag-fill me-2"></i>Nombre del Lote
-                                </label>
-                                <input class="form-control" formControlName="name" placeholder="Nombre del lote"
-                                       [class.is-invalid]="form.get('name')?.invalid && form.get('name')?.touched" />
-                                <div class="invalid-feedback d-block" *ngIf="form.get('name')?.invalid && form.get('name')?.touched">
-                                    El nombre es requerido
-                                </div>
-                            </div>
+                            <!-- Información básica -->
+                            <div class="card border-0 shadow-sm mb-4">
+                                <div class="card-body p-4">
+                                    <h6 class="text-muted text-uppercase fw-bold mb-3 small">
+                                        <i class="bi bi-info-circle me-2"></i>Información Básica
+                                    </h6>
 
-                            <!-- Código y Producto -->
-                            <div class="row g-3 mb-3">
-                                <div class="col-md-6">
-                                    <label class="form-label fw-semibold">
-                                        <i class="bi bi-upc-scan me-2"></i>Código
-                                    </label>
-                                    <input class="form-control" formControlName="code" placeholder="Código del lote" />
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label fw-semibold">
-                                        <i class="bi bi-box me-2"></i>ID Producto
-                                    </label>
-                                    <input type="number" class="form-control" formControlName="product_id"
-                                           placeholder="ID del producto"
-                                           [class.is-invalid]="form.get('product_id')?.invalid && form.get('product_id')?.touched" />
-                                    <div class="invalid-feedback d-block" *ngIf="form.get('product_id')?.invalid && form.get('product_id')?.touched">
-                                        El producto es requerido
+                                    <!-- Nombre -->
+                                    <div class="mb-4">
+                                        <label class="form-label fw-semibold mb-2">
+                                            <i class="bi bi-tag-fill text-primary me-2"></i>Nombre del Lote
+                                            <span class="text-danger">*</span>
+                                        </label>
+                                        <input class="form-control form-control-lg rounded-3" formControlName="name"
+                                            placeholder="Ej: Lote Primavera 2024"
+                                            [class.is-invalid]="form.get('name')?.invalid && form.get('name')?.touched" />
+                                        <div class="invalid-feedback d-block"
+                                            *ngIf="form.get('name')?.invalid && form.get('name')?.touched">
+                                            <i class="bi bi-exclamation-circle me-1"></i>El nombre es requerido
+                                        </div>
+                                    </div>
+
+                                    <!-- Código y Producto -->
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-semibold mb-2">
+                                                <i class="bi bi-upc-scan text-info me-2"></i>Código
+                                            </label>
+                                            <input class="form-control rounded-3" formControlName="code"
+                                                placeholder="Ej: LT-2024-001" />
+                                            <small class="text-muted d-block mt-1">Opcional</small>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-semibold mb-2">
+                                                <i class="bi bi-box text-warning me-2"></i>Producto
+                                                <span class="text-danger">*</span>
+                                            </label>
+                                            <select class="form-select rounded-3" formControlName="product_id"
+                                                [class.is-invalid]="form.get('product_id')?.invalid && form.get('product_id')?.touched">
+                                                <option [ngValue]="''">-- Selecciona un producto --</option>
+                                                <option *ngFor="let p of products$" [ngValue]="p.id">
+                                                    {{ p.name }} - {{ p.sku || p.code || p.id }}
+                                                </option>
+                                            </select>
+                                            <div class="invalid-feedback d-block"
+                                                *ngIf="form.get('product_id')?.invalid && form.get('product_id')?.touched">
+                                                <i class="bi bi-exclamation-circle me-1"></i>El producto es requerido
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
 
-                            <!-- Fechas -->
-                            <div class="row g-3 mb-3">
-                                <div class="col-md-6">
-                                    <label class="form-label fw-semibold">
-                                        <i class="bi bi-calendar-event me-2"></i>Fecha de Inicio
-                                    </label>
-                                    <input type="datetime-local" class="form-control" formControlName="start_date"
-                                           [class.is-invalid]="form.get('start_date')?.invalid && form.get('start_date')?.touched" />
-                                    <div class="invalid-feedback d-block" *ngIf="form.get('start_date')?.invalid && form.get('start_date')?.touched">
-                                        La fecha de inicio es requerida
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label fw-semibold">
-                                        <i class="bi bi-calendar-range me-2"></i>Fecha Fin Esperada
-                                    </label>
-                                    <input type="datetime-local" class="form-control" formControlName="expected_end_date"
-                                           [class.is-invalid]="form.get('expected_end_date')?.invalid && form.get('expected_end_date')?.touched" />
-                                    <div class="invalid-feedback d-block" *ngIf="form.get('expected_end_date')?.invalid && form.get('expected_end_date')?.touched">
-                                        La fecha fin esperada es requerida
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Fecha fin real -->
-                            <div class="mb-3">
-                                <label class="form-label fw-semibold">
-                                    <i class="bi bi-calendar-check me-2"></i>Fecha Fin Real (Opcional)
-                                </label>
-                                <input type="datetime-local" class="form-control" formControlName="actual_end_date" />
-                            </div>
-
-                            <!-- Cantidad y Defectos -->
+                            <!-- Cantidad  -->
                             <div class="row g-3 mb-3">
                                 <div class="col-md-6">
                                     <label class="form-label fw-semibold">
                                         <i class="bi bi-bag-check me-2"></i>Cantidad
                                     </label>
                                     <input type="number" class="form-control" formControlName="quantity"
-                                           [class.is-invalid]="form.get('quantity')?.invalid && form.get('quantity')?.touched" />
-                                    <div class="invalid-feedback d-block" *ngIf="form.get('quantity')?.invalid && form.get('quantity')?.touched">
+                                        [class.is-invalid]="form.get('quantity')?.invalid && form.get('quantity')?.touched" />
+                                    <div class="invalid-feedback d-block"
+                                        *ngIf="form.get('quantity')?.invalid && form.get('quantity')?.touched">
                                         La cantidad es requerida (mínimo 1)
                                     </div>
                                 </div>
-                                <div class="col-md-6">
-                                    <label class="form-label fw-semibold">
-                                        <i class="bi bi-exclamation-circle me-2"></i>Cantidad Defectos
-                                    </label>
-                                    <input type="number" class="form-control" formControlName="defect_quantity" />
+                            </div>
+                            <!-- Programación -->
+                            <div class="card border-0 shadow-sm mb-4">
+                                <div class="card-body p-4">
+                                    <h6 class="text-muted text-uppercase fw-bold mb-3 small">
+                                        <i class="bi bi-calendar-week me-2"></i>Programación
+                                    </h6>
+
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-semibold mb-2">
+                                                <i class="bi bi-calendar-check text-success me-2"></i>Fecha de Inicio
+                                                <span class="text-danger">*</span>
+                                            </label>
+                                            <input type="datetime-local" class="form-control rounded-3"
+                                                formControlName="start_date"
+                                                [class.is-invalid]="form.get('start_date')?.invalid && form.get('start_date')?.touched" />
+                                            <div class="invalid-feedback d-block"
+                                                *ngIf="form.get('start_date')?.invalid && form.get('start_date')?.touched">
+                                                <i class="bi bi-exclamation-circle me-1"></i>La fecha de inicio es
+                                                requerida
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-semibold mb-2">
+                                                <i class="bi bi-calendar-x text-danger me-2"></i>Fecha Fin Esperada
+                                                <span class="text-danger">*</span>
+                                            </label>
+                                            <input type="datetime-local" class="form-control rounded-3"
+                                                formControlName="expected_end_date"
+                                                [class.is-invalid]="form.get('expected_end_date')?.invalid && form.get('expected_end_date')?.touched" />
+                                            <div class="invalid-feedback d-block"
+                                                *ngIf="form.get('expected_end_date')?.invalid && form.get('expected_end_date')?.touched">
+                                                <i class="bi bi-exclamation-circle me-1"></i>La fecha fin esperada es
+                                                requerida
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 
-                            <!-- Notas -->
-                            <div class="mb-3">
-                                <label class="form-label fw-semibold">
-                                    <i class="bi bi-sticky me-2"></i>Notas
-                                </label>
-                                <textarea class="form-control" formControlName="notes" rows="3" placeholder="Notas adicionales"></textarea>
+                            <!-- Notas adicionales -->
+                            <div class="card border-0 shadow-sm mb-4">
+                                <div class="card-body p-4">
+                                    <h6 class="text-muted text-uppercase fw-bold mb-3 small">
+                                        <i class="bi bi-sticky me-2"></i>Información Adicional
+                                    </h6>
+
+                                    <label class="form-label fw-semibold mb-2">
+                                        <i class="bi bi-chat-left-text text-secondary me-2"></i>Notas
+                                    </label>
+                                    <textarea class="form-control rounded-3" formControlName="notes" rows="4"
+                                        placeholder="Agregue cualquier información adicional relevante para este lote..."></textarea>
+                                    <small class="text-muted d-block mt-1">Opcional - Máximo 500 caracteres</small>
+                                </div>
                             </div>
 
-                            <!-- Estado -->
-                            <div class="mb-4">
-                                <label class="form-label fw-semibold">
-                                    <i class="bi bi-check-circle me-2"></i>Estado del Lote
-                                </label>
-                                <select class="form-select" formControlName="status">
-                                    <option value="planned">Planificado</option>
-                                    <option value="in_process">En Proceso</option>
-                                    <option value="paused">Pausado</option>
-                                    <option value="completed">Completado</option>
-                                    <option value="delivered">Entregado</option>
-                                    <option value="cancelled">Cancelado</option>
-                                </select>
-                            </div>
-
-                            <!-- Botones -->
-                            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                                <button type="button" class="btn btn-outline-secondary" (click)="select(null)">
-                                    <i class="bi bi-x-circle me-2"></i>Cancelar
+                            <!-- Botones mejorados -->
+                            <div class="d-flex gap-2 justify-content-end pt-3">
+                                <button type="button" class="btn btn-light border px-4 py-2 rounded-3"
+                                    (click)="select(null)">
+                                    <i class="bi bi-x-lg me-2"></i>Cancelar
                                 </button>
-                                <button type="submit" class="btn btn-primary" [disabled]="form.invalid || loading$">
-                                    <i class="bi bi-check-circle me-2" *ngIf="!loading$"></i>
-                                    <span class="spinner-border spinner-border-sm me-2" *ngIf="loading$" role="status" aria-hidden="true"></span>
-                                    {{ form.get('id')?.value ? 'Actualizar' : 'Crear' }}
+                                <button type="submit" class="btn px-4 py-2 shadow-sm rounded-3"
+                                    [disabled]="form.invalid || loading$"
+                                    [ngClass]="form.get('id')?.value ? 'btn-primary' : 'btn-success'">
+                                    <span *ngIf="!loading$">
+                                        <i class="bi me-2"
+                                            [ngClass]="form.get('id')?.value ? 'bi-arrow-repeat' : 'bi-check-circle'"></i>
+                                        {{ form.get('id')?.value ? 'Actualizar' : 'Crear Lote' }}
+                                    </span>
+                                    <span *ngIf="loading$">
+                                        <span class="spinner-border spinner-border-sm me-2" role="status"
+                                            aria-hidden="true"></span>
+                                        Procesando...
+                                    </span>
                                 </button>
                             </div>
                         </form>

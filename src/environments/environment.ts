@@ -4,6 +4,7 @@
 export const environment = {
   production: false,
   defaultauth: 'fackbackend',
+  authEndpoint: 'https://apitoliboy.lat/api/broadcasting/auth',
   AUTH_API: 'https://apitoliboy.lat/api',   // <- USAR LA RAÍZ SIN "/api"
   firebaseConfig: {
     apiKey: 'AIzaSyAIrRUP8z39yFhjsfnLsxwDhzxzAguzHvI',
@@ -17,6 +18,7 @@ export const environment = {
   },
   pusher: {
     key: '3cfb434018939310b096',
+    
     cluster: 'us2',
     channelPrefix: 'notifications',
     globalChannel: 'notifications.global',

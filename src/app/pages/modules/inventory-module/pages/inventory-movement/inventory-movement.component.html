@@ -1,6 +1,6 @@
 <div class="container-fluid py-4">
     <!-- Header Section -->
-    <div class="row mb-4">
+    <div class="row mb-4 p-1">
         <div class="col">
             <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
                 <div>
@@ -76,12 +76,12 @@
 
     <!-- Search Filters Section -->
     <div class="card border-0 shadow-sm mb-4">
-        <div class="card-body">
+        <div class="card-body p-4 col">
 
             <div class="row g-3 align-items-end">
 
                 <!-- Filtro por Tipo de Movimiento -->
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <label class="form-label fw-semibold">
                         <i class="bi bi-arrow-left-right me-1 text-primary"></i>
                         Tipo de Movimiento
@@ -95,7 +95,7 @@
                 </div>
 
                 <!-- Filtro por Línea de Producción -->
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <label class="form-label fw-semibold">
                         <i class="bi bi-gear me-1 text-primary"></i>
                         Línea de Producción
@@ -126,15 +126,12 @@
                     <input type="text" class="form-control" placeholder="Buscar..." [(ngModel)]="filters.general">
                 </div>
 
-            </div>
-
-            <div class="row mt-3">
-                <div class="col-12 d-flex justify-content-end gap-2">
-                    <button class="btn btn-outline-secondary" (click)="resetFilters()">
+                <div class="col-md-4 d-flex justify-content-end gap-2 flex-wrap align-items-center">
+                        <button class="btn btn-outline-secondary btn-md" (click)="resetFilters()">
                         <i class="bi bi-eraser me-1"></i>
                         Limpiar Filtros
                     </button>
-                    <button class="btn btn-primary" (click)="applyFilters()">
+                    <button class="btn btn-primary btn-md" (click)="applyFilters()">
                         <i class="bi bi-search me-1"></i>
                         Buscar
                     </button>
@@ -145,7 +142,46 @@
     </div>
 
 
+    <div class="card border-0 shadow-sm mb-4 p-3">
+        <div class="row g-3">
+            <div class="col-12 col-md-4">
+                <div class="p-3 rounded-3 bg-white shadow-sm d-flex align-items-center justify-content-between">
+                    <div class="text-start">
+                        <div class="text-muted small">Entradas</div>
+                        <div class="h4 mb-0 text-success fw-bold">{{ sumQuantitiesByFilters().in }}</div>
+                    </div>
+                    <div class="ms-3">
+                        <i class="bi bi-arrow-down-circle-fill text-success fs-2"></i>
+                    </div>
+                </div>
+            </div>
 
+            <div class="col-12 col-md-4">
+                <div class="p-3 rounded-3 bg-white shadow-sm d-flex align-items-center justify-content-between">
+                    <div class="text-start">
+                        <div class="text-muted small">Salidas</div>
+                        <div class="h4 mb-0 text-danger fw-bold">{{ sumQuantitiesByFilters().out }}</div>
+                    </div>
+                    <div class="ms-3">
+                        <i class="bi bi-arrow-up-circle-fill text-danger fs-2"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-md-4">
+                <div class="p-3 rounded-3 bg-white shadow-sm d-flex align-items-center justify-content-between">
+                    <div class="text-start">
+                        <div class="text-muted small">Total neto <small class="text-muted">(entradas - salidas + ajustes)</small></div>
+                        <div class="h4 mb-0 fw-bold">{{ sumQuantitiesByFilters().total }}</div>
+                        
+                    </div>
+                    <div class="ms-3">
+                        <i class="bi bi-calculator-fill text-primary fs-2"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
     <!-- Table Section -->
     <div *ngIf="!loading" class="card border-0 shadow-sm">
         <div class="card-body p-0">
@@ -320,7 +356,7 @@
                         </ng-container>
 
                         <tr *ngIf="!movements || movements.length === 0">
-                            <td colspan="12" class="text-center py-5">
+                            <td colspan="10" class="text-center py-5">
                                 <div class="py-4">
                                     <i class="bi bi-inbox display-1 text-muted d-block mb-3"></i>
                                     <h5 class="text-muted mb-2">No hay movimientos registrados</h5>
@@ -561,7 +597,7 @@
 
                         <!-- Campos de Detalles de Notas - ENTRADAS -->
                         <div class="mb-4" *ngIf="form.get('type')?.value === 'in'">
-                            
+
                             <!-- Header -->
                             <div class="d-flex align-items-center mb-3 pb-2 border-bottom">
                                 <i class="bi bi-arrow-down-circle-fill text-success fs-5 me-2"></i>
@@ -604,9 +640,11 @@
                                     </label>
                                     <input type="date" class="form-control" id="expiryDate"
                                         (change)="updateNotesSummary()">
+                                    <button class="btn btn-sm btn-outline-secondary mt-2" type="button" (click)="setExpiryDateNA()">
+                                        NA 
+                                    </button>
                                 </div>
                             </div>
-
                             <!-- Verificación -->
                             <div class="d-flex align-items-center mb-3 pb-2 border-bottom">
                                 <i class="bi bi-clipboard-check text-info fs-5 me-2"></i>
@@ -647,7 +685,8 @@
                                     <label for="transportConditions" class="form-label small fw-semibold">
                                         <i class="bi bi-truck text-muted me-1"></i>Condiciones de Transporte
                                     </label>
-                                    <select class="form-select" id="transportConditions" (change)="updateNotesSummary()">
+                                    <select class="form-select" id="transportConditions"
+                                        (change)="updateNotesSummary()">
                                         <option value="">Seleccione...</option>
                                         <option value="Buenas">Buenas</option>
                                         <option value="Regulares">Regulares</option>
@@ -695,12 +734,13 @@
                                         <div class="input-group">
                                             <input type="text" class="form-control" id="batchOut"
                                                 (input)="updateNotesSummary()" placeholder="Código de lote...">
-                                            <button type="button" class="btn btn-primary"
-                                                (click)="prefillOutByBatch()" [disabled]="loadingBatchLookup">
+                                            <button type="button" class="btn btn-primary" (click)="prefillOutByBatch()"
+                                                [disabled]="loadingBatchLookup">
                                                 <span *ngIf="!loadingBatchLookup">
                                                     <i class="bi bi-arrow-right"></i>
                                                 </span>
-                                                <span *ngIf="loadingBatchLookup" class="spinner-border spinner-border-sm"></span>
+                                                <span *ngIf="loadingBatchLookup"
+                                                    class="spinner-border spinner-border-sm"></span>
                                             </button>
                                         </div>
                                     </div>
@@ -712,7 +752,8 @@
                                     </div>
                                 </div>
                                 <small class="text-muted d-block mt-2">
-                                    <i class="bi bi-info-circle me-1"></i>Busca un lote para precargar los datos automáticamente
+                                    <i class="bi bi-info-circle me-1"></i>Busca un lote para precargar los datos
+                                    automáticamente
                                 </small>
                             </div>
 
@@ -799,7 +840,8 @@
                                     <label for="transportConditionsOut" class="form-label small fw-semibold">
                                         <i class="bi bi-truck text-muted me-1"></i>Condiciones de Transporte
                                     </label>
-                                    <select class="form-select" id="transportConditionsOut" (change)="updateNotesSummary()">
+                                    <select class="form-select" id="transportConditionsOut"
+                                        (change)="updateNotesSummary()">
                                         <option value="">Seleccione...</option>
                                         <option value="Buenas">Buenas</option>
                                         <option value="Regulares">Regulares</option>
@@ -831,7 +873,7 @@
 
                         <!-- Campos de Detalles de Notas - AJUSTES -->
                         <div class="mb-4" *ngIf="form.get('type')?.value === 'adjustment'">
-                            
+
                             <!-- Header -->
                             <div class="d-flex align-items-center mb-3 pb-2 border-bottom">
                                 <i class="bi bi-gear-fill text-warning fs-5 me-2"></i>

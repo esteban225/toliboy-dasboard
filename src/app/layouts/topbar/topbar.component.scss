@@ -1,0 +1,38 @@
+/* Topbar notification improvements */
+.notification-list-item{
+	transition: box-shadow .12s ease, transform .08s ease, background-color .12s ease;
+	cursor: pointer;
+}
+.notification-list-item:hover{
+	box-shadow: 0 6px 18px rgba(13, 110, 253, 0.06);
+	transform: translateY(-1px);
+	background-color: #fff !important;
+}
+.notification-list-item.bg-light{
+	background-color: #f8fafc !important;
+}
+.notification-empty{color: #6c757d}
+.dropdown-foot{background: var(--bs-white);}
+
+/* Improve left border visibility for unread */
+.border-start.border-primary{
+	border-left-color: var(--bs-primary) !important;
+}
+
+.list-group-item .text-truncate{max-width: 220px;}
+
+/* Responsive tweaks */
+@media (max-width: 575.98px) {
+	.notification-list-item{padding: .5rem .5rem !important;}
+	.notification-list-item img, .notification-list-item .d-inline-flex{width:36px;height:36px}
+	.notification-list-item .avatar-xs{width:36px;height:36px}
+	.notification-list-item .fs-6{font-size:.95rem}
+	.notification-list-item .text-truncate{max-width:150px}
+	.notification-list-item .actions-desktop{display:none}
+	.notification-list-item .actions-mobile{display:flex}
+	.dropdown-foot{display:flex;gap:.5rem;justify-content:center}
+}
+@media (min-width: 576px){
+	.notification-list-item .actions-mobile{display:none}
+}
+

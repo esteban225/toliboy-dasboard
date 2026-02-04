@@ -1,9 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RawMaterialsService } from '../services/raw-materials.service';
 import { InventoryMovementService } from '../services/inventory-movement.service';
-import { forkJoin, of } from 'rxjs';
-import { catchError, tap } from 'rxjs/operators';
+import { forkJoin, of, Subject } from 'rxjs';
+import { catchError, finalize, takeUntil, tap } from 'rxjs/operators';
+import { NotificationGroup, NotificationItem, NotificationService } from 'src/app/core/services/notification.service';
 
 interface StatCard {
   title: string;
@@ -44,6 +45,22 @@ interface MovementUiMeta {
   prefix: string;
 }
 
+interface NotificationDetail {
+  label: string;
+  value: string;
+}
+
+interface NotificationDisplay {
+  notification: NotificationItem;
+  summary: string;
+  details: NotificationDetail[];
+}
+
+interface DailyMessage {
+  title: string;
+  message: string;
+}
+
 const MOVEMENT_TYPE_META: Record<MovementTypeKey, MovementUiMeta> = {
   in: {
     label: 'Entrada',
@@ -78,9 +95,11 @@ const MOVEMENT_TYPE_META: Record<MovementTypeKey, MovementUiMeta> = {
   templateUrl: './inventory.component.html',
   styleUrl: './inventory.component.scss'
 })
-export class InventoryComponent implements OnInit {
+export class InventoryComponent implements OnInit, OnDestroy {
   loading = true;
   error: string | null = null;
+  notificationLoading = false;
+  notificationError: string | null = null;
   
   // Estadísticas principales
   statsCards: StatCard[] = [];
@@ -91,14 +110,29 @@ export class InventoryComponent implements OnInit {
   lowStockProducts: any[] = [];
   topMovedProducts: any[] = [];
   movementSummary: MovementSummaryItem[] = [];
+  notifications: NotificationItem[] = [];
+  notificationGroups: NotificationGroup[] = [];
+  notificationDisplayList: NotificationDisplay[] = [];
+  dailyMessages: DailyMessage[] = [];
+
+  private destroy$ = new Subject<void>();
+  private deletingNotifications = new Set<string | number>();
 
   constructor(
     private rawMaterialsService: RawMaterialsService,
-    private inventoryMovementService: InventoryMovementService
+    private inventoryMovementService: InventoryMovementService,
+    private notificationService: NotificationService
   ) {}
 
   ngOnInit(): void {
     this.loadStatistics();
+    this.subscribeToNotifications();
+    this.loadNotifications();
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   private loadStatistics(): void {
@@ -184,6 +218,38 @@ export class InventoryComponent implements OnInit {
     this.movementsByType = movementsByType;
     this.movementSummary = this.buildMovementSummary(movementsByType);
     this.updateStatsCards(totalProducts, activeProducts, lowStockCount, totalMovements);
+    this.dailyMessages = this.buildDailyMessages(lowStockProducts, totalMovements, movementsByType);
+  }
+
+  private subscribeToNotifications(): void {
+    this.notificationService
+      .getNotifications()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((groups) => {
+        this.notificationGroups = groups;
+        this.notifications = groups.reduce<NotificationItem[]>((acc, group) => acc.concat(group.items), []);
+        this.notificationDisplayList = this.notifications.map((n) => this.buildNotificationDisplay(n));
+      });
+  }
+
+  private loadNotifications(): void {
+    this.notificationLoading = true;
+    this.notificationError = null;
+
+    this.notificationService
+      .fetchNotificationsFromApi()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          this.notificationError = null;
+          this.notificationLoading = false;
+        },
+        error: (err) => {
+          console.error('Error fetching notifications:', err);
+          this.notificationError = err?.error?.message || err?.message || 'Error cargando notificaciones';
+          this.notificationLoading = false;
+        }
+      });
   }
 
   private updateStatsCards(
@@ -219,6 +285,99 @@ export class InventoryComponent implements OnInit {
 
   refresh(): void {
     this.loadStatistics();
+    this.loadNotifications();
+  }
+
+  refreshNotifications(): void {
+    this.loadNotifications();
+  }
+
+  trackNotification(index: number, item: NotificationDisplay): string | number {
+    return item.notification.id;
+  }
+
+  mapNotificationBadge(type: NotificationItem['type']): string {
+    switch (type) {
+      case 'success':
+        return 'bg-success text-white';
+      case 'warning':
+        return 'bg-warning text-dark';
+      case 'danger':
+        return 'bg-danger text-white';
+      case 'primary':
+        return 'bg-primary text-white';
+      default:
+        return 'bg-info text-white';
+    }
+  }
+
+  formatNotificationTimestamp(timestamp?: string): string {
+    if (!timestamp) {
+      return '';
+    }
+    const date = new Date(timestamp);
+    if (isNaN(date.getTime())) {
+      return timestamp;
+    }
+    return date.toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' });
+  }
+
+  deleteNotification(item: NotificationDisplay): void {
+    const notificationId = item.notification.id;
+    if (!notificationId || this.deletingNotifications.has(notificationId)) {
+      return;
+    }
+
+    this.deletingNotifications.add(notificationId);
+    this.notificationService.deleteNotificationOnServer(notificationId)
+      .pipe(
+        takeUntil(this.destroy$),
+        finalize(() => this.deletingNotifications.delete(notificationId))
+      )
+      .subscribe((deleted) => {
+        if (!deleted) {
+          console.warn('[Inventory] No se pudo eliminar la notificación desde el servidor');
+        }
+      });
+  }
+
+  isNotificationDeleting(item: NotificationDisplay): boolean {
+    return this.deletingNotifications.has(item.notification.id);
+  }
+
+  private buildNotificationDisplay(notification: NotificationItem): NotificationDisplay {
+    const message = notification.message || '';
+    const parts = message.split('|').map(part => part.trim()).filter(Boolean);
+    let summary = '';
+    const details: NotificationDetail[] = [];
+
+    parts.forEach((part, index) => {
+      const separatorIndex = part.indexOf(':');
+      if (index === 0 && separatorIndex === -1) {
+        summary = part;
+      } else if (separatorIndex > -1) {
+        const label = this.capitalizeLabel(part.substring(0, separatorIndex).trim());
+        const value = part.substring(separatorIndex + 1).trim();
+        details.push({ label, value });
+      } else if (!summary) {
+        summary = part;
+      } else {
+        details.push({ label: 'Detalle', value: part });
+      }
+    });
+
+    if (!summary) {
+      summary = message;
+    }
+
+    return { notification, summary, details };
+  }
+
+  private capitalizeLabel(label: string): string {
+    if (!label) {
+      return label;
+    }
+    return label.charAt(0).toUpperCase() + label.slice(1);
   }
 
   getMovementTypePercentage(type: keyof MovementsByType): number {
@@ -280,5 +439,43 @@ export class InventoryComponent implements OnInit {
       uiQuantityClass: meta.quantityClass,
       uiQuantityPrefix: meta.prefix
     };
+  }
+
+  private buildDailyMessages(
+    lowStockProducts: any[],
+    totalMovements: number,
+    movementsByType: MovementsByType
+  ): DailyMessage[] {
+    const messages: DailyMessage[] = [];
+
+    if (lowStockProducts.length > 0) {
+      const highlights = lowStockProducts
+        .slice(0, 3)
+        .map((product: any) => product?.name || product?.code || 'Producto');
+      const highlightedText = highlights.length ? ` (${highlights.join(', ')})` : '';
+      messages.push({
+        title: 'Revisar stock bajo',
+        message: `${lowStockProducts.length} producto(s) requieren reposicion${highlightedText}.`
+      });
+    } else {
+      messages.push({
+        title: 'Stock estable',
+        message: 'No hay productos en niveles criticos. Mantener monitoreo regular.'
+      });
+    }
+
+    if (totalMovements > 0) {
+      messages.push({
+        title: 'Actividad del inventario',
+        message: `Se registraron ${totalMovements} movimientos (${movementsByType.in} entradas y ${movementsByType.out} salidas).`
+      });
+    } else {
+      messages.push({
+        title: 'Sin movimientos recientes',
+        message: 'Todavia no hay transacciones registradas para el periodo consultado.'
+      });
+    }
+
+    return messages;
   }
 }

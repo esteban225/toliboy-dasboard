@@ -8,7 +8,7 @@ import { ProductionForm } from 'src/app/store/models/production.model';
   providedIn: 'root'
 })
 export class ProductionService {
-  private baseUrl = GlobalComponent.PRODUCTION_API; // 👉 https://apitoliboy.lat/api/forms
+  private baseUrl = GlobalComponent.PRODUCTION_API; // 👉 http://localhost/api/forms
 
   constructor(private http: HttpClient) {}
 

@@ -7,7 +7,7 @@ export interface Batch {
   start_date?: string;
   expected_end_date?: string;
   actual_end_date?: string | null;
-  status?: string; // 'planned', 'in_progress', 'completed', etc.
+  status?: string; // 'planned', 'in_process', 'paused', 'completed', etc.
   quantity?: number;
   defect_quantity?: number;
   notes?: string;
