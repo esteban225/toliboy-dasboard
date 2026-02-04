@@ -8,8 +8,8 @@
 					<label class="form-label">Título</label>
 					<input class="form-control" type="text" formControlName="title" placeholder="Título" />
 					<div *ngIf="form.get('title')?.touched && form.get('title')?.invalid" class="form-text text-danger">
-						<small *ngIf="form.get('title')?.errors?.required">Título es requerido</small>
-						<small *ngIf="form.get('title')?.errors?.maxlength">Máx 255 caracteres</small>
+						<small *ngIf="form.get('title')?.errors?.['required']">Título es requerido</small>
+						<small *ngIf="form.get('title')?.errors?.['maxlength']">Máx 255 caracteres</small>
 					</div>
 				</div>
 
