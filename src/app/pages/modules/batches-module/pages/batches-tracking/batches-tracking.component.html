@@ -285,7 +285,7 @@
                 <button type="button" class="btn-close" (click)="closeModal()" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <app-batch-details [batchId]="selectedBatchId" (close)="closeModal()"></app-batch-details>
+                <app-batch-details [batchId]="selectedBatchId" [batch]="batchData" (close)="closeModal()"></app-batch-details>
             </div>
         </div>
     </div>

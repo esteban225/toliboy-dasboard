@@ -6,6 +6,7 @@ import { AlertService } from 'src/app/core/services/alert.service';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { Batch } from '../../models/batch.model';
+import { BatchDetailsComponent } from '../../components/batch-details/batch-details.component';
 
 interface BatchTimeline {
   batch: Batch;
@@ -24,7 +25,7 @@ interface BatchTimeline {
 @Component({
   selector: 'app-batches-tracking',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, BatchDetailsComponent],
   templateUrl: './batches-tracking.component.html'
 })
 export class BatchesTrackingComponent implements OnInit, OnDestroy {
@@ -38,7 +39,7 @@ export class BatchesTrackingComponent implements OnInit, OnDestroy {
   isModalOpenDetail?: boolean;
   isModalOpen?: boolean;
   selectedBatchId?: number;
-  batchData?: any = null;
+  batchData: Batch | null = null;
   editBatch: any = {};
   isSaving = signal(false);
 
