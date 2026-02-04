@@ -280,7 +280,7 @@
                     <i class="bi bi-info-circle me-2 text-primary"></i>Detalles del Lote #{{ selectedBatchId }}
                 </h5>
                 <p class=" ms-3 mb-0 text-muted small">
-                    Nombre: {{batchData.name}}
+                    Nombre: {{ batchData?.name || 'N/A' }}
                 </p>
                 <button type="button" class="btn-close" (click)="closeModal()" aria-label="Close"></button>
             </div>
