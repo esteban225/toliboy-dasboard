@@ -56,6 +56,11 @@ interface NotificationDisplay {
   details: NotificationDetail[];
 }
 
+interface DailyMessage {
+  title: string;
+  message: string;
+}
+
 const MOVEMENT_TYPE_META: Record<MovementTypeKey, MovementUiMeta> = {
   in: {
     label: 'Entrada',
@@ -108,6 +113,7 @@ export class InventoryComponent implements OnInit, OnDestroy {
   notifications: NotificationItem[] = [];
   notificationGroups: NotificationGroup[] = [];
   notificationDisplayList: NotificationDisplay[] = [];
+  dailyMessages: DailyMessage[] = [];
 
   private destroy$ = new Subject<void>();
   private deletingNotifications = new Set<string | number>();
@@ -212,6 +218,7 @@ export class InventoryComponent implements OnInit, OnDestroy {
     this.movementsByType = movementsByType;
     this.movementSummary = this.buildMovementSummary(movementsByType);
     this.updateStatsCards(totalProducts, activeProducts, lowStockCount, totalMovements);
+    this.dailyMessages = this.buildDailyMessages(lowStockProducts, totalMovements, movementsByType);
   }
 
   private subscribeToNotifications(): void {
@@ -432,5 +439,43 @@ export class InventoryComponent implements OnInit, OnDestroy {
       uiQuantityClass: meta.quantityClass,
       uiQuantityPrefix: meta.prefix
     };
+  }
+
+  private buildDailyMessages(
+    lowStockProducts: any[],
+    totalMovements: number,
+    movementsByType: MovementsByType
+  ): DailyMessage[] {
+    const messages: DailyMessage[] = [];
+
+    if (lowStockProducts.length > 0) {
+      const highlights = lowStockProducts
+        .slice(0, 3)
+        .map((product: any) => product?.name || product?.code || 'Producto');
+      const highlightedText = highlights.length ? ` (${highlights.join(', ')})` : '';
+      messages.push({
+        title: 'Revisar stock bajo',
+        message: `${lowStockProducts.length} producto(s) requieren reposicion${highlightedText}.`
+      });
+    } else {
+      messages.push({
+        title: 'Stock estable',
+        message: 'No hay productos en niveles criticos. Mantener monitoreo regular.'
+      });
+    }
+
+    if (totalMovements > 0) {
+      messages.push({
+        title: 'Actividad del inventario',
+        message: `Se registraron ${totalMovements} movimientos (${movementsByType.in} entradas y ${movementsByType.out} salidas).`
+      });
+    } else {
+      messages.push({
+        title: 'Sin movimientos recientes',
+        message: 'Todavia no hay transacciones registradas para el periodo consultado.'
+      });
+    }
+
+    return messages;
   }
 }

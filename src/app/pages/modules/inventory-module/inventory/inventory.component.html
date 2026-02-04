@@ -48,9 +48,9 @@
         <i class="bi bi-info-circle-fill text-primary fs-5 me-2"></i>
         <p><strong class="fw-semibold">Info:</strong> Recuerda revisar las alertas de stock bajo y los movimientos
           recientes para mantener tu inventario actualizado.</p>
-        <p *ngFor="let message of dailyMessages" class="text-muted ">
-          Titulo: {{titleMessage}} <br>
-          Mensaje: {{ dailyMessage }}
+        <p *ngFor="let message of dailyMessages" class="text-muted">
+          <span class="fw-semibold">Titulo:</span> {{ message.title }} <br>
+          <span class="fw-semibold">Mensaje:</span> {{ message.message }}
         </p>
       </div>
 
