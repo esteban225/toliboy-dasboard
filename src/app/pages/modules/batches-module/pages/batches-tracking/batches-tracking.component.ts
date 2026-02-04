@@ -258,7 +258,12 @@ export class BatchesTrackingComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  viewBatchTimeline(batchId: number): void {
+  viewBatchTimeline(batchId?: number): void {
+    if (batchId == null) {
+      this.alert.error('Error', 'ID de lote inválido');
+      return;
+    }
+
     // Abrir modal y poblar sólo los campos que maneja el formulario
     this.isModalOpen = true;
     this.selectedBatchId = batchId;
@@ -357,7 +362,12 @@ export class BatchesTrackingComponent implements OnInit, OnDestroy {
     this.isModalOpen = false;
   }
 
-  viewBatchDetails(batchId: number): void {
+  viewBatchDetails(batchId?: number): void {
+    if (batchId == null) {
+      this.alert.error('Error', 'ID de lote inválido');
+      return;
+    }
+
     // Lógica para abrir el modal de detalles del lote
     // asignamos el id inmediatamente y solicitamos los datos; abrimos la modal
     // sólo cuando tengamos la información para mostrar en el header.
