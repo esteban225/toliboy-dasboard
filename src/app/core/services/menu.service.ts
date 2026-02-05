@@ -428,36 +428,51 @@ export class MenuService {
     // TRZ: Trazabilidad - Aplicaciones específicas de trazabilidad
     'TRZ': [
       {
-        id: 1,
-        label: 'MENUITEMS.MENU.TEXT',
-        isTitle: true
+        id: 300,
+        label: 'MENUITEMS.PRODUCT.TEXT',
+        icon: 'ti ti-package',
+        subItems: [
+          {
+            id: 301,
+            label: 'MENUITEMS.PRODUCT.LIST.PRODUCTSANALYTICS',
+            link: '/modules/product/analytics',
+            parentId: 300
+          },
+          {
+            id: 302,
+            label: 'MENUITEMS.PRODUCT.LIST.PRODUCTSLIST',
+            link: '/modules/product',
+            parentId: 300
+          }
+        ],
+        parentId: 100
       },
       {
-        id: 8,
-        label: 'MENUITEMS.APPS.TEXT',
-        isTitle: true
+        id: 400,
+        label: 'MENUITEMS.BATCHES.TEXT',
+        icon: 'ti ti-box-seam',
+        subItems: [
+          {
+            id: 401,
+            label: 'MENUITEMS.BATCHES.LIST.BATCHLIST',
+            link: '/modules/batches',
+            parentId: 400
+          },
+          {
+            id: 402,
+            label: 'MENUITEMS.BATCHES.LIST.ANALYTICS',
+            link: '/modules/batches/analytics',
+            parentId: 400
+          },
+          {
+            id: 403,
+            label: 'MENUITEMS.BATCHES.LIST.BATCHTRACKING',
+            link: '/modules/batches/batch-tracking',
+            parentId: 400
+          }
+        ],
+        parentId: 100
       },
-      {
-        id: 26,
-        label: 'MENUITEMS.APPS.LIST.KANBANBOARD',
-        icon: 'ti ti-subtask',
-        link: '/apps/kanbanboard',
-        parentId: 8,
-      },
-      {
-        id: 24,
-        label: 'MENUITEMS.APPS.LIST.TODO',
-        icon: 'ti ti-list',
-        link: '/apps/to-do',
-        parentId: 8,
-      },
-      {
-        id: 25,
-        label: 'MENUITEMS.APPS.LIST.CONTACTS',
-        icon: 'ti ti-address-book',
-        link: '/apps/contacts',
-        parentId: 8,
-      }
     ],
 
     // OP: Operador - Solo Kanban y herramientas básicas
@@ -557,7 +572,7 @@ export class MenuService {
       'GG': '/', // Dashboard gerencial  
       'INGPL': '/', // Dashboard de planta
       'INGPR': '/', // Dashboard de producción
-      'TRZ': '/apps/kanbanboard', // Kanban para trazabilidad
+      'TRZ': '/modules/batches/analytics', // Kanban para trazabilidad
       'OP': '/modules/inventory' // Solo Kanban para operadores
     };
 
