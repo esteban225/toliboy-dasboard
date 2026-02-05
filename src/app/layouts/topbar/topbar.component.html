@@ -23,7 +23,9 @@
                     </a>
                 </div>
 
-                <button type="button" class="btn btn-sm px-3 fs-16 header-item vertical-menu-btn topnav-hamburger shadow-none" id="topnav-hamburger-icon" (click)="toggleMobileMenu($event)">
+                <button type="button"
+                    class="btn btn-sm px-3 fs-16 header-item vertical-menu-btn topnav-hamburger shadow-none"
+                    id="topnav-hamburger-icon" (click)="toggleMobileMenu($event)">
                     <span class="hamburger-icon">
                         <span></span>
                         <span></span>
@@ -34,10 +36,11 @@
 
             <!--Apps Dropdown -->
             <div class="d-flex align-items-center">
-   
+
 
                 <div dropdown class="dropdown ms-1 topbar-head-dropdown header-item">
-                    <button dropdownToggle type="button" class="btn btn-icon btn-topbar btn-ghost-secondary rounded-circle">
+                    <button dropdownToggle type="button"
+                        class="btn btn-icon btn-topbar btn-ghost-secondary rounded-circle">
                         @if(flagvalue == undefined){
                         <img id="header-lang-img" src="{{valueset}}" alt="Header Language" height="20" class="rounded">
                         }@else{
@@ -48,158 +51,240 @@
 
                 <!--- Fullscreen Toggle -->
                 <div class="ms-1 header-item d-none d-sm-flex">
-                    <button type="button" class="btn btn-icon btn-topbar btn-ghost-light rounded-circle user-name-text" data-toggle="fullscreen" (click)="fullscreen()">
+                    <button type="button" class="btn btn-icon btn-topbar btn-ghost-light rounded-circle user-name-text"
+                        data-toggle="fullscreen" (click)="fullscreen()">
                         <i class='ti ti-arrows-maximize fs-3xl'></i>
                     </button>
                 </div>
 
                 <!--- Light/Dark Mode -->
                 <div dropdown class="dropdown topbar-head-dropdown ms-1 header-item">
-                    <button dropdownToggle type="button" class="btn btn-icon btn-topbar btn-ghost-light rounded-circle user-name-text mode-layout" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <button dropdownToggle type="button"
+                        class="btn btn-icon btn-topbar btn-ghost-light rounded-circle user-name-text mode-layout"
+                        data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                         <i class="ti ti-sun align-middle fs-3xl"></i>
                     </button>
                     <div *bsDropdownMenu class="dropdown-menu p-2 dropdown-menu-end" id="light-dark-mode">
-                        <a href="javascript:void(0);" class="dropdown-item" (click)="changeMode('light')"><i class="bi bi-sun align-middle me-2"></i> Modo claro</a>
-                        <a href="javascript:void(0);" class="dropdown-item" (click)="changeMode('dark')"><i class="bi bi-moon align-middle me-2"></i> Modo oscuro</a>
-                  </div>
-                </div>
-
-                <!-- Notification -->
-                <div dropdown [insideClick]="true" class="dropdown topbar-head-dropdown ms-1 header-item" id="notificationDropdown">
-                    <button dropdownToggle type="button" class="btn btn-icon btn-topbar btn-ghost-light rounded-circle user-name-text" id="page-header-notifications-dropdown" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-haspopup="true" aria-expanded="false">
-                        <i class='ti ti-bell-ringing fs-3xl'></i>
-                        <span class="position-absolute topbar-badge fs-3xs translate-middle badge rounded-pill bg-danger"><span class="notification-badge">{{totalNotify}}</span><span class="visually-hidden">unread messages</span></span>
-                    </button>
-                    <div *dropdownMenu class="dropdown-menu dropdown-menu-lg dropdown-menu-end p-0 " aria-labelledby="page-header-notifications-dropdown">
-
-                        <div class="dropdown-head rounded-top">
-                            <div class="p-3 border-bottom border-bottom-dashed">
-                                <div class="row align-items-center">
-                                    <div class="col">
-                                        <h6 class="mb-0 fs-lg fw-semibold"> Notificaciones <span class="badge bg-danger-subtle text-danger fs-sm notification-badge"> {{totalNotify}}</span></h6>
-                                        <p class="fs-md text-muted mt-1 mb-0">Tienes <span class="fw-semibold notification-unread">{{newNotify}}</span> mensajes no leídos</p>
-                                    </div>
-                                    <div class="col-auto d-flex align-items-start">
-                                        <button type="button" class="btn btn-sm btn-ghost-secondary me-2" title="Recargar notificaciones" (click)="reloadNotifications()">
-                                            <i class="bi bi-arrow-clockwise"></i>
-                                        </button>
-                                        <div dropdown [container]="'body'" class="dropdown">
-                                            <a dropdownToggle href="javascript:void(0);" data-bs-toggle="dropdown" class="link-secondary fs-md"><i class="bi bi-three-dots-vertical"></i></a>
-                                            <ul *dropdownMenu class="dropdown-menu">
-                                                <li><a class="dropdown-item" href="javascript:void(0);" (click)="clearAll()">Todo claro</a></li>
-                                                <li><a class="dropdown-item" href="javascript:void(0);" (click)="markAllAsRead()">Marcar todo como leído</a></li>
-                                                <li><a class="dropdown-item" href="javascript:void(0);">Archivar todo</a></li>
-                                            </ul>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                        </div>
-
-                        <div class="py-2 ps-2" id="notificationItemsTabContent">
-                            <ngx-simplebar style="max-height: 300px;" class="pe-2">
-                                @for (data of notificationList; track $index) {
-                                <div>
-                                    @if(data.items.length > 0){
-                                    <h6 class="text-overflow text-muted fs-sm my-2 text-uppercase notification-title">{{data.title}}</h6>}
-
-                                    <ul class="list-group list-group-flush mb-2">
-                                    @for (item of data.items; track $index) {
-                                    <li class="list-group-item list-group-item-action d-flex align-items-start gap-2 py-2 notification-list-item"
-                                        [ngClass]="{ 'bg-light': !item.isRead, 'border-start border-4 border-primary': !item.isRead }"
-                                        (click)="callMarkAsRead(item.id)">
-
-                                        @if(item.avatar){
-                                        <img src="{{item.avatar}}" class="rounded-circle me-2" alt="user-pic" width="44" height="44">
-                                        }@else{
-                                        <span class="d-inline-flex align-items-center justify-content-center rounded-circle me-2" style="width:44px;height:44px;background-color:var(--bs-light);">
-                                            <i class='{{item.icon}}'></i>
-                                        </span>
-                                        }
-
-                                            <div class="flex-grow-1">
-                                            @if(item.title){
-                                            <div class="d-flex justify-content-between align-items-start">
-                                                <div class="me-2">
-                                                    <h6 class="mb-1 fs-6 fw-semibold text-truncate">{{item.title}}</h6>
-                                                    <p class="mb-0 text-muted small text-truncate">{{item.message}}</p>
-                                                </div>
-                                                <small class="text-muted ms-2 text-nowrap d-none d-sm-block">{{item.timestamp}}</small>
-                                            </div>
-                                            <small class="text-muted d-block d-sm-none mt-1">{{item.timestamp}}</small>
-                                            }@else{
-                                            <div class="d-flex justify-content-between align-items-center">
-                                                <p class="mb-0 text-truncate">{{item.message}}</p>
-                                                <small class="text-muted ms-2 d-none d-sm-block">{{item.timestamp}}</small>
-                                            </div>
-                                            <small class="text-muted d-block d-sm-none mt-1">{{item.timestamp}}</small>
-                                            }
-                                        </div>
-
-                                        <div class="ms-2 d-flex flex-column align-items-center actions-desktop">
-                                            <button class="btn btn-sm btn-outline-success mb-1" (click)="callMarkAsRead(item.id); $event.stopPropagation()" title="Marcar leído"><i class="bi bi-check-lg"></i></button>
-                                            <div class="form-check">
-                                                <input class="form-check-input" type="checkbox" value="{{item.id}}" [(ngModel)]="item.selected" (change)="toggleNotificationSelection(item.id)" id="notification-{{item.id}}">
-                                            </div>
-                                        </div>
-
-                                        <div class="ms-2 d-flex align-items-center d-sm-none actions-mobile">
-                                            <div class="dropdown">
-                                                <button class="btn btn-sm btn-ghost-secondary" type="button" data-bs-toggle="dropdown" aria-expanded="false" (click)="$event.stopPropagation()">
-                                                    <i class="bi bi-three-dots-vertical"></i>
-                                                </button>
-                                                <ul class="dropdown-menu dropdown-menu-end p-1">
-                                                    <li><button class="dropdown-item small" (click)="callMarkAsRead(item.id); $event.stopPropagation()">Marcar leído</button></li>
-                                                    <li><label class="dropdown-item small d-flex align-items-center"><input class="form-check-input me-2" type="checkbox" [(ngModel)]="item.selected" (change)="toggleNotificationSelection(item.id)"/> Seleccionar</label></li>
-                                                </ul>
-                                            </div>
-                                        </div>
-
-                                    </li>
-                                    }
-                                    </ul>
-                                </div>
-                                }
-                                
-                            </ngx-simplebar>
-
-                            @if(totalNotify == 0){
-                            <div class="text-center py-4 text-muted notification-empty">
-                                <i class="bi bi-bell-slash fs-2 mb-2"></i>
-                                <p class="mb-1 fw-semibold">No hay notificaciones</p>
-                                <p class="small">Cuando lleguen nuevas notificaciones, las verás aquí.</p>
-                            </div>
-                            }
-
-                            <div class="notification-actions" id="notification-actions" style="display: none;">
-                                <div class="d-flex text-muted justify-content-center align-items-center">
-                                    seleccionar <div id="select-content" class="text-body fw-semibold px-1">{{checkedValGet.length}}</div> Resultados <button type="button" class="btn btn-link link-danger p-0 ms-2" (click)="removeNotificationModal.show()">Eliminar</button>
-                                </div>
-                            </div>
-                            <div class="dropdown-foot p-2 border-top text-center">
-                                <button class="btn btn-sm btn-outline-secondary me-2" (click)="markAllAsRead()">Marcar todo leído</button>
-                                <a class="btn btn-sm btn-primary" routerLink="/pages/notifications">Ver todas</a>
-                            </div>
-                        </div>
+                        <a href="javascript:void(0);" class="dropdown-item" (click)="changeMode('light')"><i
+                                class="bi bi-sun align-middle me-2"></i> Modo claro</a>
+                        <a href="javascript:void(0);" class="dropdown-item" (click)="changeMode('dark')"><i
+                                class="bi bi-moon align-middle me-2"></i> Modo oscuro</a>
                     </div>
                 </div>
 
+                <!-- Notification -->
+                <!-- NOTIFICATION DROPDOWN -->
+                <div dropdown [insideClick]="true" class="dropdown topbar-head-dropdown ms-1 header-item">
+
+                    <!-- BUTTON -->
+                    <button dropdownToggle type="button"
+                        class="btn btn-icon btn-topbar btn-ghost-light rounded-circle position-relative">
+                        <i class="ti ti-bell-ringing fs-3xl"></i>
+
+                        <span *ngIf="totalNotify > 0"
+                            class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger fs-3xs">
+                            {{ totalNotify }}
+                        </span>
+                    </button>
+
+                    <!-- MENU -->
+                    <div *dropdownMenu class="dropdown-menu dropdown-menu-lg dropdown-menu-end p-0">
+
+                        <!-- HEADER -->
+                        <div class="p-3 border-bottom border-bottom-dashed bg-light">
+                            <div class="d-flex justify-content-between align-items-start">
+
+                                <div>
+                                    <h6 class="fw-semibold mb-1">
+                                        Notificaciones
+                                        <span class="badge bg-danger-subtle text-danger ms-1">{{ totalNotify }}</span>
+                                    </h6>
+                                    <small class="text-muted">Tienes {{ newNotify }} mensajes sin leer</small>
+                                </div>
+
+                                <div class="d-flex gap-2">
+                                    <button class="btn btn-sm btn-ghost-secondary" (click)="reloadNotifications()"
+                                        title="Recargar">
+                                        <i class="bi bi-arrow-clockwise"></i>
+                                    </button>
+
+                                    <div dropdown>
+                                        <button dropdownToggle class="btn btn-sm btn-ghost-secondary">
+                                            <i class="bi bi-three-dots-vertical"></i>
+                                        </button>
+                                        <ul *dropdownMenu class="dropdown-menu">
+                                            <li><a class="dropdown-item" (click)="clearAll()">Limpiar</a></li>
+                                            <li><a class="dropdown-item" (click)="markAllAsRead()">Marcar todo leído</a>
+                                            </li>
+                                            <li><a class="dropdown-item">Archivar todo</a></li>
+                                        </ul>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+
+                        <!-- LIST -->
+                        <div class="py-2" id="notificationItemsTabContent">
+
+                            <ngx-simplebar style="max-height: 300px;">
+                                <div class="px-2">
+
+                                    @for (group of notificationList; track $index) {
+
+                                    @if(group.items.length > 0) {
+                                    <h6 class="text-muted text-uppercase fs-7 mt-3 mb-2">
+                                        {{ group.title }}
+                                    </h6>
+                                    }
+
+                                    <ul class="list-group list-group-flush mb-2">
+
+                                        @for (item of group.items; track $index) {
+
+                                        <li class="list-group-item d-flex align-items-start gap-2 py-2"
+                                            [class.bg-light]="!item.isRead" [class.border-start]="!item.isRead"
+                                            [class.border-4]="!item.isRead" [class.border-primary]="!item.isRead"
+                                            (click)="callMarkAsRead(item.id)">
+
+                                            <!-- AVATAR / ICON -->
+                                            <div class="flex-shrink-0">
+                                                <ng-container *ngIf="item.avatar; else iconBlock">
+                                                    <img [src]="item.avatar" width="44" height="44"
+                                                        class="rounded-circle" />
+                                                </ng-container>
+                                                <ng-template #iconBlock>
+                                                    <div class="rounded-circle d-flex align-items-center justify-content-center"
+                                                        style="width:44px;height:44px;background:var(--bs-light)">
+                                                        <i [class]="item.icon"></i>
+                                                    </div>
+                                                </ng-template>
+                                            </div>
+
+                                            <!-- CONTENT -->
+                                            <div class="flex-grow-1">
+                                                <div class="d-flex justify-content-between">
+                                                    <div class="me-2">
+                                                        <h6 class="fw-semibold fs-6 mb-1 text-truncate"
+                                                            *ngIf="item.title">{{ item.title }}</h6>
+
+                                                        <p class="text-muted small mb-0 text-truncate">
+                                                            {{ item.message }}
+                                                        </p>
+                                                    </div>
+
+                                                    <small class="text-muted text-nowrap d-none d-sm-block">
+                                                        {{ item.timestamp }}
+                                                    </small>
+                                                </div>
+
+                                                <small class="d-sm-none text-muted mt-1">{{ item.timestamp }}</small>
+                                            </div>
+
+                                            <!-- ACTIONS DESKTOP -->
+                                            <div class="ms-2 d-none d-sm-flex flex-column align-items-center">
+                                                <button class="btn btn-sm btn-outline-success mb-1"
+                                                    (click)="callMarkAsRead(item.id); $event.stopPropagation()"
+                                                    title="Marcar leído">
+                                                    <i class="bi bi-check-lg"></i>
+                                                </button>
+
+                                                <input type="checkbox" class="form-check-input"
+                                                    [(ngModel)]="item.selected"
+                                                    (change)="toggleNotificationSelection(item.id)" />
+                                            </div>
+
+                                            <!-- ACTIONS MOBILE -->
+                                            <div class="d-sm-none ms-2">
+                                                <div dropdown>
+                                                    <button dropdownToggle class="btn btn-sm btn-ghost-secondary"
+                                                        (click)="$event.stopPropagation()">
+                                                        <i class="bi bi-three-dots-vertical"></i>
+                                                    </button>
+
+                                                    <ul *dropdownMenu class="dropdown-menu dropdown-menu-end p-1">
+                                                        <li><button class="dropdown-item small"
+                                                                (click)="callMarkAsRead(item.id); $event.stopPropagation()">
+                                                                Marcar leído
+                                                            </button></li>
+
+                                                        <li>
+                                                            <label class="dropdown-item small">
+                                                                <input type="checkbox" class="form-check-input me-2"
+                                                                    [(ngModel)]="item.selected"
+                                                                    (change)="toggleNotificationSelection(item.id)" />
+                                                                Seleccionar
+                                                            </label>
+                                                        </li>
+                                                    </ul>
+                                                </div>
+                                            </div>
+
+                                        </li>
+
+                                        }
+
+                                    </ul>
+
+                                    }
+
+                                </div>
+                            </ngx-simplebar>
+
+                            <!-- EMPTY STATE -->
+                            <div *ngIf="totalNotify == 0" class="text-center py-4 text-muted">
+                                <i class="bi bi-bell-slash fs-2 mb-2"></i>
+                                <p class="fw-semibold mb-1">No hay notificaciones</p>
+                                <small>Cuando lleguen nuevas, aparecerán aquí.</small>
+                            </div>
+
+                            <!-- SELECTION BAR -->
+                            <div *ngIf="checkedValGet?.length > 0" class="text-center py-2 border-top bg-light small">
+                                Seleccionados:
+                                <span class="fw-semibold px-1">{{ checkedValGet.length }}</span>
+                                <button class="btn btn-link link-danger p-0" (click)="removeNotificationModal.show()">
+                                    Eliminar
+                                </button>
+                            </div>
+
+                        </div>
+
+                        <!-- FOOTER -->
+                        <div class="p-2 border-top text-center bg-light">
+                            <button class="btn btn-sm btn-outline-secondary me-2" (click)="markAllAsRead()">
+                                Marcar todo leído
+                            </button>
+                            <a routerLink="/pages/notifications" class="btn btn-sm btn-primary">
+                                Ver todas
+                            </a>
+                        </div>
+
+                    </div>
+
+                </div>
+
+
                 <div dropdown class="dropdown ms-sm-3 topbar-head-dropdown dropdown-hover-end header-item topbar-user">
-                    <button dropdownToggle type="button" class="btn shadow-none btn-icon" id="page-header-user-dropdown">
+                    <button dropdownToggle type="button" class="btn shadow-none btn-icon"
+                        id="page-header-user-dropdown">
                         <span class="d-flex align-items-center">
-                            <img class="rounded-circle header-profile-user" src="assets/images/users/avatar-1.jpg" alt="Header Avatar">
+                            <img class="rounded-circle header-profile-user" src="assets/images/users/avatar-1.jpg"
+                                alt="Header Avatar">
                         </span>
                     </button>
                     <div *dropdownMenu class="dropdown-menu dropdown-menu-end">
                         <!-- item-->
                         <h6 class="dropdown-header">¡Bienvenido!</h6>
+                        <!-- 
                         <a class="dropdown-item fs-sm" routerLink="/pages/profile"><i class="bi bi-person-circle text-muted align-middle me-1"></i> <span class="align-middle"> Perfil</span></a>
                         <a class="dropdown-item fs-sm" routerLink="/apps/chat"><i class="bi bi-box-seam text-muted align-middle me-1"></i> <span class="align-middle"> Chat</span></a>
                         <a class="dropdown-item fs-sm" routerLink="/apps/to-do"><span class="badge bg-success-subtle text-success float-end ms-2">Nuevo</span><i class="bi bi-cassette text-muted align-middle me-1"></i> <span class="align-middle"> Por hacer</span></a>
                         <div class="dropdown-divider"></div>
                         <a class="dropdown-item fs-sm" routerLink="/pages/profile-settings"><i class="bi bi-gear text-muted align-middle me-1"></i> <span class="align-middle"> Configuración</span></a>
-                        <a class="dropdown-item fs-sm" (click)="logoutUser()"><i class="bi bi-box-arrow-right text-muted align-middle me-1"></i> <span class="align-middle" data-key="t-logout"> Cerrar sesión</span></a>
+                        -->
+                        <a class="dropdown-item fs-sm" (click)="logoutUser()"><i
+                                class="bi bi-box-arrow-right text-muted align-middle me-1"></i> <span
+                                class="align-middle" data-key="t-logout"> Cerrar sesión</span></a>
                     </div>
                 </div>
             </div>
@@ -209,7 +294,8 @@
 <div class="wrapper z-n1"></div>
 
 <!-- removeNotificationModal -->
-<div bsModal #removeNotificationModal="bs-modal" id="removeNotificationModal" class="modal fade zoomIn" tabindex="-1" aria-hidden="true">
+<div bsModal #removeNotificationModal="bs-modal" id="removeNotificationModal" class="modal fade zoomIn" tabindex="-1"
+    aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
@@ -226,12 +312,13 @@
                     </div>
                 </div>
                 <div class="d-flex gap-2 justify-content-center mt-4 mb-2">
-                    <button type="button" class="btn w-sm btn-light" (click)="removeNotificationModal.hide()">Cerrar</button>
-                    <button type="button" class="btn w-sm btn-danger" id="delete-notification" (click)="notificationDelete()">Sí, eliminarla!</button>
+                    <button type="button" class="btn w-sm btn-light"
+                        (click)="removeNotificationModal.hide()">Cerrar</button>
+                    <button type="button" class="btn w-sm btn-danger" id="delete-notification"
+                        (click)="notificationDelete()">Sí, eliminarla!</button>
                 </div>
             </div>
 
         </div>
     </div>
 </div><!-- /.modal -->
-
