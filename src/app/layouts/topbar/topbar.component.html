@@ -239,9 +239,9 @@
                             </div>
 
                             <!-- SELECTION BAR -->
-                            <div *ngIf="checkedValGet?.length > 0" class="text-center py-2 border-top bg-light small">
+                            <div *ngIf="(checkedValGet?.length || 0) > 0" class="text-center py-2 border-top bg-light small">
                                 Seleccionados:
-                                <span class="fw-semibold px-1">{{ checkedValGet.length }}</span>
+                                <span class="fw-semibold px-1">{{ checkedValGet?.length || 0 }}</span>
                                 <button class="btn btn-link link-danger p-0" (click)="removeNotificationModal.show()">
                                     Eliminar
                                 </button>

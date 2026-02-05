@@ -93,13 +93,13 @@
                                         <span class="badge bg-info-subtle text-info border border-info">{{ p.category }}</span>
                                     </td>
                                     <td>
-                                        <div *ngIf="p.specifications?.length > 0" class="d-flex flex-wrap gap-1">
+                                        <div *ngIf="(p.specifications?.length || 0) > 0" class="d-flex flex-wrap gap-1">
                                             <span *ngFor="let spec of p.specifications"
                                                   class="badge bg-secondary-subtle text-secondary border border-secondary">
                                                 {{ spec }}
                                             </span>
                                         </div>
-                                        <span *ngIf="!p.specifications?.length" class="text-muted small">—</span>
+                                        <span *ngIf="(p.specifications?.length || 0) === 0" class="text-muted small">—</span>
                                     </td>
                                 </tr>
 
