@@ -353,6 +353,28 @@ export class BatchesListComponent implements OnInit, OnDestroy {
     return Math.min(a ?? 0, b ?? 0);
   }
 
+  getProductName(batch: Batch): string {
+    if (!batch) {
+      return '-';
+    }
+
+    const direct = (batch as any)?.product?.name || (batch as any)?.product_name;
+    if (direct) {
+      return direct;
+    }
+
+    const productId = this.toNumber(batch.product_id);
+    if (productId !== null) {
+      const product = this.products().find((p: any) => this.toNumber(p?.id) === productId);
+      if (product) {
+        return product.name || product.sku || product.code || `Producto #${productId}`;
+      }
+      return `Producto #${productId}`;
+    }
+
+    return '-';
+  }
+
   formatDate(date?: string): string {
     if (!date) return '-';
     return new Date(date).toLocaleDateString('es-ES');
