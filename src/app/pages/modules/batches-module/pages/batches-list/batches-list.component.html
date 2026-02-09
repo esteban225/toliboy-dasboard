@@ -1,49 +1,52 @@
-<div class="container-fluid px-4 py-4">
+<div class="container-fluid px-2 px-md-4 py-3 py-md-4">
     <!-- Header con título y acciones -->
-    <div class="d-flex justify-content-between align-items-center mb-4 rounded-4 bg-body p-4 shadow-sm border efect-3d">
+    <div
+        class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-3 mb-md-4 rounded-4 bg-body p-3 p-md-4 shadow-sm border efect-3d gap-3">
         <div>
-            <h2 class="mb-1 fw-bold">
+            <h2 class="mb-1 fw-bold fs-4 fs-md-3">
                 <i class="bi bi-boxes text-primary me-2"></i>Lotes
             </h2>
             <p class="text-muted mb-0 small">Gestión de lotes de producción</p>
         </div>
-        <div class="d-flex gap-2">
-            <button class="btn btn-primary" (click)="openCreate()">
-                <i class="bi bi-plus-circle me-2"></i>Nuevo
+        <div class="d-flex gap-2 w-100 w-md-auto">
+            <button class="btn btn-primary flex-fill flex-md-grow-0" (click)="openCreate()">
+                <i class="bi bi-plus-circle me-1 me-md-2"></i><span class="d-none d-sm-inline">Nuevo</span>
             </button>
-            <button class="btn btn-outline-secondary" (click)="forceReload()">
-                <i class="bi bi-arrow-clockwise me-2"></i>Recargar
+            <button class="btn btn-outline-secondary flex-fill flex-md-grow-0" (click)="forceReload()">
+                <i class="bi bi-arrow-clockwise me-1 me-md-2"></i><span class="d-none d-sm-inline">Recargar</span>
             </button>
         </div>
     </div>
 
     <!-- Filtros -->
-    <div class="card shadow-sm mb-4 p-4 rounded-4 bg-body border">
-        <div class="card-header bg-light border-0">
-            <h6 class="mb-0 fw-semibold">
+    <div class="card shadow-sm mb-3 mb-md-4 rounded-4 bg-body border">
+        <div class="card-header bg-light border-0 p-3">
+            <h6 class="mb-0 fw-semibold small">
                 <i class="bi bi-funnel me-2"></i>Filtros de búsqueda
             </h6>
         </div>
-        <div class="card-body">
+        <div class="card-body p-3 p-md-4">
             <form [formGroup]="filterForm">
-                <div class="row g-3 align-items-end">
-                    <div class="col-md-3">
-                        <label class="form-label fw-semibold small">
+                <div class="row g-2 g-md-3">
+                    <div class="col-12 col-sm-6 col-md-3">
+                        <label class="form-label fw-semibold small mb-1">
                             <i class="bi bi-tag me-1"></i>Nombre
                         </label>
-                        <input class="form-control" formControlName="name" placeholder="Buscar por nombre" />
+                        <input class="form-control form-control-sm form-control-md-regular" formControlName="name"
+                            placeholder="Buscar por nombre" />
                     </div>
-                    <div class="col-md-3">
-                        <label class="form-label fw-semibold small">
+                    <div class="col-12 col-sm-6 col-md-3">
+                        <label class="form-label fw-semibold small mb-1">
                             <i class="bi bi-upc-scan me-1"></i>Código
                         </label>
-                        <input class="form-control" formControlName="code" placeholder="Buscar por código" />
+                        <input class="form-control form-control-sm form-control-md-regular" formControlName="code"
+                            placeholder="Buscar por código" />
                     </div>
-                    <div class="col-md-3">
-                        <label class="form-label fw-semibold small">
+                    <div class="col-12 col-sm-6 col-md-3">
+                        <label class="form-label fw-semibold small mb-1">
                             <i class="bi bi-check-circle me-1"></i>Estado
                         </label>
-                        <select class="form-select" formControlName="status">
+                        <select class="form-select form-select-sm form-select-md-regular" formControlName="status">
                             <option value="">Todos</option>
                             <option value="planned">Planificado</option>
                             <option value="in_process">En Proceso</option>
@@ -53,13 +56,14 @@
                             <option value="cancelled">Cancelado</option>
                         </select>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-12 col-sm-6 col-md-3">
+                        <label class="form-label fw-semibold small mb-1 d-none d-md-block">&nbsp;</label>
                         <div class="d-flex gap-2">
-                            <button type="button" class="btn btn-primary flex-fill" (click)="applyFilters()">
+                            <button type="button" class="btn btn-primary btn-sm flex-fill" (click)="applyFilters()">
                                 <i class="bi bi-search me-1"></i>Buscar
                             </button>
-                            <button type="button" class="btn btn-outline-secondary" (click)="clearFilters()">
-                                <i class="bi bi-x-lg">Limpiar filtros</i>
+                            <button type="button" class="btn btn-outline-secondary btn-sm" (click)="clearFilters()">
+                                <i class="bi bi-x-lg"></i>
                             </button>
                         </div>
                     </div>
@@ -69,101 +73,103 @@
     </div>
 
     <!-- Alertas de estado -->
-    <div *ngIf="loading$" class="alert alert-info d-flex align-items-center" role="alert">
-        <div class="spinner-border spinner-border-sm me-3" role="status">
+    <div *ngIf="loading$" class="alert alert-info d-flex align-items-center mb-3" role="alert">
+        <div class="spinner-border spinner-border-sm me-2 me-md-3" role="status">
             <span class="visually-hidden">Cargando...</span>
         </div>
-        <div>Cargando datos...</div>
+        <div class="small">Cargando datos...</div>
     </div>
 
-    <div *ngIf="error$" class="alert alert-danger d-flex align-items-center" role="alert">
-        <i class="bi bi-exclamation-triangle-fill me-3"></i>
-        <div>{{ error$ }}</div>
+    <div *ngIf="error$" class="alert alert-danger d-flex align-items-center mb-3" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2 me-md-3"></i>
+        <div class="small">{{ error$ }}</div>
     </div>
 
     <!-- Tabla de lotes -->
-    <div class="card shadow-sm border rounded-4 bg-body ">
+    <div class="card shadow-sm border rounded-4 bg-body">
         <div class="card-body p-0">
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0">
                     <thead class="table-light">
                         <tr>
-                            <th class="text-center px-3 py-3" style="width: 60px;">
-                                <i class="bi bi-hash"></i> ID
+                            <th class="text-center px-2 px-md-3 py-2 py-md-3 small" style="width: 50px;">
+                                <i class="bi bi-hash"></i><span class="d-none d-sm-inline"> ID</span>
                             </th>
-                            <th class="px-3 py-3">
+                            <th class="px-2 px-md-3 py-2 py-md-3 small">
                                 <i class="bi bi-tag-fill"></i> Nombre
                             </th>
-                            <th class="px-3 py-3 d-none d-lg-table-cell">
+                            <th class="px-2 px-md-3 py-2 py-md-3 small d-none d-lg-table-cell">
                                 <i class="bi bi-upc-scan"></i> Código
                             </th>
-                            <th class="px-3 py-3 d-none d-md-table-cell">
+                            <th class="px-2 px-md-3 py-2 py-md-3 small d-none d-md-table-cell">
                                 <i class="bi bi-calendar-event"></i> Inicio
                             </th>
-                            <th class="px-3 py-3 d-none d-md-table-cell">
+                            <th class="px-2 px-md-3 py-2 py-md-3 small d-none d-xl-table-cell">
                                 <i class="bi bi-calendar-range"></i> Fin Esperado
                             </th>
-                            <th class="px-3 py-3 d-none d-lg-table-cell">
+                            <th class="px-2 px-md-3 py-2 py-md-3 small d-none d-lg-table-cell">
                                 <i class="bi bi-bag-check"></i> Cantidad
                             </th>
-                            <th class="px-3 py-3 d-none d-lg-table-cell">
+                            <th class="px-2 px-md-3 py-2 py-md-3 small d-none d-xl-table-cell">
                                 <i class="bi bi-exclamation-circle"></i> Defectos
                             </th>
-                            <th class="px-3 py-3 d-none d-md-table-cell">
+                            <th class="px-2 px-md-3 py-2 py-md-3 small d-none d-sm-table-cell">
                                 <i class="bi bi-check-circle"></i> Estado
                             </th>
-                            <th class="text-center px-3 py-3" style="width: 100px;">
-                                <i class="bi bi-gear"></i> Acciones
+                            <th class="text-center px-2 px-md-3 py-2 py-md-3 small" style="width: 90px;">
+                                <i class="bi bi-gear"></i><span class="d-none d-md-inline"> Acciones</span>
                             </th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr *ngFor="let b of batches$; trackBy: trackById">
-                            <td class="text-center px-3 py-3 fw-bold text-primary">
+                            <td class="text-center px-2 px-md-3 py-2 py-md-3 fw-bold text-primary small">
                                 #{{ b.id }}
                             </td>
-                            <td class="px-3 py-3">
-                                <div class="fw-semibold ">{{ b.name ?? '-' }}</div>
-                                <small class="text-muted">Producto: {{ getProductName(b) }}</small>
+                            <td class="px-2 px-md-3 py-2 py-md-3">
+                                <div class="fw-semibold small">{{ b.name ?? '-' }}</div>
+                                <small class="text-muted d-block d-md-none">{{ getProductName(b) }}</small>
+                                <small class="text-muted d-none d-md-block">Producto: {{ getProductName(b) }}</small>
                             </td>
-                            <td class="px-3 py-3 d-none d-lg-table-cell">
-                                <span class="badge bg-info">{{ b.code ?? '-' }}</span>
+                            <td class="px-2 px-md-3 py-2 py-md-3 d-none d-lg-table-cell">
+                                <span class="badge bg-info small">{{ b.code ?? '-' }}</span>
                             </td>
-                            <td class="px-3 py-3 d-none d-md-table-cell">
+                            <td class="px-2 px-md-3 py-2 py-md-3 d-none d-md-table-cell">
                                 <small>{{ formatDate(b.start_date) }}</small>
                             </td>
-                            <td class="px-3 py-3 d-none d-md-table-cell">
+                            <td class="px-2 px-md-3 py-2 py-md-3 d-none d-xl-table-cell">
                                 <small>{{ formatDate(b.expected_end_date) }}</small>
                             </td>
-                            <td class="px-3 py-3 d-none d-lg-table-cell">
-                                <span class="badge bg-success">{{ b.quantity ?? 0 }}</span>
+                            <td class="px-2 px-md-3 py-2 py-md-3 d-none d-lg-table-cell">
+                                <span class="badge bg-success small">{{ b.quantity ?? 0 }}</span>
                             </td>
-                            <td class="px-3 py-3 d-none d-lg-table-cell">
-                                <span class="badge"
+                            <td class="px-2 px-md-3 py-2 py-md-3 d-none d-xl-table-cell">
+                                <span class="badge small"
                                     [ngClass]="(b.defect_quantity ?? 0) > 0 ? 'bg-danger' : 'bg-secondary'">
                                     {{ b.defect_quantity ?? 0 }}
                                 </span>
                             </td>
-                            <td class="px-3 py-3 d-none d-md-table-cell">
-                                <span class="badge" [ngClass]="getStatusBadgeClass(b)">
+                            <td class="px-2 px-md-3 py-2 py-md-3 d-none d-sm-table-cell">
+                                <span class="badge small" [ngClass]="getStatusBadgeClass(b)">
                                     {{ getStatusLabel(b.status) }}
                                 </span>
                             </td>
-                            <td class="text-center px-3 py-3">
+                            <td class="text-center px-2 px-md-3 py-2 py-md-3">
                                 <div class="btn-group btn-group-sm" role="group">
-                                    <button class="btn btn-outline-primary" (click)="select(b)" title="Editar">
+                                    <button class="btn btn-outline-primary btn-sm" (click)="select(b)" title="Editar">
                                         <i class="bi bi-pencil-square"></i>
                                     </button>
-                                    <button class="btn btn-outline-danger" (click)="remove(b.id)" title="Eliminar">
+                                    <button class="btn btn-outline-danger btn-sm" (click)="remove(b.id)"
+                                        title="Eliminar">
                                         <i class="bi bi-trash"></i>
                                     </button>
                                 </div>
                             </td>
                         </tr>
                         <tr *ngIf="!batches$ || batches$.length === 0">
-                            <td colspan="9" class="text-center py-4">
-                                <i class="bi bi-inbox text-muted display-1"></i>
-                                <p class="text-muted mt-2">No hay lotes para mostrar</p>
+                            <td colspan="9" class="text-center py-4 py-md-5">
+                                <i class="bi bi-inbox text-muted display-4 display-md-1"></i>
+                                <p class="text-muted mt-2 small">No hay lotes para mostrar</p>
                             </td>
                         </tr>
                     </tbody>
@@ -172,30 +178,32 @@
         </div>
 
         <!-- Paginación -->
-        <div class="card-footer border-0" *ngIf="meta$.total">
-            <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
-                <div class="text-muted small">
-                    <i class="bi bi-file-text me-2"></i>
-                    Mostrando
+        <div class="card-footer border-0 p-2 p-md-3" *ngIf="meta$.total">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-2 gap-md-3">
+                <div class="text-muted small text-center text-md-start">
+                    <i class="bi bi-file-text me-1 me-md-2"></i>
+                    <span class="d-none d-sm-inline">Mostrando </span>
                     <span class="fw-bold">{{ ((meta$.current_page - 1) * meta$.per_page) + 1 }}</span> -
                     <span class="fw-bold">{{ min(meta$.current_page * meta$.per_page, meta$.total) }}</span>
                     de
-                    <span class="fw-bold">{{ meta$.total }}</span> registros
+                    <span class="fw-bold">{{ meta$.total }}</span>
                 </div>
                 <nav>
                     <ul class="pagination pagination-sm mb-0">
                         <li class="page-item" [class.disabled]="meta$.current_page <= 1">
-                            <a class="page-link" href="#" (click)="goToPage(meta$.current_page - 1, $event)">
+                            <a class="page-link px-2 px-md-3" href="#"
+                                (click)="goToPage(meta$.current_page - 1, $event)">
                                 <i class="bi bi-chevron-left"></i>
                             </a>
                         </li>
                         <li class="page-item active">
-                            <span class="page-link">
+                            <span class="page-link px-2 px-md-3 small">
                                 {{ meta$.current_page }} / {{ meta$.last_page }}
                             </span>
                         </li>
                         <li class="page-item" [class.disabled]="meta$.current_page >= meta$.last_page">
-                            <a class="page-link" href="#" (click)="goToPage(meta$.current_page + 1, $event)">
+                            <a class="page-link px-2 px-md-3" href="#"
+                                (click)="goToPage(meta$.current_page + 1, $event)">
                                 <i class="bi bi-chevron-right"></i>
                             </a>
                         </li>
@@ -207,28 +215,30 @@
 
     <!-- Modal de formulario -->
     <div *ngIf="showForm$"
-        class="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center bg-dark bg-opacity-75">
+        class="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center bg-dark bg-opacity-75 p-2 p-md-3"
+        style="z-index: 1050;">
         <!-- Backdrop -->
         <div class="position-absolute top-0 start-0 w-100 h-100" (click)="select(null)"></div>
 
         <!-- Modal -->
         <div class="modal d-block position-relative" tabindex="-1" role="dialog" aria-modal="true">
-            <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable" role="document">
+            <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable mx-2 mx-md-auto"
+                role="document">
                 <div class="modal-content shadow-lg border-0 rounded-3 overflow-hidden">
                     <!-- Header mejorado -->
-                    <div class="modal-header border-0 py-3"
+                    <div class="modal-header border-0 py-2 py-md-3"
                         [ngClass]="form.get('id')?.value ? 'bg-primary text-white' : 'bg-success text-white'">
                         <div class="d-flex align-items-center w-100">
-                            <div class="rounded-circle bg-white bg-opacity-25 d-flex align-items-center justify-content-center me-3"
-                                style="width: 45px; height: 45px;">
-                                <i class="bi fs-5"
+                            <div class="rounded-circle bg-white bg-opacity-25 d-flex align-items-center justify-content-center me-2 me-md-3"
+                                style="width: 35px; height: 35px;">
+                                <i class="bi fs-6"
                                     [ngClass]="form.get('id')?.value ? 'bi-pencil-square' : 'bi-plus-circle-fill'"></i>
                             </div>
                             <div class="flex-grow-1">
-                                <h5 class="modal-title fw-bold mb-0">
+                                <h5 class="modal-title fw-bold mb-0 fs-6 fs-md-5">
                                     {{ form.get('id')?.value ? 'Editar Lote' : 'Crear Nuevo Lote' }}
                                 </h5>
-                                <small class="opacity-75">Complete la información del lote</small>
+                                <small class="opacity-75 d-none d-md-block">Complete la información del lote</small>
                             </div>
                         </div>
                         <button type="button" class="btn-close btn-close-white" aria-label="Cerrar"
@@ -236,53 +246,54 @@
                     </div>
 
                     <!-- Body con mejor espaciado -->
-                    <div class="modal-body p-4 bg-light">
+                    <div class="modal-body p-2 p-md-4 bg-light" style="max-height: 70vh; overflow-y: auto;">
                         <form [formGroup]="form" (ngSubmit)="save()">
                             <!-- Información básica -->
-                            <div class="card border-0 shadow-sm mb-4">
-                                <div class="card-body p-4">
-                                    <h6 class="text-muted text-uppercase fw-bold mb-3 small">
+                            <div class="card border-0 shadow-sm mb-3 mb-md-4">
+                                <div class="card-body p-2 p-md-4">
+                                    <h6 class="text-muted text-uppercase fw-bold mb-2 mb-md-3 small">
                                         <i class="bi bi-info-circle me-2"></i>Información Básica
                                     </h6>
 
                                     <!-- Nombre -->
-                                    <div class="mb-4">
-                                        <label class="form-label fw-semibold mb-2">
+                                    <div class="mb-3 mb-md-4">
+                                        <label class="form-label fw-semibold mb-1 mb-md-2 small">
                                             <i class="bi bi-tag-fill text-primary me-2"></i>Nombre del Lote
                                             <span class="text-danger">*</span>
                                         </label>
-                                        <input class="form-control form-control-lg rounded-3" formControlName="name"
-                                            placeholder="Ej: Lote Primavera 2024"
+                                        <input class="form-control form-control-sm form-control-md-lg rounded-3"
+                                            formControlName="name" placeholder="Ej: Lote Primavera 2024"
                                             [class.is-invalid]="form.get('name')?.invalid && form.get('name')?.touched" />
-                                        <div class="invalid-feedback d-block"
+                                        <div class="invalid-feedback d-block small"
                                             *ngIf="form.get('name')?.invalid && form.get('name')?.touched">
                                             <i class="bi bi-exclamation-circle me-1"></i>El nombre es requerido
                                         </div>
                                     </div>
 
                                     <!-- Código y Producto -->
-                                    <div class="row g-3">
-                                        <div class="col-md-6">
-                                            <label class="form-label fw-semibold mb-2">
+                                    <div class="row g-2 g-md-3">
+                                        <div class="col-12 col-md-6">
+                                            <label class="form-label fw-semibold mb-1 mb-md-2 small">
                                                 <i class="bi bi-upc-scan text-info me-2"></i>Código
                                             </label>
-                                            <input class="form-control rounded-3" formControlName="code"
+                                            <input class="form-control form-control-sm rounded-3" formControlName="code"
                                                 placeholder="Ej: LT-2024-001" />
                                             <small class="text-muted d-block mt-1">Opcional</small>
                                         </div>
-                                        <div class="col-md-6">
-                                            <label class="form-label fw-semibold mb-2">
+                                        <div class="col-12 col-md-6">
+                                            <label class="form-label fw-semibold mb-1 mb-md-2 small">
                                                 <i class="bi bi-box text-warning me-2"></i>Producto
                                                 <span class="text-danger">*</span>
                                             </label>
-                                            <select class="form-select rounded-3" formControlName="product_id"
+                                            <select class="form-select form-select-sm rounded-3"
+                                                formControlName="product_id"
                                                 [class.is-invalid]="form.get('product_id')?.invalid && form.get('product_id')?.touched">
                                                 <option [ngValue]="''">-- Selecciona un producto --</option>
                                                 <option *ngFor="let p of products$" [ngValue]="p.id">
                                                     {{ p.name }} - {{ p.sku || p.code || p.id }}
                                                 </option>
                                             </select>
-                                            <div class="invalid-feedback d-block"
+                                            <div class="invalid-feedback d-block small"
                                                 *ngIf="form.get('product_id')?.invalid && form.get('product_id')?.touched">
                                                 <i class="bi bi-exclamation-circle me-1"></i>El producto es requerido
                                             </div>
@@ -291,51 +302,52 @@
                                 </div>
                             </div>
 
-                            <!-- Cantidad  -->
-                            <div class="row g-3 mb-3">
-                                <div class="col-md-6">
-                                    <label class="form-label fw-semibold">
+                            <!-- Cantidad -->
+                            <div class="row g-2 g-md-3 mb-3">
+                                <div class="col-12 col-md-6">
+                                    <label class="form-label fw-semibold small">
                                         <i class="bi bi-bag-check me-2"></i>Cantidad
                                     </label>
-                                    <input type="number" class="form-control" formControlName="quantity"
+                                    <input type="number" class="form-control form-control-sm" formControlName="quantity"
                                         [class.is-invalid]="form.get('quantity')?.invalid && form.get('quantity')?.touched" />
-                                    <div class="invalid-feedback d-block"
+                                    <div class="invalid-feedback d-block small"
                                         *ngIf="form.get('quantity')?.invalid && form.get('quantity')?.touched">
                                         La cantidad es requerida (mínimo 1)
                                     </div>
                                 </div>
                             </div>
+
                             <!-- Programación -->
-                            <div class="card border-0 shadow-sm mb-4">
-                                <div class="card-body p-4">
-                                    <h6 class="text-muted text-uppercase fw-bold mb-3 small">
+                            <div class="card border-0 shadow-sm mb-3 mb-md-4">
+                                <div class="card-body p-2 p-md-4">
+                                    <h6 class="text-muted text-uppercase fw-bold mb-2 mb-md-3 small">
                                         <i class="bi bi-calendar-week me-2"></i>Programación
                                     </h6>
 
-                                    <div class="row g-3">
-                                        <div class="col-md-6">
-                                            <label class="form-label fw-semibold mb-2">
+                                    <div class="row g-2 g-md-3">
+                                        <div class="col-12 col-md-6">
+                                            <label class="form-label fw-semibold mb-1 mb-md-2 small">
                                                 <i class="bi bi-calendar-check text-success me-2"></i>Fecha de Inicio
                                                 <span class="text-danger">*</span>
                                             </label>
-                                            <input type="datetime-local" class="form-control rounded-3"
+                                            <input type="datetime-local" class="form-control form-control-sm rounded-3"
                                                 formControlName="start_date"
                                                 [class.is-invalid]="form.get('start_date')?.invalid && form.get('start_date')?.touched" />
-                                            <div class="invalid-feedback d-block"
+                                            <div class="invalid-feedback d-block small"
                                                 *ngIf="form.get('start_date')?.invalid && form.get('start_date')?.touched">
                                                 <i class="bi bi-exclamation-circle me-1"></i>La fecha de inicio es
                                                 requerida
                                             </div>
                                         </div>
-                                        <div class="col-md-6">
-                                            <label class="form-label fw-semibold mb-2">
+                                        <div class="col-12 col-md-6">
+                                            <label class="form-label fw-semibold mb-1 mb-md-2 small">
                                                 <i class="bi bi-calendar-x text-danger me-2"></i>Fecha Fin Esperada
                                                 <span class="text-danger">*</span>
                                             </label>
-                                            <input type="datetime-local" class="form-control rounded-3"
+                                            <input type="datetime-local" class="form-control form-control-sm rounded-3"
                                                 formControlName="expected_end_date"
                                                 [class.is-invalid]="form.get('expected_end_date')?.invalid && form.get('expected_end_date')?.touched" />
-                                            <div class="invalid-feedback d-block"
+                                            <div class="invalid-feedback d-block small"
                                                 *ngIf="form.get('expected_end_date')?.invalid && form.get('expected_end_date')?.touched">
                                                 <i class="bi bi-exclamation-circle me-1"></i>La fecha fin esperada es
                                                 requerida
@@ -346,39 +358,40 @@
                             </div>
 
                             <!-- Notas adicionales -->
-                            <div class="card border-0 shadow-sm mb-4">
-                                <div class="card-body p-4">
-                                    <h6 class="text-muted text-uppercase fw-bold mb-3 small">
+                            <div class="card border-0 shadow-sm mb-3 mb-md-4">
+                                <div class="card-body p-2 p-md-4">
+                                    <h6 class="text-muted text-uppercase fw-bold mb-2 mb-md-3 small">
                                         <i class="bi bi-sticky me-2"></i>Información Adicional
                                     </h6>
 
-                                    <label class="form-label fw-semibold mb-2">
+                                    <label class="form-label fw-semibold mb-1 mb-md-2 small">
                                         <i class="bi bi-chat-left-text text-secondary me-2"></i>Notas
                                     </label>
-                                    <textarea class="form-control rounded-3" formControlName="notes" rows="4"
+                                    <textarea class="form-control form-control-sm rounded-3" formControlName="notes"
+                                        rows="3"
                                         placeholder="Agregue cualquier información adicional relevante para este lote..."></textarea>
                                     <small class="text-muted d-block mt-1">Opcional - Máximo 500 caracteres</small>
                                 </div>
                             </div>
 
                             <!-- Botones mejorados -->
-                            <div class="d-flex gap-2 justify-content-end pt-3">
-                                <button type="button" class="btn btn-light border px-4 py-2 rounded-3"
+                            <div class="d-flex gap-2 justify-content-end pt-2 pt-md-3">
+                                <button type="button" class="btn btn-light border px-3 px-md-4 py-2 rounded-3 btn-sm"
                                     (click)="select(null)">
-                                    <i class="bi bi-x-lg me-2"></i>Cancelar
+                                    <i class="bi bi-x-lg me-1 me-md-2"></i>Cancelar
                                 </button>
-                                <button type="submit" class="btn px-4 py-2 shadow-sm rounded-3"
+                                <button type="submit" class="btn px-3 px-md-4 py-2 shadow-sm rounded-3 btn-sm"
                                     [disabled]="form.invalid || loading$"
                                     [ngClass]="form.get('id')?.value ? 'btn-primary' : 'btn-success'">
                                     <span *ngIf="!loading$">
-                                        <i class="bi me-2"
+                                        <i class="bi me-1 me-md-2"
                                             [ngClass]="form.get('id')?.value ? 'bi-arrow-repeat' : 'bi-check-circle'"></i>
-                                        {{ form.get('id')?.value ? 'Actualizar' : 'Crear Lote' }}
+                                        {{ form.get('id')?.value ? 'Actualizar' : 'Crear' }}
                                     </span>
                                     <span *ngIf="loading$">
                                         <span class="spinner-border spinner-border-sm me-2" role="status"
                                             aria-hidden="true"></span>
-                                        Procesando...
+                                        <span class="d-none d-md-inline">Procesando...</span>
                                     </span>
                                 </button>
                             </div>

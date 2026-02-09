@@ -1,59 +1,60 @@
-<div class="container-fluid px-4 py-4">
+<div class="container-fluid px-2 px-md-4 py-3 py-md-4">
     <!-- Header -->
-    <div class="d-flex justify-content-between align-items-center mb-4 rounded-4 bg-body p-4 shadow-sm border">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-3 mb-md-4 rounded-4 bg-body p-3 p-md-4 shadow-sm border gap-3">
         <div>
-            <h2 class="mb-1 fw-bold">
+            <h2 class="mb-1 fw-bold fs-4 fs-md-3">
                 <i class="bi bi-diagram-3 text-primary me-2"></i>Seguimiento de Lotes
             </h2>
             <p class="text-muted mb-0 small">Monitoreo del progreso y estado de producción</p>
         </div>
-        <button class="btn btn-outline-primary" (click)="loadBatches()" [disabled]="loading()">
+        <button class="btn btn-outline-primary w-100 w-md-auto" (click)="loadBatches()" [disabled]="loading()">
             <i class="bi bi-arrow-clockwise me-2"></i>Actualizar
         </button>
     </div>
 
     <!-- Loading & Error Alerts -->
-    <div *ngIf="loading()" class="alert alert-info d-flex align-items-center">
-        <div class="spinner-border spinner-border-sm me-3" role="status">
+    <div *ngIf="loading()" class="alert alert-info d-flex align-items-center mb-3">
+        <div class="spinner-border spinner-border-sm me-2 me-md-3" role="status">
             <span class="visually-hidden">Cargando...</span>
         </div>
-        <div>Cargando seguimiento de lotes...</div>
+        <div class="small">Cargando seguimiento de lotes...</div>
     </div>
 
-    <div *ngIf="error()" class="alert alert-danger d-flex align-items-center">
-        <i class="bi bi-exclamation-triangle-fill me-3"></i>
-        <div>{{ error() }}</div>
+    <div *ngIf="error()" class="alert alert-danger d-flex align-items-center mb-3">
+        <i class="bi bi-exclamation-triangle-fill me-2 me-md-3"></i>
+        <div class="small">{{ error() }}</div>
     </div>
 
     <!-- Filters -->
-    <div class="card mb-4 border-0" *ngIf="!loading()">
-        <div class="card-header bg-light border-0">
-            <h6 class="mb-0 fw-semibold">
+    <div class="card mb-3 mb-md-4 border-0 shadow-sm" *ngIf="!loading()">
+        <div class="card-header bg-light border-0 p-2 p-md-3">
+            <h6 class="mb-0 fw-semibold small">
                 <i class="bi bi-funnel me-2"></i>Filtros
             </h6>
         </div>
-        <div class="card-body">
-            <div class="row g-3 align-items-end">
-                <div class="col-md-6">
-                    <label class="form-label fw-semibold small">
+        <div class="card-body p-2 p-md-3">
+            <div class="row g-2 g-md-3">
+                <div class="col-12 col-md-6">
+                    <label class="form-label fw-semibold small mb-1">
                         <i class="bi bi-search me-1"></i>Búsqueda
                     </label>
-                    <input type="text" class="form-control" placeholder="Nombre, código o ID del lote"
+                    <input type="text" class="form-control form-control-sm" placeholder="Nombre, código o ID del lote"
                            [value]="searchFilter()" (input)="searchFilter.set($any($event.target).value); onSearchChange()" />
                 </div>
-                <div class="col-md-4">
-                    <label class="form-label fw-semibold small">
+                <div class="col-12 col-sm-8 col-md-4">
+                    <label class="form-label fw-semibold small mb-1">
                         <i class="bi bi-filter me-1"></i>Estado
                     </label>
-                    <select class="form-select" [value]="statusFilter()" (change)="statusFilter.set($any($event.target).value); onStatusFilterChange()">
+                    <select class="form-select form-select-sm" [value]="statusFilter()" (change)="statusFilter.set($any($event.target).value); onStatusFilterChange()">
                         <option value="all">Todos</option>
                         <option value="active">Activos</option>
                         <option value="completed">Completados</option>
                         <option value="at-risk">En Riesgo (Retrasados)</option>
                     </select>
                 </div>
-                <div class="col-md-2">
-                    <button class="btn btn-outline-secondary w-100" (click)="clearFilters()">
+                <div class="col-12 col-sm-4 col-md-2">
+                    <label class="form-label fw-semibold small mb-1 d-none d-sm-block">&nbsp;</label>
+                    <button class="btn btn-outline-secondary btn-sm w-100" (click)="clearFilters()">
                         <i class="bi bi-x-lg me-1"></i>Limpiar
                     </button>
                 </div>
@@ -62,26 +63,28 @@
     </div>
 
     <!-- Batches Timeline -->
-    <div class="row g-3 rounded-4 bg-body p-4 shadow-sm border" *ngIf="!loading()">
+    <div class="row g-2 g-md-3 rounded-4 bg-body p-2 p-md-4 shadow-sm border" *ngIf="!loading()">
         <div class="col-12" *ngFor="let timeline of filteredTimelines()">
-            <div class="card shadow-sm  rounded-4 bg-body p-4 shadow-sm border">
-                <div class="card-body">
+            <div class="card shadow-sm rounded-4 bg-body border">
+                <div class="card-body p-2 p-md-4">
                     <!-- Header Info -->
-                    <div class="d-flex justify-content-between align-items-start mb-3">
-                        <div class="flex-grow-1">
-                            <div class="d-flex align-items-center gap-2 mb-1">
-                                <h5 class="mb-0 fw-bold">{{ timeline.batch.name }}</h5>
-                                <span class="badge" [ngClass]="timeline.statusClass">
+                    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start mb-3 gap-2">
+                        <div class="flex-grow-1 w-100 w-md-auto">
+                            <div class="d-flex flex-column flex-sm-row align-items-start align-items-sm-center gap-2 mb-1">
+                                <h5 class="mb-0 fw-bold fs-6 fs-md-5">{{ timeline.batch.name }}</h5>
+                                <span class="badge small" [ngClass]="timeline.statusClass">
                                     {{ timeline.statusLabel }}
                                 </span>
                             </div>
-                            <small class="text-muted">
-                                <i class="bi bi-upc-scan me-1"></i>Código: {{ timeline.batch.code }} |
+                            <small class="text-muted d-block">
+                                <i class="bi bi-upc-scan me-1"></i>Código: {{ timeline.batch.code }}
+                            </small>
+                            <small class="text-muted d-block d-md-inline">
                                 <i class="bi bi-box me-1"></i>Producto ID: {{ timeline.batch.product_id }}
                             </small>
                         </div>
-                        <div class="text-end">
-                            <div class="fw-bold text-primary">
+                        <div class="text-start text-md-end w-100 w-md-auto">
+                            <div class="fw-bold text-primary small">
                                 <i class="bi bi-calendar-event me-1"></i>ID #{{ timeline.batch.id }}
                             </div>
                             <small class="text-muted d-block mt-1">
@@ -94,31 +97,31 @@
                     <div class="mb-3">
                         <div class="d-flex justify-content-between align-items-center mb-2">
                             <small class="text-muted fw-semibold">Progreso de Tiempo</small>
-                            <span class="badge bg-secondary">{{ timeline.progress }}%</span>
+                            <span class="badge bg-secondary small">{{ timeline.progress }}%</span>
                         </div>
-                            <div class="progress" role="progressbar" [attr.aria-valuenow]="timeline.progress" aria-valuemin="0" aria-valuemax="100">
-                                <div class="progress-bar" [ngClass]="timeline.progressBarClass" [style.width.%]="timeline.progress"></div>
+                        <div class="progress" style="height: 8px;" role="progressbar" [attr.aria-valuenow]="timeline.progress" aria-valuemin="0" aria-valuemax="100">
+                            <div class="progress-bar" [ngClass]="timeline.progressBarClass" [style.width.%]="timeline.progress"></div>
                         </div>
                     </div>
 
                     <!-- Dates and Production Info -->
                     <div class="row g-2 mb-3">
-                        <div class="col-md-6">
+                        <div class="col-12 col-md-6">
                             <div class="p-2 bg-light rounded">
                                 <small class="text-muted d-block mb-1">
                                     <i class="bi bi-calendar-event me-1 text-info"></i>Inicio
                                 </small>
-                                <strong class="text-info">
+                                <strong class="text-info small">
                                     {{ timeline.batch.start_date | date: 'short' }}
                                 </strong>
                             </div>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-12 col-md-6">
                             <div class="p-2 bg-light rounded">
                                 <small class="text-muted d-block mb-1">
                                     <i class="bi bi-calendar-range me-1 text-warning"></i>Fin Esperado
                                 </small>
-                                <strong class="text-warning">
+                                <strong class="text-warning small">
                                     {{ timeline.batch.expected_end_date | date: 'short' }}
                                 </strong>
                             </div>
@@ -129,54 +132,54 @@
                         <small class="text-muted d-block mb-1">
                             <i class="bi bi-calendar-check me-1 text-success"></i>Fin Real
                         </small>
-                        <strong class="text-success">
+                        <strong class="text-success small">
                             {{ timeline.batch.actual_end_date | date: 'short' }}
                         </strong>
                     </div>
 
                     <!-- Production Stats -->
                     <div class="row g-2">
-                        <div class="col-sm-6 col-md-3">
+                        <div class="col-6 col-md-3">
                             <div class="p-2 text-center border rounded">
-                                <small class="text-muted d-block mb-1">
+                                <small class="text-muted d-block mb-1" style="font-size: 0.7rem;">
                                     <i class="bi bi-bag-check me-1"></i>Cantidad
                                 </small>
-                                <span class="badge bg-success fs-6">{{ timeline.batch.quantity ?? 0 }}</span>
+                                <span class="badge bg-success small">{{ timeline.batch.quantity ?? 0 }}</span>
                             </div>
                         </div>
-                        <div class="col-sm-6 col-md-3">
+                        <div class="col-6 col-md-3">
                             <div class="p-2 text-center border rounded">
-                                <small class="text-muted d-block mb-1">
+                                <small class="text-muted d-block mb-1" style="font-size: 0.7rem;">
                                     <i class="bi bi-exclamation-circle me-1"></i>Defectos
                                 </small>
-                                <span class="badge" [ngClass]="timeline.defectBadgeClass">
+                                <span class="badge small" [ngClass]="timeline.defectBadgeClass">
                                     {{ timeline.batch.defect_quantity ?? 0 }}
                                 </span>
                             </div>
                         </div>
-                        <div class="col-sm-6 col-md-3">
+                        <div class="col-6 col-md-3">
                             <div class="p-2 text-center border rounded">
-                                <small class="text-muted d-block mb-1">
-                                    <i class="bi bi-percent me-1"></i>Tasa Defectos
+                                <small class="text-muted d-block mb-1" style="font-size: 0.7rem;">
+                                    <i class="bi bi-percent me-1"></i>Tasa Def.
                                 </small>
-                                <span class="badge" [ngClass]="timeline.defectBadgeClass">
+                                <span class="badge small" [ngClass]="timeline.defectBadgeClass">
                                     {{ timeline.defectRate | number: '1.1-1' }}%
                                 </span>
                             </div>
                         </div>
-                        <div class="col-sm-6 col-md-3">
+                        <div class="col-6 col-md-3">
                             <div class="p-2 text-center border rounded" [ngClass]="timeline.isDelayed ? 'bg-danger bg-opacity-10' : ''">
-                                <small class="text-muted d-block mb-1">
-                                    <i class="bi bi-clock me-1"></i>{{ timeline.isDelayed ? 'Días atraso' : 'Días Rest.' }}
+                                <small class="text-muted d-block mb-1" style="font-size: 0.7rem;">
+                                    <i class="bi bi-clock me-1"></i>{{ timeline.isDelayed ? 'Atraso' : 'Rest.' }}
                                 </small>
-                                <span class="badge" [ngClass]="timeline.isDelayed ? 'bg-danger' : (timeline.estimatedDaysRemaining > 0 ? 'bg-info' : 'bg-success')">
+                                <span class="badge small" [ngClass]="timeline.isDelayed ? 'bg-danger' : (timeline.estimatedDaysRemaining > 0 ? 'bg-info' : 'bg-success')">
                                     {{ timeline.isDelayed ? timeline.delayDays : timeline.estimatedDaysRemaining }} días
                                 </span>
                             </div>
                         </div>
                     </div>
 
-                    <div class="alert alert-warning d-flex align-items-center mt-3" *ngIf="timeline.isDelayed">
+                    <div class="alert alert-warning d-flex align-items-center mt-3 mb-0 py-2" *ngIf="timeline.isDelayed">
                         <i class="bi bi-exclamation-octagon-fill me-2"></i>
                         <small class="mb-0">El lote supera la fecha prevista por {{ timeline.delayDays }} días.</small>
                     </div>
@@ -189,11 +192,12 @@
                         <p class="mb-0 text-muted small">{{ timeline.batch.notes }}</p>
                     </div>
 
-                    <div class=" mt-3 text-end d-flex justify-content-end">
-                        <button class="btn btn-outline-primary m-2" (click)="viewBatchTimeline(timeline.batch.id)" >
+                    <!-- Action Buttons -->
+                    <div class="mt-3 d-flex flex-column flex-sm-row justify-content-end gap-2">
+                        <button class="btn btn-outline-primary btn-sm w-100 w-sm-auto" (click)="viewBatchTimeline(timeline.batch.id)">
                             <i class="bi bi-eye me-1"></i>Seguimiento
                         </button>
-                         <button class="btn btn-outline-secondary m-2"  (click)="viewBatchDetails(timeline.batch.id)">
+                        <button class="btn btn-outline-secondary btn-sm w-100 w-sm-auto" (click)="viewBatchDetails(timeline.batch.id)">
                             <i class="bi bi-info-circle me-1"></i>Detalles
                         </button>
                     </div>
@@ -204,9 +208,9 @@
         <!-- Empty State -->
         <div class="col-12" *ngIf="filteredTimelines().length === 0 && !loading()">
             <div class="card shadow-sm border-0">
-                <div class="card-body py-5 text-center">
-                    <i class="bi bi-inbox text-muted display-1 d-block mb-3"></i>
-                    <h5 class="text-muted mb-2">No hay lotes para mostrar</h5>
+                <div class="card-body py-4 py-md-5 text-center">
+                    <i class="bi bi-inbox text-muted display-4 display-md-1 d-block mb-3"></i>
+                    <h5 class="text-muted mb-2 fs-6 fs-md-5">No hay lotes para mostrar</h5>
                     <p class="text-muted mb-3 small">No se encontraron lotes que coincidan con los filtros aplicados</p>
                     <button class="btn btn-outline-primary btn-sm" (click)="clearFilters()">
                         <i class="bi bi-funnel-off me-1"></i>Limpiar filtros
@@ -217,35 +221,35 @@
     </div>
 </div>
 
-
-
-<div class="modal fade show d-block" tabindex="-1" *ngIf="isModalOpen">
-
-    <div class="modal-dialog modal-lg modal-dialog-centered">
+<!-- Modal Seguimiento -->
+<div class="modal fade show d-block" tabindex="-1" *ngIf="isModalOpen" style="background-color: rgba(0,0,0,0.5);">
+    <div class="modal-dialog modal-lg modal-dialog-centered mx-2 mx-md-auto modal-dialog-scrollable">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title fw-bold">
-                    <i class="bi bi-diagram-3 me-2 text-primary"></i>Seguimiento del Lote #{{ selectedBatchId }}
-                </h5>
+            <div class="modal-header p-2 p-md-3">
+                <div class="w-100">
+                    <h5 class="modal-title fw-bold mb-0 fs-6 fs-md-5">
+                        <i class="bi bi-diagram-3 me-2 text-primary"></i>Seguimiento del Lote #{{ selectedBatchId }}
+                    </h5>
+                </div>
                 <button type="button" class="btn-close" (click)="closeModal()" aria-label="Close"></button>
             </div>
-            <div class="modal-body">
+            <div class="modal-body p-2 p-md-3">
                 <form #batchForm="ngForm" (ngSubmit)="onSaveBatch()">
                     <input type="hidden" name="id" [(ngModel)]="editBatch.id" />
 
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label class="form-label small fw-semibold">Fecha de fin real</label>
-                            <input type="datetime-local" class="form-control" name="actual_end_date" required [(ngModel)]="editBatch.actual_end_date" />
+                    <div class="row g-2 g-md-3">
+                        <div class="col-12 col-md-6">
+                            <label class="form-label small fw-semibold mb-1">Fecha de fin real</label>
+                            <input type="datetime-local" class="form-control form-control-sm" name="actual_end_date" required [(ngModel)]="editBatch.actual_end_date" />
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label small fw-semibold">Cantidad de defectos</label>
-                            <input type="number" class="form-control" name="defect_quantity" [(ngModel)]="editBatch.defect_quantity" />
+                        <div class="col-12 col-md-6">
+                            <label class="form-label small fw-semibold mb-1">Cantidad de defectos</label>
+                            <input type="number" class="form-control form-control-sm" name="defect_quantity" [(ngModel)]="editBatch.defect_quantity" />
                         </div>
 
-                        <div class="col-md-6">
-                            <label class="form-label small fw-semibold">Estado del lote</label>
-                            <select class="form-select" name="status" [(ngModel)]="editBatch.status">
+                        <div class="col-12 col-md-6">
+                            <label class="form-label small fw-semibold mb-1">Estado del lote</label>
+                            <select class="form-select form-select-sm" name="status" [(ngModel)]="editBatch.status">
                                 <option value="planned">Planificado</option>
                                 <option value="in_process">En Progreso</option>
                                 <option value="paused">Pausado</option>
@@ -256,11 +260,13 @@
                         </div>
                     </div>
 
-                    <div class="mt-4 text-end">
-                        <button type="button" class="btn btn-outline-secondary me-2" (click)="onCancelEdit()">Cancelar</button>
-                        <button type="submit" class="btn btn-primary" [disabled]="batchForm.invalid || isSaving()">
+                    <div class="mt-3 mt-md-4 d-flex flex-column flex-sm-row justify-content-end gap-2">
+                        <button type="button" class="btn btn-outline-secondary btn-sm order-2 order-sm-1" (click)="onCancelEdit()">
+                            Cancelar
+                        </button>
+                        <button type="submit" class="btn btn-primary btn-sm order-1 order-sm-2" [disabled]="batchForm.invalid || isSaving()">
                             <span *ngIf="isSaving()" class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                            <i class="bi bi-save me-1"></i>
+                            <i class="bi bi-save me-1" *ngIf="!isSaving()"></i>
                             <span *ngIf="!isSaving()">Guardar</span>
                             <span *ngIf="isSaving()">Guardando...</span>
                         </button>
@@ -271,20 +277,22 @@
     </div>
 </div>
 
-<div class="modal fade show d-block" tabindex="-1" *ngIf="isModalOpenDetail">
-
-    <div class="modal-dialog modal-lg modal-dialog-centered">
+<!-- Modal Detalles -->
+<div class="modal fade show d-block" tabindex="-1" *ngIf="isModalOpenDetail" style="background-color: rgba(0,0,0,0.5);">
+    <div class="modal-dialog modal-lg modal-dialog-centered mx-2 mx-md-auto modal-dialog-scrollable">
         <div class="modal-content">
-            <div class="modal-header" >
-                <h5 class="modal-title fw-bold">
-                    <i class="bi bi-info-circle me-2 text-primary"></i>Detalles del Lote #{{ selectedBatchId }}
-                </h5>
-                <p class=" ms-3 mb-0 text-muted small">
-                    Nombre: {{ batchData?.name || 'N/A' }}
-                </p>
-                <button type="button" class="btn-close" (click)="closeModal()" aria-label="Close"></button>
+            <div class="modal-header p-2 p-md-3 flex-column flex-md-row align-items-start align-items-md-center gap-2">
+                <div>
+                    <h5 class="modal-title fw-bold mb-1 fs-6 fs-md-5">
+                        <i class="bi bi-info-circle me-2 text-primary"></i>Detalles del Lote #{{ selectedBatchId }}
+                    </h5>
+                    <p class="mb-0 text-muted small">
+                        Nombre: {{ batchData?.name || 'N/A' }}
+                    </p>
+                </div>
+                <button type="button" class="btn-close position-absolute top-0 end-0 m-2 m-md-3" (click)="closeModal()" aria-label="Close"></button>
             </div>
-            <div class="modal-body">
+            <div class="modal-body p-2 p-md-3">
                 <app-batch-details [batchId]="selectedBatchId" [batch]="batchData" (close)="closeModal()"></app-batch-details>
             </div>
         </div>
