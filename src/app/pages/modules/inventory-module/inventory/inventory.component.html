@@ -57,14 +57,76 @@
       <div class="w-100 mt-4">
 
         <!-- Header -->
-        <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
-          <div>
+        <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+          <div class="flex-shrink-0">
             <h4 class="fw-bold mb-1">Notificaciones recientes</h4>
             <p class="text-muted small mb-0">Últimas alertas del usuario</p>
           </div>
 
-          <button class="btn btn-primary btn-sm d-flex align-items-center" (click)="refreshNotifications()"
-            [disabled]="notificationLoading">
+          <div class="flex-shrink-0">
+
+            <span>Buscador de Productos</span>
+            <input type="text" class="form-control" placeholder="Buscar producto (Codigo) ..."
+              [(ngModel)]="filters.code" (input)="onSearchInput(filters.code)"
+              style="max-width: 300px; min-width: 200px;">
+          </div>
+
+
+
+          <div *ngIf="products.length > 0; else noData" class="w-100 mt-3">
+            <div class="card shadow-sm border-0">
+              <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                  <div *ngFor="let p of products; let i = index"
+                    class="list-group-item list-group-item-action p-3 border-start-0 border-end-0"
+                    [class.border-top-0]="i === 0">
+
+                    <!-- Header del producto -->
+                    <div class="d-flex align-items-start gap-3 mb-2">
+                      <div class="bg-primary bg-opacity-10 rounded-circle p-2 flex-shrink-0">
+                        <i class="bi bi-box-seam text-primary"></i>
+                      </div>
+                      <div class="flex-grow-1">
+                        <h6 class="mb-1 fw-semibold text-dark">{{ p.name }}</h6>
+                        <span class="badge bg-light text-dark border small">
+                          <i class="bi bi-upc me-1"></i>{{ p.code }}
+                        </span>
+                      </div>
+                    </div>
+
+                    <!-- Especificaciones -->
+                    <div *ngIf="p.specifications && p.specifications.length > 0" class="ms-5 ps-2">
+                      <p class="text-muted small mb-1 fw-medium">Especificaciones:</p>
+                      <ul class="list-unstyled mb-0">
+                        <li *ngFor="let m of p.specifications"
+                          class="small text-secondary mb-1 d-flex align-items-start">
+                          <i class="bi bi-check-circle-fill text-success me-2 mt-1 flex-shrink-0"
+                            style="font-size: 0.75rem;"></i>
+                          <span>{{ m }}</span>
+                        </li>
+                      </ul>
+                    </div>
+
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <ng-template #noData>
+            <div class="w-100 mt-3">
+              <div class="alert alert-light border d-flex align-items-center gap-3 mb-0" role="alert">
+                <i class="bi bi-inbox text-muted" style="font-size: 1.5rem;"></i>
+                <div>
+                  <p class="mb-0 fw-medium text-dark">No hay resultados</p>
+                  <p class="mb-0 small text-muted">Intenta con otro código de producto</p>
+                </div>
+              </div>
+            </div>
+          </ng-template>
+
+          <button class="btn btn-primary btn-sm d-flex align-items-center flex-shrink-0"
+            (click)="refreshNotifications()" [disabled]="notificationLoading">
             <span *ngIf="notificationLoading" class="spinner-border spinner-border-sm me-2" role="status">
             </span>
             <i *ngIf="!notificationLoading" class="bi bi-arrow-repeat me-2"></i>
@@ -121,8 +183,8 @@
                 </small>
                 <button class="btn btn-outline-danger btn-sm" (click)="deleteNotification(item)"
                   [disabled]="isNotificationDeleting(item)">
-                  <span *ngIf="isNotificationDeleting(item)" class="spinner-border spinner-border-sm me-2"
-                    role="status" aria-hidden="true"></span>
+                  <span *ngIf="isNotificationDeleting(item)" class="spinner-border spinner-border-sm me-2" role="status"
+                    aria-hidden="true"></span>
                   <i *ngIf="!isNotificationDeleting(item)" class="bi bi-trash me-1"></i>
                   {{ isNotificationDeleting(item) ? 'Eliminando...' : 'Eliminar notificación' }}
                 </button>

@@ -3,8 +3,10 @@ import { CommonModule } from '@angular/common';
 import { RawMaterialsService } from '../services/raw-materials.service';
 import { InventoryMovementService } from '../services/inventory-movement.service';
 import { forkJoin, of, Subject } from 'rxjs';
-import { catchError, finalize, takeUntil, tap } from 'rxjs/operators';
+import { catchError, debounceTime, distinctUntilChanged, finalize, switchMap, takeUntil, tap } from 'rxjs/operators';
 import { NotificationGroup, NotificationItem, NotificationService } from 'src/app/core/services/notification.service';
+import { FormsModule } from '@angular/forms';
+import { ProductsService } from '../../product-module/services/products.service';
 
 interface StatCard {
   title: string;
@@ -91,7 +93,7 @@ const MOVEMENT_TYPE_META: Record<MovementTypeKey, MovementUiMeta> = {
 @Component({
   selector: 'app-inventory',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './inventory.component.html',
   styleUrl: './inventory.component.scss'
 })
@@ -100,10 +102,11 @@ export class InventoryComponent implements OnInit, OnDestroy {
   error: string | null = null;
   notificationLoading = false;
   notificationError: string | null = null;
-  
+
+  searchSubject = new Subject<string>();
   // Estadísticas principales
   statsCards: StatCard[] = [];
-  
+
   // Datos para gráficos/estadísticas
   movementsByType: MovementsByType = { in: 0, out: 0, adjustment: 0 };
   recentMovements: any[] = [];
@@ -115,14 +118,53 @@ export class InventoryComponent implements OnInit, OnDestroy {
   notificationDisplayList: NotificationDisplay[] = [];
   dailyMessages: DailyMessage[] = [];
 
+  filters = {
+    code: ''
+  }
+
+  products: any[] = [];
+
   private destroy$ = new Subject<void>();
   private deletingNotifications = new Set<string | number>();
 
   constructor(
     private rawMaterialsService: RawMaterialsService,
     private inventoryMovementService: InventoryMovementService,
-    private notificationService: NotificationService
-  ) {}
+    private notificationService: NotificationService,
+    private productsService: ProductsService
+  ) {
+
+    this.searchSubject.pipe(
+      debounceTime(5000),            // ← espera 600ms sin escribir
+      distinctUntilChanged(),       // ← evita repetir búsquedas iguales
+      switchMap(code => {
+        code = code.trim().toLowerCase();
+
+        if (!code) {
+          return this.productsService.list({});
+        }
+
+        this.loading = true;
+        this.error = null;
+
+        return this.productsService.list({ code }).pipe(
+          catchError(err => {
+            this.error = 'Error filtrando productos';
+            return of({ data: [], meta: null });
+          }),
+          finalize(() => this.loading = false)
+        );
+      })
+    ).subscribe(response => {
+      this.products = response.data || [];
+      const filteredData = { rawMaterials: response, movements: { data: [] } };
+      this.processStatistics(filteredData);
+    });
+  }
+
+  onSearchInput(value: string) {
+    this.searchSubject.next(value);
+  }
 
   ngOnInit(): void {
     this.loadStatistics();
@@ -174,7 +216,7 @@ export class InventoryComponent implements OnInit, OnDestroy {
     // Procesar materias primas
     const totalProducts = rawMaterials.length;
     const activeProducts = rawMaterials.filter((p: any) => p.is_active !== false).length;
-    
+
     const lowStockProducts = rawMaterials
       .filter((product: any) => {
         const currentStock = Number(product.stock) || 0;
@@ -193,7 +235,7 @@ export class InventoryComponent implements OnInit, OnDestroy {
     // Procesar movimientos
     const totalMovements = movements.length;
     const movementsByType: MovementsByType = { in: 0, out: 0, adjustment: 0 };
-    
+
     movements.forEach((m: any) => {
       const type = (m?.type || m?.movement_type || '').toLowerCase();
       if (type === 'in') movementsByType.in++;
@@ -253,9 +295,9 @@ export class InventoryComponent implements OnInit, OnDestroy {
   }
 
   private updateStatsCards(
-    totalProducts: number, 
-    activeProducts: number, 
-    lowStockCount: number, 
+    totalProducts: number,
+    activeProducts: number,
+    lowStockCount: number,
     totalMovements: number
   ): void {
     this.statsCards = [

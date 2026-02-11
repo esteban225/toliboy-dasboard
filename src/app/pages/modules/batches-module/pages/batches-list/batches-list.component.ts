@@ -511,7 +511,7 @@ export class BatchesListComponent implements OnInit, OnDestroy {
       fragments.push(`Fin estimado: ${this.formatDateTimeForNotification(batch.expected_end_date)}`);
     }
 
-    return `${label} creado. ${fragments.join(' | ')}`;
+    return ` Creado: ${label} | ${fragments.join(' | ')}`;
   }
 
   private resolveProductLabel(batch: Partial<Batch>): string {
