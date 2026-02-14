@@ -25,7 +25,7 @@ export class InventoryMovementComponent implements OnInit, OnDestroy {
   loading = false;
   error: string | null = null;
   page = 1;
-  perPage = 99;
+  perPage = 500;
   meta: any = null;
   hasActiveFilters = false;
   totalRawMaterialsOut = 0;
@@ -62,6 +62,10 @@ export class InventoryMovementComponent implements OnInit, OnDestroy {
   private rawMaterialsLoaded = false;
   private rawMaterialsMap = new Map<number, { id: number; name: string; code: string | null; unit_cost?: number | null }>();
   private rawMaterialsList: any[] = [];
+  // Filter product search
+  filterProductSearch = '';
+  filterProductSuggestions: any[] = [];
+  selectedFilterProduct: any = null;
   // Batches
   availableBatches: any[] = [];
   loadingBatches = false;
@@ -427,9 +431,49 @@ export class InventoryMovementComponent implements OnInit, OnDestroy {
       production_line: '',
       general: ''
     };
+    this.filterProductSearch = '';
+    this.filterProductSuggestions = [];
+    this.selectedFilterProduct = null;
     this.hasActiveFilters = false;
     this.page = 1;
     this.loadMovements();
+  }
+
+  searchFilterProducts(event: any): void {
+    const searchTerm = this.filterProductSearch?.trim().toLowerCase();
+    
+    if (!searchTerm || searchTerm.length < 1) {
+      this.filterProductSuggestions = [];
+      return;
+    }
+
+    // Filtrar productos en caché
+    this.filterProductSuggestions = this.cachedProducts
+      .filter(p => {
+        const name = (p?.name ?? p?.product_name ?? '').toLowerCase();
+        const code = (p?.code ?? p?.product_code ?? '').toLowerCase();
+        return name.includes(searchTerm) || code.includes(searchTerm);
+      })
+      .slice(0, 8);
+  }
+
+  selectFilterProduct(product: any): void {
+    if (!product) return;
+    
+    this.selectedFilterProduct = product;
+    this.filters.product = product?.id ?? product?.product_id;
+    this.filterProductSearch = `${product?.code ?? product?.product_code} - ${product?.name ?? product?.product_name}`;
+    this.filterProductSuggestions = [];
+    
+    // Aplicar filtros automáticamente
+    this.applyFilters();
+  }
+
+  clearFilterProduct(): void {
+    this.filterProductSearch = '';
+    this.filterProductSuggestions = [];
+    this.selectedFilterProduct = null;
+    this.filters.product = '';
   }
 
   private loadProductDetailsForMovements(): void {

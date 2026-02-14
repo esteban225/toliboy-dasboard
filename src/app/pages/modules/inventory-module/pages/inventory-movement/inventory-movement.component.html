@@ -74,70 +74,179 @@
     </div>
 
 
-    <!-- Search Filters Section -->
-    <div class="card border-0 shadow-sm mb-4">
-        <div class="card-body p-4 col">
+    <!-- Search Filters Section - Professional & Responsive -->
+    <div class="card border-0 shadow-sm mb-4 filter-card">
+        <div class="card-body p-4">
+            <form (ngSubmit)="applyFilters()" class="filter-form">
 
-            <div class="row g-3 align-items-end">
+                <!-- Filters Grid -->
+                <div class="row g-3 mb-3">
 
-                <!-- Filtro por Tipo de Movimiento -->
-                <div class="col-md-2">
-                    <label class="form-label fw-semibold">
-                        <i class="bi bi-arrow-left-right me-1 text-primary"></i>
-                        Tipo de Movimiento
-                    </label>
-                    <select class="form-select" [(ngModel)]="filters.type">
-                        <option value="">Todos</option>
-                        <option value="in">Entrada</option>
-                        <option value="out">Salida</option>
-                        <option value="adjustment">Ajuste</option>
-                    </select>
+                    <!-- Tipo de Movimiento -->
+                    <div class="col-12 col-sm-6 col-lg-2">
+                        <div class="filter-group">
+                            <label class="form-label fw-semibold text-muted small">
+                                <i class="bi bi-arrow-left-right me-2 text-primary"></i>
+                                Tipo de Movimiento
+                            </label>
+                            <select class="form-select form-select-sm" [(ngModel)]="filters.type" name="type">
+                                <option value="">Todos</option>
+                                <option value="in">
+                                    <i class="bi bi-arrow-down"></i> Entrada
+                                </option>
+                                <option value="out">
+                                    <i class="bi bi-arrow-up"></i> Salida
+                                </option>
+                                <option value="adjustment">
+                                    <i class="bi bi-gear"></i> Ajuste
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Línea de Producción -->
+                    <div class="col-12 col-sm-6 col-lg-2">
+                        <div class="filter-group">
+                            <label class="form-label fw-semibold text-muted small">
+                                <i class="bi bi-gear me-2 text-success"></i>
+                                Línea de Producción
+                            </label>
+                            <select class="form-select form-select-sm" [(ngModel)]="filters.production_line" name="production_line">
+                                <option value="">Todas</option>
+                                <option value="richard">Richard</option>
+                                <option value="panaderia">Panadería</option>
+                                <option value="pasteleria">Pastelería</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Fecha -->
+                    <div class="col-12 col-sm-6 col-lg-2">
+                        <div class="filter-group">
+                            <label class="form-label fw-semibold text-muted small">
+                                <i class="bi bi-calendar-date me-2 text-info"></i>
+                                Fecha
+                            </label>
+                            <input type="date" class="form-control form-control-sm" [(ngModel)]="filters.date" name="date">
+                        </div>
+                    </div>
+
+                    <!-- Búsqueda General -->
+                    <div class="col-12 col-sm-6 col-lg-2">
+                        <div class="filter-group">
+                            <label class="form-label fw-semibold text-muted small">
+                                <i class="bi bi-search me-2 text-warning"></i>
+                                Búsqueda Rápida
+                            </label>
+                            <input type="text" 
+                                class="form-control form-control-sm" 
+                                placeholder="Nombre, código..." 
+                                [(ngModel)]="filters.general"
+                                name="general"
+                                (keyup.enter)="applyFilters()">
+                        </div>
+                    </div>
+
+                    <!-- Producto -->
+                    <div class="col-12 col-sm-6 col-lg-2 position-relative">
+                        <div class="filter-group">
+                            <label class="form-label fw-semibold text-muted small">
+                                <i class="bi bi-box-seam me-2 text-danger"></i>
+                                Producto
+                            </label>
+                            <div class="input-group input-group-sm product-search-wrapper">
+                                <input type="text" 
+                                    class="form-control" 
+                                    placeholder="Código o nombre..." 
+                                    [(ngModel)]="filterProductSearch" 
+                                    (keyup)="searchFilterProducts($event)"
+                                    (focus)="filterProductSearch && filterProductSuggestions.length ? null : null"
+                                    name="filterProductSearch"
+                                    autocomplete="off">
+                                <button class="btn btn-light border-start-0 px-2" 
+                                    type="button" 
+                                    *ngIf="filterProductSearch" 
+                                    (click)="clearFilterProduct()" 
+                                    title="Limpiar búsqueda"
+                                    class="clear-btn">
+                                    <i class="bi bi-x-circle-fill text-muted"></i>
+                                </button>
+                            </div>
+                            <!-- Suggestions Dropdown -->
+                            <div *ngIf="filterProductSuggestions?.length" 
+                                class="product-suggestions-dropdown">
+                                <ul class="list-group">
+                                    <li *ngFor="let p of filterProductSuggestions" 
+                                        class="list-group-item list-group-item-action suggestion-item"
+                                        (click)="selectFilterProduct(p)">
+                                        <div class="d-flex justify-content-between align-items-center gap-2">
+                                            <div class="flex-grow-1 min-w-0">
+                                                <div class="fw-semibold text-truncate" style="font-size: 0.9rem;">
+                                                    {{ p?.name ?? p?.product_name ?? 'Sin nombre' }}
+                                                </div>
+                                                <small class="text-muted d-block text-truncate">
+                                                    {{ p?.code ?? p?.product_code ?? 'S/C' }}
+                                                </small>
+                                            </div>
+                                            <i class="bi bi-check2 text-primary flex-shrink-0"></i>
+                                        </div>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="col-12 col-lg-2">
+                        <div class="filter-group d-flex gap-2 align-items-end h-100">
+                            <button type="button" 
+                                class="btn btn-sm btn-outline-secondary flex-grow-1" 
+                                (click)="resetFilters()"
+                                title="Limpiar todos los filtros">
+                                <i class="bi bi-eraser me-1"></i>
+                                <span class="d-none d-sm-inline">Limpiar</span>
+                            </button>
+                            <button type="submit" 
+                                class="btn btn-sm btn-primary flex-grow-1"
+                                title="Aplicar filtros">
+                                <i class="bi bi-search me-1"></i>
+                                <span class="d-none d-sm-inline">Buscar</span>
+                            </button>
+                        </div>
+                    </div>
+
                 </div>
 
-                <!-- Filtro por Línea de Producción -->
-                <div class="col-md-2">
-                    <label class="form-label fw-semibold">
-                        <i class="bi bi-gear me-1 text-primary"></i>
-                        Línea de Producción
-                    </label>
-                    <select class="form-select" [(ngModel)]="filters.production_line">
-                        <option value="">Todas</option>
-                        <option value="richard">Richard</option>
-                        <option value="panaderia">Panadería</option>
-                        <option value="pasteleria">Pastelería</option>
-                    </select>
-                </div>
-
-                <!-- Filtro por Fecha -->
-                <div class="col-md-2">
-                    <label class="form-label fw-semibold">
-                        <i class="bi bi-calendar-date me-1 text-primary"></i>
-                        Fecha
-                    </label>
-                    <input type="date" class="form-control" [(ngModel)]="filters.date">
-                </div>
-
-                <!-- Buscador General -->
-                <div class="col-md-2">
-                    <label class="form-label fw-semibold">
-                        <i class="bi bi-search me-1 text-primary"></i>
-                        Búsqueda
-                    </label>
-                    <input type="text" class="form-control" placeholder="Buscar..." [(ngModel)]="filters.general">
-                </div>
-
-                <div class="col-md-4 d-flex justify-content-end gap-2 flex-wrap align-items-center">
-                        <button class="btn btn-outline-secondary btn-md" (click)="resetFilters()">
-                        <i class="bi bi-eraser me-1"></i>
-                        Limpiar Filtros
-                    </button>
-                    <button class="btn btn-primary btn-md" (click)="applyFilters()">
+                <!-- Filter Tags (Optional: mostrar filtros activos) -->
+                <div *ngIf="hasActiveFilters" class="filter-tags-row">
+                    <span *ngIf="filters.type" class="badge badge-filter me-2 mb-2">
+                        <i class="bi bi-arrow-left-right me-1"></i>
+                        {{ filters.type === 'in' ? 'Entrada' : filters.type === 'out' ? 'Salida' : 'Ajuste' }}
+                        <button type="button" class="btn-close btn-close-sm ms-1" aria-label="Remove" (click)="filters.type = ''; applyFilters()"></button>
+                    </span>
+                    <span *ngIf="filters.production_line" class="badge badge-filter me-2 mb-2">
+                        <i class="bi bi-gear me-1"></i>
+                        {{ filters.production_line }}
+                        <button type="button" class="btn-close btn-close-sm ms-1" aria-label="Remove" (click)="filters.production_line = ''; applyFilters()"></button>
+                    </span>
+                    <span *ngIf="filters.date" class="badge badge-filter me-2 mb-2">
+                        <i class="bi bi-calendar-date me-1"></i>
+                        {{ filters.date }}
+                        <button type="button" class="btn-close btn-close-sm ms-1" aria-label="Remove" (click)="filters.date = ''; applyFilters()"></button>
+                    </span>
+                    <span *ngIf="filters.general" class="badge badge-filter me-2 mb-2">
                         <i class="bi bi-search me-1"></i>
-                        Buscar
-                    </button>
+                        {{ filters.general }}
+                        <button type="button" class="btn-close btn-close-sm ms-1" aria-label="Remove" (click)="filters.general = ''; applyFilters()"></button>
+                    </span>
+                    <span *ngIf="filters.product" class="badge badge-filter me-2 mb-2">
+                        <i class="bi bi-box-seam me-1"></i>
+                        {{ filterProductSearch }}
+                        <button type="button" class="btn-close btn-close-sm ms-1" aria-label="Remove" (click)="clearFilterProduct(); applyFilters()"></button>
+                    </span>
                 </div>
-            </div>
 
+            </form>
         </div>
     </div>
 
@@ -171,9 +280,10 @@
             <div class="col-12 col-md-4">
                 <div class="p-3 rounded-3 bg-white shadow-sm d-flex align-items-center justify-content-between">
                     <div class="text-start">
-                        <div class="text-muted small">Total neto <small class="text-muted">(entradas - salidas + ajustes)</small></div>
+                        <div class="text-muted small">Total neto <small class="text-muted">(entradas - salidas +
+                                ajustes)</small></div>
                         <div class="h4 mb-0 fw-bold">{{ sumQuantitiesByFilters().total }}</div>
-                        
+
                     </div>
                     <div class="ms-3">
                         <i class="bi bi-calculator-fill text-primary fs-2"></i>
@@ -640,8 +750,9 @@
                                     </label>
                                     <input type="date" class="form-control" id="expiryDate"
                                         (change)="updateNotesSummary()">
-                                    <button class="btn btn-sm btn-outline-secondary mt-2" type="button" (click)="setExpiryDateNA()">
-                                        NA 
+                                    <button class="btn btn-sm btn-outline-secondary mt-2" type="button"
+                                        (click)="setExpiryDateNA()">
+                                        NA
                                     </button>
                                 </div>
                             </div>
