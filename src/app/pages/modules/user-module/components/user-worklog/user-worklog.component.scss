@@ -1,0 +1,79 @@
+// User Worklog Component Styles
+// Using Bootstrap utilities with minimal custom styles
+
+.worklog-page {
+  max-width: 1400px;
+  margin: 0 auto;
+
+  // Table improvements
+  .table {
+    > :not(caption) > * > * {
+      padding: 1rem 1.25rem;
+    }
+
+    thead th {
+      font-weight: 600;
+      font-size: 0.875rem;
+      text-transform: uppercase;
+      letter-spacing: 0.025em;
+      color: var(--bs-secondary);
+      white-space: nowrap;
+    }
+
+    tbody tr {
+      transition: background-color 0.15s ease-in-out;
+    }
+  }
+
+  // Card hover effects
+  .card {
+    transition: box-shadow 0.2s ease-in-out;
+
+    &:hover {
+      box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.08) !important;
+    }
+  }
+
+  // Modal backdrop animation
+  .modal {
+    animation: fadeIn 0.2s ease-out;
+
+    .modal-dialog {
+      animation: slideIn 0.25s ease-out;
+    }
+  }
+}
+
+// Animations
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// Responsive adjustments
+@media (max-width: 575.98px) {
+  .worklog-page {
+    .table {
+      font-size: 0.875rem;
+
+      > :not(caption) > * > * {
+        padding: 0.75rem 1rem;
+      }
+    }
+  }
+}

@@ -110,7 +110,7 @@ export class MenuService {
           {
             id: 103,
             label: 'MENUITEMS.USERMANAGEMENT.LIST.WORKLOGUSERS',
-            link: '/modules/worklog-users',
+            link: '/modules/users/worklog-users',
             parentId: 101
           }
         ],

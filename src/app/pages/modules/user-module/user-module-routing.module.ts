@@ -2,6 +2,7 @@ import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 // Componentes
 import { UserListComponent } from './components/user-list/user-list.component';
+import { UserWorklogComponent } from './components/user-worklog/user-worklog.component';
 
 const routes: Routes = [
   {
@@ -12,6 +13,11 @@ const routes: Routes = [
         path: '',
         component: UserListComponent
       },
+      {
+        // Ruta para la gestión de usuarios de Worklog
+        path: 'worklog-users',
+        component: UserWorklogComponent
+      }
     ]
   }
 ];

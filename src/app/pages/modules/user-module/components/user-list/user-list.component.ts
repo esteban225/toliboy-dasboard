@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { Observable, Subscription } from 'rxjs';
+import { take } from 'rxjs/operators';
 import { Store } from '@ngrx/store';
 import * as UserActions from '../../store/actions/user.actions';
 import * as UserSelectors from '../../store/selectors/user.selectors';
@@ -26,6 +27,20 @@ export class UserListComponent implements OnInit, OnDestroy {
 
   private subscriptions: Subscription[] = [];
 
+  readonly roleOptions = [
+    { id: 1, label: 'Desarrollador' },
+    { id: 2, label: 'Gerente General' },
+    { id: 3, label: 'Ingeniero de planta' },
+    { id: 4, label: 'Ingeniero de producción' },
+    { id: 5, label: 'Trazabilidad' },
+    { id: 6, label: 'Operador' }
+  ];
+
+  searchTerm = '';
+  roleFilter: number | 'all' = 'all';
+  statusFilter: 'all' | 'active' | 'inactive' = 'all';
+  viewMode: 'grid' | 'list' = 'grid';
+
   // Estado de modales
   showFormModal = false;
   showDetailModal = false;
@@ -37,7 +52,7 @@ export class UserListComponent implements OnInit, OnDestroy {
     name: '',
     email: '',
     password: '',
-    role_id: 2,
+    role_id: 6,
     position: '',
     is_active: true,
     last_login: new Date()
@@ -76,16 +91,7 @@ export class UserListComponent implements OnInit, OnDestroy {
 
   // 🔹 Abrir modal para crear nuevo usuario
   openCreateModal(): void {
-    this.isEditMode = false;
-    this.newUser = {
-      name: '',
-      email: '',
-      password: '',
-      role_id: 6,
-      position: '',
-      is_active: true,
-      last_login: new Date()
-    };
+    this.resetFormState();
     this.showFormModal = true;
   }
 
@@ -93,17 +99,7 @@ export class UserListComponent implements OnInit, OnDestroy {
   editUser(user: UserData, userContact: DataUser | null): void {
     this.isEditMode = true;
     this.newUser = { ...user };
-    this.newUserContact = userContact ? { ...userContact } : {
-      id: undefined,
-      user_id: user.id || 0,
-      num_phone: '',
-      num_phone_alt: '',
-      identification_type: '',
-      num_identification: '',
-      address: '',
-      emergency_contact: '',
-      emergency_phone: ''
-    };
+    this.newUserContact = userContact ? { ...userContact } : this.createEmptyContact(user.id || 0);
     this.showFormModal = true;
   }
 
@@ -111,21 +107,24 @@ export class UserListComponent implements OnInit, OnDestroy {
   viewUser(user: UserData): void {
     this.selectedUser = user;
     this.showDetailModal = true;
-    // Obtener el contacto asociado
-    const sub = this.userContacts$.subscribe(contacts => {
-      this.selectedUserContact = contacts.find(contact => contact.user_id === user.id) || null;
-    });
+    const sub = this.userContacts$
+      .pipe(take(1))
+      .subscribe(contacts => {
+        this.selectedUserContact = contacts.find(contact => contact.user_id === user.id) || null;
+      });
     this.subscriptions.push(sub);
   }
 
   // 🔹 Cerrar modales
   closeFormModal(): void {
     this.showFormModal = false;
+    this.resetFormState();
   }
 
   closeDetailModal(): void {
     this.showDetailModal = false;
     this.selectedUser = null;
+    this.selectedUserContact = null;
   }
 
   // 🔹 Enviar formulario (crear o actualizar)
@@ -138,46 +137,37 @@ export class UserListComponent implements OnInit, OnDestroy {
     if (this.isEditMode && this.newUser.id) {
       // Actualizar usuario existente
       this.store.dispatch(UserActions.updateUser({ id: this.newUser.id, user: this.newUser }));
-      //Actualizar el contacto del usuario si es necesario
-      const updateContact = {
-        ...this.newUserContact,
-        user_id: this.newUser.id
+      const contactPayload = { ...this.newUserContact, user_id: this.newUser.id };
+
+      if (this.hasContactInformation(contactPayload)) {
+        if (contactPayload.id) {
+          this.store.dispatch(
+            UserContactActions.updateUserContact({ id: contactPayload.id, userContact: contactPayload })
+          );
+        } else {
+          this.store.dispatch(UserContactActions.createUserContact({ userContact: contactPayload }));
+        }
       }
 
-      // Si el contacto no existe, lo creamos 
-      this.store.dispatch(UserContactActions.updateUserContact({ id: updateContact.id!, userContact: updateContact }));
-
-      // Alert de éxito
-      this.alertService.success('Usuario y contacto actualizados con éxito');
+      this.alertService.success('Usuario actualizado con éxito');
       this.closeFormModal();
     } else {
-
       // Crear nuevo usuario
       this.store.dispatch(UserActions.createUser({ user: this.newUser }));
 
-      let sub: Subscription;
-
-      // 🔹 Escuchar cuando el usuario se haya creado exitosamente
-       sub = this.store.select(UserSelectors.selectUserState).subscribe(state => {
-        const lastUser = state.users[state.users.length - 1]; // último usuario en la lista
-        console.log('Último usuario creado:', lastUser.id);
+      const sub = this.store.select(UserSelectors.selectUserState).subscribe(state => {
+        const lastUser = state.users[state.users.length - 1];
         if (lastUser && lastUser.id) {
-          // Crear contacto con el user_id del nuevo usuario
-          const contactToCreate = {
-            ...this.newUserContact,
-            user_id: lastUser.id
-          };
-
-          this.store.dispatch(UserContactActions.createUserContact({ userContact: contactToCreate }));
-          this.alertService.success('Usuario y contacto creados con éxito');
+          const contactToCreate = { ...this.newUserContact, user_id: lastUser.id };
+          if (this.hasContactInformation(contactToCreate)) {
+            this.store.dispatch(UserContactActions.createUserContact({ userContact: contactToCreate }));
+          }
+          this.alertService.success('Usuario creado con éxito');
           this.closeFormModal();
-
-          // Muy importante: desuscribirse para no duplicar
           sub.unsubscribe();
         }
       });
       this.subscriptions.push(sub);
-      this.alertService.success('Usuario creado con éxito');
     }
   }
 
@@ -189,6 +179,61 @@ export class UserListComponent implements OnInit, OnDestroy {
         this.store.dispatch(UserActions.deleteUser({ id }));
       }
     });
+  }
+
+  refreshUsers(): void {
+    this.store.dispatch(UserActions.fetchUsers());
+    this.store.dispatch(UserContactActions.fetchUserContacts());
+  }
+
+  clearFilters(): void {
+    this.searchTerm = '';
+    this.roleFilter = 'all';
+    this.statusFilter = 'all';
+  }
+
+  filterUsers(users: UserData[]): UserData[] {
+    return users.filter(user => {
+      const matchesSearch = this.matchesSearch(user, this.searchTerm);
+      const matchesRole = this.roleFilter === 'all' ? true : user.role_id === this.roleFilter;
+      const matchesStatus =
+        this.statusFilter === 'all'
+          ? true
+          : this.statusFilter === 'active'
+            ? user.is_active
+            : !user.is_active;
+
+      return matchesSearch && matchesRole && matchesStatus;
+    });
+  }
+
+  hasActiveFilters(): boolean {
+    return this.searchTerm.trim().length > 0 || this.roleFilter !== 'all' || this.statusFilter !== 'all';
+  }
+
+  getActiveCount(users: UserData[]): number {
+    return users.filter(user => user.is_active).length;
+  }
+
+  getInactiveCount(users: UserData[]): number {
+    return users.filter(user => !user.is_active).length;
+  }
+
+  getInitials(name?: string | null): string {
+    if (!name) {
+      return '?';
+    }
+    const parts = name.trim().split(' ').filter(Boolean);
+    if (parts.length === 0) {
+      return '?';
+    }
+    const first = parts[0].charAt(0);
+    const last = parts.length > 1 ? parts[parts.length - 1].charAt(0) : '';
+    return `${first}${last}`.toUpperCase();
+  }
+
+  trackByUserId(_: number, user: UserData): number | undefined {
+    return user.id;
   }
 
   // 🔹 Buscar contacto por user_id
@@ -220,6 +265,63 @@ export class UserListComponent implements OnInit, OnDestroy {
       6: 'badge bg-dark'                   // Operador
     };
     return classes[roleId] || 'badge bg-secondary';
+  }
+
+  getRoleLabel(filter: number | 'all'): string {
+    return filter === 'all' ? 'Todos' : this.getRoleName(filter);
+  }
+
+  private resetFormState(): void {
+    this.isEditMode = false;
+    this.newUser = {
+      id: undefined,
+      name: '',
+      email: '',
+      password: '',
+      role_id: 6,
+      position: '',
+      is_active: true,
+      last_login: new Date()
+    };
+    this.newUserContact = this.createEmptyContact();
+  }
+
+  private createEmptyContact(userId = 0): DataUser {
+    return {
+      id: undefined,
+      user_id: userId,
+      num_phone: '',
+      num_phone_alt: '',
+      identification_type: '',
+      num_identification: '',
+      address: '',
+      emergency_contact: '',
+      emergency_phone: ''
+    };
+  }
+
+  private matchesSearch(user: UserData, term: string): boolean {
+    if (!term) {
+      return true;
+    }
+    const normalized = term.toLowerCase().trim();
+    return (
+      (user.name || '').toLowerCase().includes(normalized) ||
+      (user.email || '').toLowerCase().includes(normalized) ||
+      (user.position || '').toLowerCase().includes(normalized)
+    );
+  }
+
+  private hasContactInformation(contact: DataUser): boolean {
+    return !!(
+      contact.num_phone?.trim() ||
+      contact.num_phone_alt?.trim() ||
+      contact.identification_type?.trim() ||
+      contact.num_identification?.trim() ||
+      contact.address?.trim() ||
+      contact.emergency_contact?.trim() ||
+      contact.emergency_phone?.trim()
+    );
   }
 
   ngOnDestroy(): void {

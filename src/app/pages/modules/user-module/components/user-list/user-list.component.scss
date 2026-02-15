@@ -1,0 +1,74 @@
+.stats-table th,
+.stats-table td {
+	padding: 1.25rem 1.5rem;
+}
+
+.metric-label {
+	display: flex;
+	align-items: center;
+	gap: 1rem;
+}
+
+.metric-icon {
+	width: 48px;
+	height: 48px;
+	border-radius: 12px;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 1.25rem;
+}
+
+// Transiciones suaves para cards
+.card {
+	transition: box-shadow 0.2s ease-in-out, transform 0.15s ease-in-out;
+	
+	&:hover {
+		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+	}
+}
+
+// Tabla hover sutil
+.table-hover tbody tr:hover {
+	background-color: rgba(0, 0, 0, 0.02);
+}
+
+// Botones con transiciones
+.btn {
+	transition: all 0.15s ease-in-out;
+}
+
+// Inputs con focus más suave
+.form-control:focus,
+.form-select:focus {
+	border-color: #6c757d;
+	box-shadow: 0 0 0 3px rgba(108, 117, 125, 0.1);
+}
+
+// Modal backdrop
+.modal {
+	backdrop-filter: blur(2px);
+}
+
+// Badge neutros
+.badge.bg-dark {
+	font-weight: 500;
+}
+
+.badge.bg-secondary {
+	font-weight: 500;
+}
+
+// Separador sutil
+hr {
+	opacity: 0.1;
+}
+
+// Avatar con transición
+.rounded-circle {
+	transition: transform 0.15s ease;
+}
+
+.card:hover .rounded-circle {
+	transform: scale(1.02);
+}
