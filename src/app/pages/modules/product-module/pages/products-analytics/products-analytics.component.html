@@ -1,151 +1,202 @@
-<div class="container-fluid px-4 py-4">
+<div class="analytics-page container-fluid py-4">
+    <!-- Hero Section -->
+    <section class="card bg-gradient text-white border-0 shadow mb-4 rounded-4 overflow-hidden" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
+        <div class="card-body p-4 p-lg-5">
+            <div class="row align-items-center g-4">
+                <div class="col-lg-8">
+                    <span class="badge bg-white bg-opacity-25 text-white mb-3">
+                        <i class="bi bi-box-seam me-1"></i> Panel de Analíticas
+                    </span>
+                    <h1 class="display-6 fw-bold mb-2">Analíticas de Productos</h1>
+                    <p class="lead mb-0 opacity-75">Resumen general y estadísticas del catálogo de productos.</p>
+                </div>
+                <div class="col-lg-4 text-lg-end">
+                    <button type="button" class="btn btn-light text-success fw-semibold" [disabled]="loading">
+                        <ng-container *ngIf="!loading">
+                            <i class="bi bi-arrow-clockwise me-2"></i>Actualizar
+                        </ng-container>
+                        <ng-container *ngIf="loading">
+                            <span class="spinner-border spinner-border-sm me-2"></span>Cargando...
+                        </ng-container>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
 
-    <!-- Header -->
-    <div class="mb-4 pb-2 border-bottom">
-        <h2 class="fw-bold mb-1">
-            <i class="bi bi-graph-up-arrow text-primary me-2"></i>Análitica de Productos
-        </h2>
-        <p class="text-muted small mb-0">Resumen general y estadísticas del catálogo</p>
+    <!-- Loading State -->
+    <div class="card border-0 shadow-sm text-center p-5 rounded-3" *ngIf="loading">
+        <div class="spinner-border text-success mb-3" role="status" style="width: 3rem; height: 3rem;">
+            <span class="visually-hidden">Cargando...</span>
+        </div>
+        <p class="text-muted mb-0">Cargando datos de productos...</p>
     </div>
 
-    <!-- Alertas -->
-    <div *ngIf="loading"
-         class="alert alert-info border-0 shadow-sm d-flex align-items-center py-2 mb-4"
-         role="alert">
-        <div class="spinner-border spinner-border-sm me-2"></div>
-        <span>Cargando datos...</span>
+    <!-- Error State -->
+    <div *ngIf="error" class="card border-0 shadow-sm mb-4 rounded-3">
+        <div class="card-body p-4 d-flex align-items-center">
+            <div class="rounded-3 bg-danger bg-opacity-10 p-3 me-3">
+                <i class="bi bi-exclamation-octagon-fill fs-3 text-danger"></i>
+            </div>
+            <div>
+                <h6 class="fw-bold mb-1 text-danger">Error al cargar datos</h6>
+                <p class="text-muted mb-0 small">{{ error }}</p>
+            </div>
+        </div>
     </div>
 
-    <div *ngIf="error"
-         class="alert alert-danger border-0 shadow-sm d-flex align-items-center py-2 mb-4"
-         role="alert">
-        <i class="bi bi-exclamation-octagon-fill me-2 fs-5"></i>
-        <span>{{ error }}</span>
-    </div>
-
-    <!-- KPIs -->
-    <div class="row g-4 mb-4" *ngIf="!loading">
-
-        <!-- Total Productos -->
-        <div class="col-md-6 col-lg-3">
-            <div class="card shadow-sm border-0 h-100 rounded-3">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between">
+    <ng-container *ngIf="!loading">
+        <!-- KPI Cards -->
+        <section class="row g-3 mb-4">
+            <div class="col-sm-6 col-xl-3">
+                <div class="card border-0 shadow-sm h-100 rounded-3">
+                    <div class="card-body d-flex align-items-center justify-content-between p-4">
                         <div>
-                            <p class="text-muted small mb-1">Total Productos</p>
-                            <h3 class="fw-bold mb-0">{{ totalProducts }}</h3>
+                            <p class="text-muted small mb-1 fw-semibold">Total Productos</p>
+                            <h3 class="mb-0 fw-bold text-primary">{{ totalProducts }}</h3>
+                            <small class="text-muted">En catálogo</small>
                         </div>
-                        <div class="icon-box bg-primary bg-opacity-10 text-primary p-3 rounded-3">
-                            <i class="bi bi-bag-fill fs-3"></i>
+                        <div class="rounded-3 bg-primary bg-opacity-10 p-3">
+                            <i class="bi bi-bag-fill fs-3 text-primary"></i>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
-
-        <!-- Inactivos -->
-        <div class="col-md-6 col-lg-3">
-            <div class="card shadow-sm border-0 h-100 rounded-3">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between">
+            <div class="col-sm-6 col-xl-3">
+                <div class="card border-0 shadow-sm h-100 rounded-3">
+                    <div class="card-body d-flex align-items-center justify-content-between p-4">
                         <div>
-                            <p class="text-muted small mb-1">Inactivos</p>
-                            <h3 class="fw-bold text-danger mb-0">{{ inactiveCount }}</h3>
+                            <p class="text-muted small mb-1 fw-semibold">Productos Inactivos</p>
+                            <h3 class="mb-0 fw-bold text-danger">{{ inactiveCount }}</h3>
+                            <small class="text-muted">Sin disponibilidad</small>
                         </div>
-                        <div class="icon-box bg-danger bg-opacity-10 text-danger p-3 rounded-3">
-                            <i class="bi bi-power fs-3"></i>
+                        <div class="rounded-3 bg-danger bg-opacity-10 p-3">
+                            <i class="bi bi-power fs-3 text-danger"></i>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
-
-    </div>
-
-    <!-- Contenido Principal -->
-    <div class="row g-4" *ngIf="!loading">
-
-        <!-- Top 5 -->
-        <div class="col-lg-6">
-            <div class="card shadow-sm border-0 rounded-3">
-                <div class="card-header bg-white border-bottom py-3">
-                    <h6 class="fw-semibold mb-0">
-                        <i class="bi bi-trophy-fill text-warning me-2"></i>Top 5 Productos
-                    </h6>
+            <div class="col-sm-6 col-xl-3">
+                <div class="card border-0 shadow-sm h-100 rounded-3">
+                    <div class="card-body d-flex align-items-center justify-content-between p-4">
+                        <div>
+                            <p class="text-muted small mb-1 fw-semibold">Categorías</p>
+                            <h3 class="mb-0 fw-bold text-info">{{ getProductsByCategory().length }}</h3>
+                            <small class="text-muted">Activas</small>
+                        </div>
+                        <div class="rounded-3 bg-info bg-opacity-10 p-3">
+                            <i class="bi bi-diagram-3-fill fs-3 text-info"></i>
+                        </div>
+                    </div>
                 </div>
+            </div>
+            <div class="col-sm-6 col-xl-3">
+                <div class="card border-0 shadow-sm h-100 rounded-3">
+                    <div class="card-body d-flex align-items-center justify-content-between p-4">
+                        <div>
+                            <p class="text-muted small mb-1 fw-semibold">Top Productos</p>
+                            <h3 class="mb-0 fw-bold text-warning">{{ getTopProducts().length }}</h3>
+                            <small class="text-muted">Destacados</small>
+                        </div>
+                        <div class="rounded-3 bg-warning bg-opacity-10 p-3">
+                            <i class="bi bi-trophy-fill fs-3 text-warning"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
 
-                <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-hover align-middle mb-0">
-                            <thead class="table-light">
-                                <tr>
-                                    <th><small class="text-muted fw-bold">Nombre</small></th>
-                                    <th><small class="text-muted fw-bold">Categoría</small></th>
-                                    <th><small class="text-muted fw-bold">Especificaciones</small></th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr *ngFor="let p of getTopProducts()">
-                                    <td>
-                                        <span class="fw-semibold">{{ p.name }}</span>
-                                    </td>
-                                    <td>
-                                        <span class="badge bg-info-subtle text-info border border-info">{{ p.category }}</span>
-                                    </td>
-                                    <td>
-                                        <div *ngIf="(p.specifications?.length || 0) > 0" class="d-flex flex-wrap gap-1">
-                                            <span *ngFor="let spec of p.specifications"
-                                                  class="badge bg-secondary-subtle text-secondary border border-secondary">
-                                                {{ spec }}
+        <!-- Content Row -->
+        <div class="row g-4 mb-4">
+            <!-- Top 5 Products -->
+            <div class="col-lg-7">
+                <div class="card border-0 shadow-sm rounded-3 h-100">
+                    <div class="card-header bg-transparent border-0 pt-4 px-4 d-flex align-items-center justify-content-between">
+                        <h5 class="card-title mb-0 d-flex align-items-center gap-2">
+                            <i class="bi bi-trophy-fill text-warning"></i> Top 5 Productos
+                        </h5>
+                        <span class="badge bg-warning bg-opacity-10 text-warning">Destacados</span>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead>
+                                    <tr>
+                                        <th class="ps-4">Nombre</th>
+                                        <th>Categoría</th>
+                                        <th class="pe-4">Especificaciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr *ngFor="let p of getTopProducts(); let i = index">
+                                        <td class="ps-4">
+                                            <div class="d-flex align-items-center gap-3">
+                                                <div class="avatar-sm rounded-circle bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center fw-bold">
+                                                    {{ i + 1 }}
+                                                </div>
+                                                <span class="fw-semibold">{{ p.name }}</span>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-info bg-opacity-10 text-info border-0 px-3 py-2">
+                                                {{ p.category }}
                                             </span>
-                                        </div>
-                                        <span *ngIf="(p.specifications?.length || 0) === 0" class="text-muted small">—</span>
-                                    </td>
-                                </tr>
-
-                                <tr *ngIf="getTopProducts().length === 0">
-                                    <td colspan="3" class="text-center py-3 text-muted">
-                                        <small>No hay productos</small>
-                                    </td>
-                                </tr>
-
-                            </tbody>
-                        </table>
+                                        </td>
+                                        <td class="pe-4">
+                                            <div *ngIf="(p.specifications?.length || 0) > 0" class="d-flex flex-wrap gap-1">
+                                                <span *ngFor="let spec of p.specifications"
+                                                      class="badge bg-secondary bg-opacity-10 text-secondary border-0">
+                                                    {{ spec }}
+                                                </span>
+                                            </div>
+                                            <span *ngIf="(p.specifications?.length || 0) === 0" class="text-muted">—</span>
+                                        </td>
+                                    </tr>
+                                    <tr *ngIf="getTopProducts().length === 0">
+                                        <td colspan="3" class="text-center py-5">
+                                            <div class="text-muted">
+                                                <i class="bi bi-inbox fs-1 opacity-50 d-block mb-2"></i>
+                                                <span>No hay productos disponibles</span>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
-
             </div>
-        </div>
 
-        <!-- Categorías -->
-        <div class="col-lg-6">
-            <div class="card shadow-sm border-0 rounded-3">
-                <div class="card-header bg-white border-bottom py-3">
-                    <h6 class="fw-semibold mb-0">
-                        <i class="bi bi-diagram-3-fill me-2 text-primary"></i>Productos por Categoría
-                    </h6>
-                </div>
-                <div class="card-body">
-                    <div class="row g-3">
-                        <div *ngFor="let cat of getProductsByCategory()" class="col-6">
-                            <div class="p-3 bg-light rounded-3 shadow-sm-sm text-center">
-                                <p class="small text-muted mb-1">{{ cat.name }}</p>
-                                <h4 class="fw-bold mb-0">{{ cat.count }}</h4>
-                                <small class="text-muted">producto<span *ngIf="cat.count !== 1">s</span></small>
+            <!-- Products by Category -->
+            <div class="col-lg-5">
+                <div class="card border-0 shadow-sm rounded-3 h-100">
+                    <div class="card-header bg-transparent border-0 pt-4 px-4 d-flex align-items-center justify-content-between">
+                        <h5 class="card-title mb-0 d-flex align-items-center gap-2">
+                            <i class="bi bi-pie-chart-fill text-primary"></i> Por Categoría
+                        </h5>
+                        <span class="badge bg-primary bg-opacity-10 text-primary">{{ getProductsByCategory().length }} categorías</span>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="row g-3" *ngIf="getProductsByCategory().length > 0">
+                            <div *ngFor="let cat of getProductsByCategory()" class="col-6">
+                                <div class="category-card p-3 rounded-3 text-center h-100">
+                                    <div class="category-icon mx-auto mb-2">
+                                        <i class="bi bi-folder-fill"></i>
+                                    </div>
+                                    <h4 class="fw-bold mb-1 text-primary">{{ cat.count }}</h4>
+                                    <p class="small text-muted mb-0 text-truncate" [title]="cat.name">{{ cat.name }}</p>
+                                </div>
                             </div>
                         </div>
-
-                        <div *ngIf="getProductsByCategory().length === 0" class="col-12">
-                            <p class="text-center text-muted py-3 mb-0">
-                                No hay productos por categoría
-                            </p>
+                        <div class="text-center py-5" *ngIf="getProductsByCategory().length === 0">
+                            <div class="text-muted">
+                                <i class="bi bi-folder-x fs-1 opacity-50 d-block mb-2"></i>
+                                <span>No hay categorías disponibles</span>
+                            </div>
                         </div>
-
                     </div>
                 </div>
             </div>
         </div>
-
-    </div>
-
+    </ng-container>
 </div>

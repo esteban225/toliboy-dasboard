@@ -1,0 +1,124 @@
+.analytics-page {
+  .card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+    &:hover {
+      transform: translateY(-2px);
+    }
+  }
+
+  // KPI Cards
+  .kpi-card {
+    .card-body {
+      .fs-3 {
+        transition: transform 0.2s ease;
+      }
+
+      &:hover .fs-3 {
+        transform: scale(1.1);
+      }
+    }
+  }
+
+  .avatar-sm {
+    width: 40px;
+    height: 40px;
+    font-size: 0.875rem;
+  }
+
+  // Summary stats
+  .summary-stat {
+    transition: all 0.2s ease;
+
+    &:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+    }
+  }
+
+  // Quality metrics
+  .quality-metric {
+    .progress {
+      background-color: rgba(0, 0, 0, 0.05);
+    }
+  }
+
+  // Status items
+  .status-item {
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      min-width: 10px;
+    }
+
+    .progress {
+      background-color: rgba(0, 0, 0, 0.05);
+    }
+  }
+
+  // Table styles
+  .table {
+    th {
+      font-weight: 600;
+      font-size: 0.8125rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #6c757d;
+      border-bottom-width: 2px;
+    }
+
+    td {
+      vertical-align: middle;
+      padding-top: 1rem;
+      padding-bottom: 1rem;
+    }
+
+    tbody tr {
+      transition: background-color 0.15s ease;
+
+      &:hover {
+        background-color: rgba(99, 102, 241, 0.04);
+      }
+    }
+  }
+
+  // Card header styling
+  .card-header {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  }
+
+  // Badge improvements
+  .badge {
+    font-weight: 500;
+    letter-spacing: 0.3px;
+  }
+
+  // Progress bars
+  .progress {
+    border-radius: 10px;
+    overflow: hidden;
+
+    .progress-bar {
+      border-radius: 10px;
+    }
+  }
+
+  // Responsive adjustments
+  @media (max-width: 768px) {
+    .display-6 {
+      font-size: 1.5rem;
+    }
+
+    .card-body {
+      padding: 1rem !important;
+    }
+
+    h3.fw-bold {
+      font-size: 1.5rem;
+    }
+
+    .summary-stat {
+      padding: 1rem !important;
+    }
+  }
+}

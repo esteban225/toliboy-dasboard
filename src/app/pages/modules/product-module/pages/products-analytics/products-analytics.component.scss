@@ -1,93 +1,108 @@
-// Analytics page styles
-.card {
-  transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+.analytics-page {
+  .card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
 
-  &:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1) !important;
-  }
-}
-
-// KPI Cards
-.card-body {
-  h3 {
-    font-size: 2rem;
-    margin-bottom: 0.5rem;
-  }
-
-  p {
-    font-weight: 500;
-  }
-}
-
-// Table responsive styles
-.table-responsive {
-  .table {
-    margin-bottom: 0;
-
-    thead th {
-      background-color: #f8f9fa;
-      border-bottom: 2px solid #dee2e6;
-      font-weight: 600;
-      color: #6c757d;
-      padding: 1rem 0.75rem;
-    }
-
-    tbody td {
-      padding: 1rem 0.75rem;
-      border-bottom: 1px solid #dee2e6;
-
-      &:first-child {
-        font-weight: 500;
-      }
-    }
-
-    tbody tr {
-      transition: background-color 0.15s ease-in-out;
-
-      &:hover {
-        background-color: #f8f9fa;
-      }
+    &:hover {
+      transform: translateY(-2px);
     }
   }
-}
 
-// Badge styles
-.badge {
-  font-weight: 500;
-  padding: 0.35rem 0.65rem;
-}
-
-// Stats boxes in category grid
-.bg-light {
-  padding: 1.25rem;
-  border-radius: 0.5rem;
-  transition: all 0.3s ease-in-out;
-
-  h4 {
-    font-size: 1.5rem;
-    margin-bottom: 0.25rem;
-  }
-
-  p {
-    margin-bottom: 0;
-    font-weight: 500;
-  }
-
-  small {
-    display: block;
+  .avatar-sm {
+    width: 36px;
+    height: 36px;
     font-size: 0.875rem;
   }
 
-  &:hover {
-    background-color: #e9ecef;
-    transform: translateY(-3px);
-  }
-}
+  // KPI Cards animation
+  .card-body {
+    .fs-3 {
+      transition: transform 0.2s ease;
+    }
 
-// Hide on small screens
-@media (max-width: 576px) {
-  .hide-sm {
-    display: none;
+    &:hover .fs-3 {
+      transform: scale(1.1);
+    }
+  }
+
+  // Table styles
+  .table {
+    th {
+      font-weight: 600;
+      font-size: 0.8125rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #6c757d;
+      border-bottom: 2px solid #e9ecef;
+      background-color: #fafbfc;
+      padding: 1rem 0.75rem;
+    }
+
+    td {
+      vertical-align: middle;
+      padding: 1rem 0.75rem;
+      border-bottom: 1px solid #f0f0f0;
+    }
+
+    tbody tr {
+      transition: background-color 0.15s ease;
+
+      &:hover {
+        background-color: rgba(17, 153, 142, 0.04);
+      }
+    }
+  }
+
+  // Category cards
+  .category-card {
+    background: linear-gradient(135deg, #f8f9fa 0%, #fff 100%);
+    border: 1px solid #e9ecef;
+    transition: all 0.2s ease;
+
+    &:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      border-color: #11998e;
+    }
+
+    .category-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 1rem;
+    }
+  }
+
+  // Badge improvements
+  .badge {
+    font-weight: 500;
+    letter-spacing: 0.3px;
+  }
+
+  // Responsive adjustments
+  @media (max-width: 768px) {
+    .display-6 {
+      font-size: 1.5rem;
+    }
+
+    .card-body {
+      padding: 1rem !important;
+    }
+
+    h3.fw-bold {
+      font-size: 1.5rem;
+    }
+
+    .category-card {
+      padding: 0.75rem !important;
+
+      h4 {
+        font-size: 1.25rem;
+      }
+    }
   }
 }

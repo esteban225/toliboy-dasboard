@@ -35,7 +35,8 @@ interface ProductionMetrics {
   selector: 'app-batches-analytics',
   standalone: true,
   imports: [CommonModule],
-  templateUrl: './batches-analytics.component.html'
+  templateUrl: './batches-analytics.component.html',
+  styleUrl: './batches-analytics.component.scss'
 })
 export class BatchesAnalyticsComponent implements OnInit, OnDestroy {
   batches = signal<Batch[]>([]);
@@ -184,6 +185,24 @@ export class BatchesAnalyticsComponent implements OnInit, OnDestroy {
     if (percentage >= 50) return 'bg-danger';
     if (percentage >= 25) return 'bg-warning';
     return 'bg-success';
+  }
+
+  getStatusDotClass(status: string): string {
+    switch (status) {
+      case 'Activos': return 'bg-info';
+      case 'Completados': return 'bg-success';
+      case 'Con Defectos': return 'bg-warning';
+      default: return 'bg-secondary';
+    }
+  }
+
+  getStatusProgressClass(status: string): string {
+    switch (status) {
+      case 'Activos': return 'bg-info';
+      case 'Completados': return 'bg-success';
+      case 'Con Defectos': return 'bg-warning';
+      default: return 'bg-secondary';
+    }
   }
 
   getDefectRateBadgeClass(rate: number): string {

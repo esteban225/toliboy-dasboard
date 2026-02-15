@@ -1,21 +1,21 @@
 <div class="user-page container py-4">
   <!-- Hero Section Mejorado -->
   <section class="page-hero card border-0 shadow-lg text-white overflow-hidden mb-4 bg-gradient position-relative" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-    <div class="card-body p-4 ">
+    <div class="card-body p-4 bg-body">
       <div class="row g-3 align-items-center">
         <div class="col-lg-8">
           <p class="text-uppercase mb-2 fw-bold opacity-75 small">
             <i class="bi bi-diagram-3-fill me-2"></i>Panel de usuarios
           </p>
-          <h1 class="display-5 fw-bold mb-2">Gestión de Usuarios</h1>
+          <h1 class=" fw-bold mb-2">Gestión de Usuarios</h1>
           <p class="mb-0 fs-6 opacity-90">Administra y monitorea los perfiles activos de tu organización.</p>
         </div>
         <div class="col-lg-4 text-lg-end">
-          <button type="button" class="btn btn-outline-light btn-lg me-2 mb-2 mb-lg-0" (click)="refreshUsers()">
+          <button type="button" class="btn btn-light btn-md me-2 mb-2 mb-lg-0" (click)="refreshUsers()">
             <i class="bi bi-arrow-clockwise me-2"></i>
             Refrescar
           </button>
-          <button type="button" class="btn btn-light text-primary btn-lg mb-2 mb-lg-0 fw-semibold shadow" (click)="openCreateModal()">
+          <button type="button" class="btn btn-light text-primary btn-md mb-2 mb-lg-0 fw-semibold shadow" (click)="openCreateModal()">
             <i class="bi bi-person-plus-fill me-2"></i>
             Nuevo Usuario
           </button>
@@ -202,9 +202,9 @@
           <ng-container *ngIf="filteredUsers.length > 0; else noMatches">
             <div [ngSwitch]="viewMode">
               <!-- Grid View -->
-              <div *ngSwitchCase="'grid'" class="row g-4">
+              <div *ngSwitchCase="'grid'" class="row g-4 ">
                 <div class="col-12 col-md-6 col-xl-4" *ngFor="let user of filteredUsers; trackBy: trackByUserId">
-                  <article class="card border-0 shadow-sm h-100">
+                  <article class="card border-0 shadow-sm h-100 ">
                     <div class="card-body p-4 d-flex flex-column">
                       <div class="d-flex align-items-start mb-4">
                         <div class="bg-primary bg-gradient text-white rounded-circle d-flex align-items-center justify-content-center me-3 fw-bold shadow" style="width: 56px; height: 56px; font-size: 1.25rem;">

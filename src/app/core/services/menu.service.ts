@@ -99,7 +99,7 @@ export class MenuService {
       {
         id: 101,
         label: 'MENUITEMS.USERMANAGEMENT.TEXT',
-        icon: 'ti ti-user',
+        icon: 'ti ti-users-group',
         subItems: [
           {
             id: 102,
@@ -125,7 +125,7 @@ export class MenuService {
       {
         id: 103,
         label: 'MENUITEMS.FORMMANAGER.TEXT',
-        icon: 'ti ti-box',
+        icon: 'ti ti-clipboard-list',
         subItems: [
           {
             id: 104,
@@ -158,7 +158,7 @@ export class MenuService {
       {
         id: 200,
         label: 'MENUITEMS.INVENTORY.TEXT',
-        icon: 'ti ti-box',
+        icon: 'ti ti-building-warehouse',
         subItems: [
           {
             id: 201,
@@ -204,7 +204,7 @@ export class MenuService {
       {
         id: 400,
         label: 'MENUITEMS.BATCHES.TEXT',
-        icon: 'ti ti-box-seam',
+        icon: 'ti ti-layers-intersect',
         subItems: [
           {
             id: 401,
@@ -230,7 +230,7 @@ export class MenuService {
       {
         id: 500,
         label: 'MENUITEMS.TRACEABILITY.TEXT',
-        icon: 'ti ti-shuffle',
+        icon: 'ti ti-route',
         subItems: [
           {
             id: 501,
@@ -456,7 +456,7 @@ export class MenuService {
       {
         id: 400,
         label: 'MENUITEMS.BATCHES.TEXT',
-        icon: 'ti ti-box-seam',
+        icon: 'ti ti-layers-intersect',
         subItems: [
           {
             id: 401,
@@ -491,7 +491,7 @@ export class MenuService {
       {
         id: 200,
         label: 'MENUITEMS.INVENTORY.TEXT',
-        icon: 'ti ti-box',
+        icon: 'ti ti-building-warehouse',
         subItems: [
           {
             id: 201,

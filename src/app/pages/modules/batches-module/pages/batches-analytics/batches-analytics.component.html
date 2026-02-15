@@ -1,196 +1,313 @@
-<div class="container-fluid px-4 py-4">
+<div class="analytics-page container-fluid py-4">
+	<!-- Hero Section -->
+	<section class="card bg-gradient text-white border-0 shadow mb-4 rounded-4 overflow-hidden" style="background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);">
+		<div class="card-body p-4 p-lg-5">
+			<div class="row align-items-center g-4">
+				<div class="col-lg-8">
+					<span class="badge bg-white bg-opacity-25 text-white mb-3">
+						<i class="bi bi-boxes me-1"></i> Panel de Analíticas
+					</span>
+					<h1 class="display-6 fw-bold mb-2">Análisis de Lotes</h1>
+					<p class="lead mb-0 opacity-75">Visualiza métricas de producción, calidad y defectos en tiempo real.</p>
+				</div>
+				<div class="col-lg-4 text-lg-end">
+					<button type="button" class="btn btn-light text-primary fw-semibold" (click)="loadAnalytics()" [disabled]="loading()">
+						<ng-container *ngIf="!loading()">
+							<i class="bi bi-arrow-clockwise me-2"></i>Actualizar
+						</ng-container>
+						<ng-container *ngIf="loading()">
+							<span class="spinner-border spinner-border-sm me-2"></span>Cargando...
+						</ng-container>
+					</button>
+				</div>
+			</div>
+		</div>
+	</section>
 
-    <!-- Header -->
-    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 border rounded-4 p-3 bg-white shadow-sm gap-3">
-        <div class="text-center text-md-start">
-            <h2 class="mb-1 fw-bold">
-                <i class="bi bi-graph-up text-primary me-2"></i>Análisis de Lotes
-            </h2>
-            <p class="text-muted mb-0 small">Métricas y estadísticas de producción</p>
-        </div>
+	<!-- Loading State -->
+	<div class="card border-0 shadow-sm text-center p-5 rounded-3" *ngIf="loading()">
+		<div class="spinner-border text-primary mb-3" role="status" style="width: 3rem; height: 3rem;">
+			<span class="visually-hidden">Cargando...</span>
+		</div>
+		<p class="text-muted mb-0">Cargando datos de lotes...</p>
+	</div>
 
-        <button class="btn btn-outline-primary w-md-auto" 
-                (click)="loadAnalytics()" 
-                [disabled]="loading()">
-            <i class="bi bi-arrow-clockwise me-2"></i>Actualizar
-        </button>
-    </div>
+	<!-- Error State -->
+	<div *ngIf="error()" class="card border-0 shadow-sm mb-4 rounded-3">
+		<div class="card-body p-4 d-flex align-items-center">
+			<div class="rounded-3 bg-danger bg-opacity-10 p-3 me-3">
+				<i class="bi bi-exclamation-octagon-fill fs-3 text-danger"></i>
+			</div>
+			<div>
+				<h6 class="fw-bold mb-1 text-danger">Error al cargar datos</h6>
+				<p class="text-muted mb-0 small">{{ error() }}</p>
+			</div>
+		</div>
+	</div>
 
-    <!-- Loading & Error Alerts -->
-    <div *ngIf="loading()" class="alert alert-info d-flex align-items-center">
-        <div class="spinner-border spinner-border-sm me-3" role="status">
-            <span class="visually-hidden">Cargando...</span>
-        </div>
-        <div>Cargando análisis...</div>
-    </div>
+	<ng-container *ngIf="!loading()">
+		<!-- KPI Cards -->
+		<section class="row g-3 mb-4">
+			<div class="col-sm-6 col-xl-3">
+				<div class="card border-0 shadow-sm h-100 rounded-3 kpi-card">
+					<div class="card-body d-flex align-items-center justify-content-between p-4">
+						<div>
+							<p class="text-muted small mb-1 fw-semibold text-uppercase" style="letter-spacing: 0.5px;">Total Lotes</p>
+							<h3 class="mb-0 fw-bold text-primary">{{ metrics().totalBatches }}</h3>
+							<small class="text-muted">En sistema</small>
+						</div>
+						<div class="rounded-3 bg-primary bg-opacity-10 p-3">
+							<i class="bi bi-boxes fs-3 text-primary"></i>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="col-sm-6 col-xl-3">
+				<div class="card border-0 shadow-sm h-100 rounded-3 kpi-card">
+					<div class="card-body d-flex align-items-center justify-content-between p-4">
+						<div>
+							<p class="text-muted small mb-1 fw-semibold text-uppercase" style="letter-spacing: 0.5px;">Activos</p>
+							<h3 class="mb-0 fw-bold text-info">{{ metrics().activeBatches }}</h3>
+							<small class="text-muted">En proceso</small>
+						</div>
+						<div class="rounded-3 bg-info bg-opacity-10 p-3">
+							<i class="bi bi-play-circle fs-3 text-info"></i>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="col-sm-6 col-xl-3">
+				<div class="card border-0 shadow-sm h-100 rounded-3 kpi-card">
+					<div class="card-body d-flex align-items-center justify-content-between p-4">
+						<div>
+							<p class="text-muted small mb-1 fw-semibold text-uppercase" style="letter-spacing: 0.5px;">Completados</p>
+							<h3 class="mb-0 fw-bold text-success">{{ metrics().completedBatches }}</h3>
+							<small class="text-success"><i class="bi bi-check-circle me-1"></i>Finalizados</small>
+						</div>
+						<div class="rounded-3 bg-success bg-opacity-10 p-3">
+							<i class="bi bi-check-circle fs-3 text-success"></i>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="col-sm-6 col-xl-3">
+				<div class="card border-0 shadow-sm h-100 rounded-3 kpi-card">
+					<div class="card-body d-flex align-items-center justify-content-between p-4">
+						<div>
+							<p class="text-muted small mb-1 fw-semibold text-uppercase" style="letter-spacing: 0.5px;">Defectos</p>
+							<h3 class="mb-0 fw-bold text-warning">{{ metrics().totalDefects }}</h3>
+							<small class="text-muted">Unidades defectuosas</small>
+						</div>
+						<div class="rounded-3 bg-warning bg-opacity-10 p-3">
+							<i class="bi bi-exclamation-triangle fs-3 text-warning"></i>
+						</div>
+					</div>
+				</div>
+			</div>
+		</section>
 
-    <div *ngIf="error()" class="alert alert-danger d-flex align-items-center">
-        <i class="bi bi-exclamation-triangle-fill me-3"></i>
-        <div>{{ error() }}</div>
-    </div>
+		<!-- Production Overview -->
+		<section class="row g-3 mb-4">
+			<div class="col-12">
+				<div class="card border-0 shadow-sm rounded-3">
+					<div class="card-body p-4">
+						<div class="row g-4">
+							<div class="col-md-4">
+								<div class="summary-stat p-4 rounded-3 bg-primary bg-opacity-10 text-center h-100">
+									<div class="rounded-circle bg-primary bg-opacity-25 d-inline-flex align-items-center justify-content-center mb-3" style="width: 56px; height: 56px;">
+										<i class="bi bi-graph-up-arrow fs-4 text-primary"></i>
+									</div>
+									<h3 class="fw-bold text-primary mb-1">{{ metrics().totalProduced | number }}</h3>
+									<p class="text-muted mb-0 small fw-medium">Producción Total</p>
+								</div>
+							</div>
+							<div class="col-md-4">
+								<div class="summary-stat p-4 rounded-3 bg-warning bg-opacity-10 text-center h-100">
+									<div class="rounded-circle bg-warning bg-opacity-25 d-inline-flex align-items-center justify-content-center mb-3" style="width: 56px; height: 56px;">
+										<i class="bi bi-percent fs-4 text-warning"></i>
+									</div>
+									<h3 class="fw-bold text-warning mb-1">{{ metrics().defectivePercentage }}%</h3>
+									<p class="text-muted mb-0 small fw-medium">Lotes con Defectos</p>
+								</div>
+							</div>
+							<div class="col-md-4">
+								<div class="summary-stat p-4 rounded-3 bg-danger bg-opacity-10 text-center h-100">
+									<div class="rounded-circle bg-danger bg-opacity-25 d-inline-flex align-items-center justify-content-center mb-3" style="width: 56px; height: 56px;">
+										<i class="bi bi-speedometer2 fs-4 text-danger"></i>
+									</div>
+									<h3 class="fw-bold text-danger mb-1">{{ metrics().averageDefectRate }}%</h3>
+									<p class="text-muted mb-0 small fw-medium">Tasa de Defectos</p>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</section>
 
-    <!-- Key Metrics -->
-    <div class="row g-3 mb-4" *ngIf="!loading()">
-        <div class="col-12 col-sm-6 col-lg-3" *ngFor="let m of [
-            {label:'Total de Lotes', icon:'bi-boxes', class:'text-primary', value:metrics().totalBatches},
-            {label:'Lotes Activos', icon:'bi-play-circle', class:'text-info', value:metrics().activeBatches},
-            {label:'Completados', icon:'bi-check-circle', class:'text-success', value:metrics().completedBatches},
-            {label:'Defectos Totales', icon:'bi-exclamation-triangle', class:'text-warning', value:metrics().totalDefects}
-        ]">
-            <div class="card shadow-sm border rounded-4 bg-body h-100">
-                <div class="card-body">
-                    <div class="d-flex align-items-center justify-content-between">
-                        <div>
-                            <p class="text-muted mb-1 small">
-                                <i class="bi" [ngClass]="m.icon + ' ' + m.class + ' me-1'"></i>{{ m.label }}
-                            </p>
-                            <h3 class="mb-0 fw-bold" [ngClass]="m.class">{{ m.value }}</h3>
-                        </div>
-                        <div class="display-6 opacity-50" [ngClass]="m.class">
-                            <i class="bi" [ngClass]="m.icon"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+		<!-- Charts Row -->
+		<div class="row g-4 mb-4">
+			<!-- Quality Statistics -->
+			<div class="col-lg-6">
+				<div class="card border-0 shadow-sm rounded-3 h-100">
+					<div class="card-header bg-white d-flex justify-content-between align-items-center py-3 px-4 rounded-top-3 border-0">
+						<h5 class="mb-0 d-flex align-items-center gap-2">
+							<i class="bi bi-shield-check text-success"></i> Estadísticas de Calidad
+						</h5>
+						<span class="badge bg-success bg-opacity-10 text-success rounded-pill px-3">Calidad</span>
+					</div>
+					<div class="card-body p-4">
+						<div class="quality-metric mb-4">
+							<div class="d-flex justify-content-between align-items-center mb-2">
+								<div class="d-flex align-items-center gap-2">
+									<div class="rounded-circle bg-warning bg-opacity-10 p-2">
+										<i class="bi bi-exclamation-circle text-warning"></i>
+									</div>
+									<span class="fw-semibold">Lotes con Defectos</span>
+								</div>
+								<span class="badge bg-warning bg-opacity-10 text-warning px-3 py-2">{{ metrics().defectivePercentage }}%</span>
+							</div>
+							<div class="progress rounded-pill" style="height: 8px;">
+								<div class="progress-bar bg-warning" [style.width.%]="metrics().defectivePercentage"></div>
+							</div>
+						</div>
 
-    <!-- Production Stats -->
-    <div class="row g-3 mb-4" *ngIf="!loading()">
+						<div class="quality-metric mb-4">
+							<div class="d-flex justify-content-between align-items-center mb-2">
+								<div class="d-flex align-items-center gap-2">
+									<div class="rounded-circle bg-info bg-opacity-10 p-2">
+										<i class="bi bi-speedometer2 text-info"></i>
+									</div>
+									<span class="fw-semibold">Tasa de Defectos</span>
+								</div>
+								<span class="badge bg-info bg-opacity-10 text-info px-3 py-2">{{ metrics().averageDefectRate }}%</span>
+							</div>
+							<div class="progress rounded-pill" style="height: 8px;">
+								<div class="progress-bar bg-info" [style.width.%]="metrics().averageDefectRate"></div>
+							</div>
+						</div>
 
-        <!-- Calidad -->
-        <div class="col-12 col-lg-6">
-            <div class="card shadow-sm border rounded-4 p-3 bg-body">
-                <div class="card-header bg-light border-0">
-                    <h6 class="mb-0 fw-semibold">
-                        <i class="bi bi-percent text-primary me-2"></i>Estadísticas de Calidad
-                    </h6>
-                </div>
-                <div class="card-body">
+						<div class="quality-metric">
+							<div class="d-flex justify-content-between align-items-center mb-2">
+								<div class="d-flex align-items-center gap-2">
+									<div class="rounded-circle bg-success bg-opacity-10 p-2">
+										<i class="bi bi-graph-up text-success"></i>
+									</div>
+									<span class="fw-semibold">Producción Total</span>
+								</div>
+								<span class="badge bg-success bg-opacity-10 text-success px-3 py-2">{{ metrics().totalProduced | number }}</span>
+							</div>
+							<div class="progress rounded-pill" style="height: 8px;">
+								<div class="progress-bar bg-success" style="width: 100%"></div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
 
-                    <!-- Defectivos -->
-                    <div class="mb-3">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <small class="text-muted fw-semibold">Lotes con Defectos</small>
-                            <span class="badge bg-warning">{{ metrics().defectivePercentage }}%</span>
-                        </div>
-                        <div class="progress">
-                            <div class="progress-bar bg-warning" [style.width.%]="metrics().defectivePercentage"></div>
-                        </div>
-                    </div>
+			<!-- Status Distribution -->
+			<div class="col-lg-6">
+				<div class="card border-0 shadow-sm rounded-3 h-100">
+					<div class="card-header bg-white d-flex justify-content-between align-items-center py-3 px-4 rounded-top-3 border-0">
+						<h5 class="mb-0 d-flex align-items-center gap-2">
+							<i class="bi bi-pie-chart-fill text-primary"></i> Distribución de Estados
+						</h5>
+						<span class="badge bg-primary bg-opacity-10 text-primary rounded-pill px-3">{{ batchStatuses().length }} estados</span>
+					</div>
+					<div class="card-body p-4">
+						<div *ngFor="let status of batchStatuses(); let last = last" class="status-item" [class.mb-4]="!last">
+							<div class="d-flex justify-content-between align-items-center mb-2">
+								<div class="d-flex align-items-center gap-2">
+									<div class="status-dot rounded-circle" [ngClass]="getStatusDotClass(status.status)"></div>
+									<span class="fw-semibold">{{ status.status }}</span>
+								</div>
+								<div class="d-flex align-items-center gap-2">
+									<span class="text-muted small">{{ status.count }} lotes</span>
+									<span class="badge rounded-pill px-3 py-2" [ngClass]="getStatusBadgeClass(status.percentage)">
+										{{ status.percentage }}%
+									</span>
+								</div>
+							</div>
+							<div class="progress rounded-pill" style="height: 8px;">
+								<div class="progress-bar" [ngClass]="getStatusProgressClass(status.status)" [style.width.%]="status.percentage"></div>
+							</div>
+						</div>
+						<div *ngIf="batchStatuses().length === 0" class="text-center py-5">
+							<i class="bi bi-pie-chart fs-1 opacity-50 d-block mb-2"></i>
+							<p class="text-muted mb-0">Sin datos de estados</p>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
 
-                    <!-- Tasa -->
-                    <div class="mb-3">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <small class="text-muted fw-semibold">Tasa de Defectos</small>
-                            <span class="badge bg-info">{{ metrics().averageDefectRate }}%</span>
-                        </div>
-                        <div class="progress">
-                            <div class="progress-bar bg-info" [style.width.%]="metrics().averageDefectRate"></div>
-                        </div>
-                    </div>
-
-                    <!-- Producción -->
-                    <div class="mb-1">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <small class="text-muted fw-semibold">Producción Total</small>
-                            <span class="badge bg-success">{{ metrics().totalProduced }}</span>
-                        </div>
-                    </div>
-
-                </div>
-            </div>
-        </div>
-
-        <!-- Status Distribution -->
-        <div class="col-12 col-lg-6">
-            <div class="card shadow-sm border rounded-4 p-3 bg-body">
-                <div class="card-header bg-light border-0">
-                    <h6 class="mb-0 fw-semibold">
-                        <i class="bi bi-pie-chart text-info me-2"></i>Distribución de Estados
-                    </h6>
-                </div>
-                <div class="card-body">
-                    <div *ngFor="let status of batchStatuses()" class="mb-3">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <small class="text-muted fw-semibold">{{ status.status }}</small>
-                            <span class="badge" [ngClass]="getStatusBadgeClass(status.percentage)">
-                                {{ status.count }} ({{ status.percentage }}%)
-                            </span>
-                        </div>
-                        <div class="progress">
-                            <div class="progress-bar" 
-                                 [ngClass]="getStatusBadgeClass(status.percentage)" 
-                                 [style.width.%]="status.percentage"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-    </div>
-
-    <!-- Top Products -->
-    <div class="card shadow-sm border-0" *ngIf="!loading()">
-        <div class="card-header bg-light border-0">
-            <h6 class="mb-0 fw-semibold">
-                <i class="bi bi-bar-chart text-primary me-2"></i>Top 10 Productos más Producidos
-            </h6>
-        </div>
-
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
-                    <thead class="table-light">
-                        <tr>
-                            <th class="px-3 py-3">Producto</th>
-                            <th class="px-3 py-3 text-center">Lotes</th>
-                            <th class="px-3 py-3 text-end">Producido</th>
-                            <th class="px-3 py-3 text-end">Defectos</th>
-                            <th class="px-3 py-3 text-end">Tasa Defectos</th>
-                        </tr>
-                    </thead>
-
-                    <tbody>
-                        <tr *ngFor="let metric of productionMetrics()">
-                            <td class="px-3 py-3">
-                                <div class="fw-semibold">{{ metric.productName }}</div>
-                                <small class="text-muted">ID: {{ metric.productId }}</small>
-                            </td>
-
-                            <td class="px-3 py-3 text-center">
-                                <span class="badge bg-info">{{ metric.batchCount }}</span>
-                            </td>
-
-                            <td class="px-3 py-3 text-end">
-                                <span class="badge bg-success">{{ metric.totalProduced }}</span>
-                            </td>
-
-                            <td class="px-3 py-3 text-end">
-                                <span class="badge" [ngClass]="metric.totalDefects > 0 ? 'bg-warning' : 'bg-secondary'">
-                                    {{ metric.totalDefects }}
-                                </span>
-                            </td>
-
-                            <td class="px-3 py-3 text-end">
-                                <span class="badge" [ngClass]="getDefectRateBadgeClass(metric.defectRate)">
-                                    {{ (metric.defectRate | number: '1.2-2') }}%
-                                </span>
-                            </td>
-                        </tr>
-
-                        <tr *ngIf="productionMetrics().length === 0">
-                            <td colspan="5" class="text-center py-4">
-                                <i class="bi bi-inbox text-muted display-4 d-block mb-2"></i>
-                                <p class="text-muted">No hay datos de producción</p>
-                            </td>
-                        </tr>
-
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-    </div>
-
+		<!-- Top Products Table -->
+		<div class="card border-0 shadow-sm rounded-3">
+			<div class="card-header bg-white d-flex justify-content-between align-items-center py-3 px-4 rounded-top-3 border-0">
+				<h5 class="mb-0 d-flex align-items-center gap-2">
+					<i class="bi bi-trophy-fill text-warning"></i> Top 10 Productos más Producidos
+				</h5>
+				<span class="badge bg-primary rounded-pill">{{ productionMetrics().length }} productos</span>
+			</div>
+			<div class="card-body p-0">
+				<div class="table-responsive">
+					<table class="table table-hover align-middle mb-0">
+						<thead class="table-light">
+							<tr>
+								<th class="ps-4">Producto</th>
+								<th class="text-center">Lotes</th>
+								<th class="text-center">Producido</th>
+								<th class="text-center">Defectos</th>
+								<th class="text-center pe-4">Tasa Defectos</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr *ngFor="let metric of productionMetrics(); let i = index">
+								<td class="ps-4">
+									<div class="d-flex align-items-center gap-3">
+										<div class="avatar-sm rounded-circle d-flex align-items-center justify-content-center" 
+											 [ngClass]="i < 3 ? 'bg-warning bg-opacity-10' : 'bg-primary bg-opacity-10'" 
+											 style="width: 40px; height: 40px;">
+											<span [ngClass]="i < 3 ? 'text-warning' : 'text-primary'" class="fw-bold">
+												<i *ngIf="i < 3" class="bi bi-trophy-fill"></i>
+												<span *ngIf="i >= 3">{{ i + 1 }}</span>
+											</span>
+										</div>
+										<div>
+											<div class="fw-semibold">{{ metric.productName }}</div>
+											<small class="text-muted">ID: {{ metric.productId }}</small>
+										</div>
+									</div>
+								</td>
+								<td class="text-center">
+									<span class="badge bg-info bg-opacity-10 text-info px-3 py-2">{{ metric.batchCount }}</span>
+								</td>
+								<td class="text-center">
+									<span class="badge bg-success bg-opacity-10 text-success px-3 py-2">{{ metric.totalProduced | number }}</span>
+								</td>
+								<td class="text-center">
+									<span class="badge px-3 py-2" [ngClass]="metric.totalDefects > 0 ? 'bg-warning bg-opacity-10 text-warning' : 'bg-secondary bg-opacity-10 text-secondary'">
+										{{ metric.totalDefects }}
+									</span>
+								</td>
+								<td class="text-center pe-4">
+									<span class="badge px-3 py-2" [ngClass]="getDefectRateBadgeClass(metric.defectRate)">
+										{{ (metric.defectRate | number: '1.2-2') }}%
+									</span>
+								</td>
+							</tr>
+							<tr *ngIf="productionMetrics().length === 0">
+								<td colspan="5" class="text-center py-5">
+									<div class="text-muted">
+										<i class="bi bi-inbox fs-1 opacity-50 d-block mb-2"></i>
+										<p class="mb-0">No hay datos de producción</p>
+									</div>
+								</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+			</div>
+		</div>
+	</ng-container>
 </div>
