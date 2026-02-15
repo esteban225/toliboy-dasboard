@@ -112,6 +112,12 @@ export class MenuService {
             label: 'MENUITEMS.USERMANAGEMENT.LIST.WORKLOGUSERS',
             link: '/modules/users/worklog-users',
             parentId: 101
+          },
+          {
+            id: 104,
+            label: 'MENUITEMS.USERMANAGEMENT.LIST.ANALYTICS',
+            link: '/modules/users/analytics',
+            parentId: 101
           }
         ],
         parentId: 100

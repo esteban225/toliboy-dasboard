@@ -152,34 +152,50 @@ export class UserWorklogComponent implements OnInit, OnDestroy {
   }
 
   getTotalHours(): number {
-    return this.worklogs.reduce((acc, log) => acc + this.resolveHours(log.total_hours, log.start_time, log.end_time), 0);
+    return this.worklogs.reduce((acc, log) => {
+      const hours = this.calculateHoursDiff(log.start_time, log.end_time);
+      return acc + hours;
+    }, 0);
   }
 
   getOvertimeHours(): number {
-    return this.worklogs.reduce((acc, log) => acc + this.resolveHours(log.overtime_hours), 0);
+    return this.worklogs.reduce((acc, log) => {
+      const hours = this.calculateHoursDiff(log.start_time, log.end_time);
+      const overtime = Math.max(0, hours - 8); // Horas extra después de 8h
+      return acc + overtime;
+    }, 0);
   }
 
-  resolveHours(value?: number | string, start?: string, end?: string): number {
-    if (typeof value === 'number' && !Number.isNaN(value)) {
-      return value;
-    }
-    if (typeof value === 'string' && value.trim()) {
-      const hours = value.includes(':') ? this.convertClockToHours(value) : Number(value);
-      if (!Number.isNaN(hours)) return hours;
-    }
-    if (start && end) {
-      const startHours = this.convertClockToHours(start);
-      const endHours = this.convertClockToHours(end);
-      return Math.max(endHours - startHours, 0);
-    }
-    return 0;
+  // Extrae solo HH:mm de un timestamp como "2026-02-15 08:00:00" o "08:00:00"
+  formatTime(timestamp: string | null | undefined): string {
+    if (!timestamp) return '—';
+    // Si es un timestamp completo "2026-02-15 08:00:00"
+    const match = timestamp.match(/(\d{2}:\d{2})/);
+    return match ? match[1] : timestamp;
   }
 
-  private convertClockToHours(value: string): number {
-    if (!value) return 0;
-    const [hours, minutes] = value.split(':').map(Number);
-    if (Number.isNaN(hours)) return 0;
-    return hours + (Number.isNaN(minutes) ? 0 : minutes / 60);
+  // Calcula la diferencia en horas entre dos timestamps
+  calculateHoursDiff(start: string | null | undefined, end: string | null | undefined): number {
+    if (!start || !end) return 0;
+    
+    const startTime = this.extractTimeAsMinutes(start);
+    const endTime = this.extractTimeAsMinutes(end);
+    
+    if (startTime === null || endTime === null) return 0;
+    
+    let diff = endTime - startTime;
+    if (diff < 0) diff += 24 * 60; // Manejar cruce de medianoche
+    
+    return diff / 60;
+  }
+
+  private extractTimeAsMinutes(timestamp: string): number | null {
+    // Extraer HH:mm:ss de "2026-02-15 08:00:00" o "08:00:00" o "08:00"
+    const match = timestamp.match(/(\d{2}):(\d{2})/);
+    if (!match) return null;
+    const hours = parseInt(match[1], 10);
+    const minutes = parseInt(match[2], 10);
+    return hours * 60 + minutes;
   }
 
   private getErrorMessage(error: unknown): string | undefined {

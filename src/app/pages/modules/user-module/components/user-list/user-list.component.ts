@@ -3,8 +3,9 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { Observable, Subscription } from 'rxjs';
-import { take } from 'rxjs/operators';
+import { filter, take } from 'rxjs/operators';
 import { Store } from '@ngrx/store';
+import { Actions, ofType } from '@ngrx/effects';
 import * as UserActions from '../../store/actions/user.actions';
 import * as UserSelectors from '../../store/selectors/user.selectors';
 import * as UserContactActions from '../../store/actions/userContact.actions';
@@ -76,7 +77,8 @@ export class UserListComponent implements OnInit, OnDestroy {
 
   constructor(
     private store: Store,
-    private alertService: AlertService
+    private alertService: AlertService,
+    private actions$: Actions
   ) {
     this.users$ = this.store.select(UserSelectors.selectAllUsers);
     this.userContacts$ = this.store.select(UserContactSelector.selectAllUserContacts);
@@ -153,21 +155,24 @@ export class UserListComponent implements OnInit, OnDestroy {
       this.closeFormModal();
     } else {
       // Crear nuevo usuario
-      this.store.dispatch(UserActions.createUser({ user: this.newUser }));
-
-      const sub = this.store.select(UserSelectors.selectUserState).subscribe(state => {
-        const lastUser = state.users[state.users.length - 1];
-        if (lastUser && lastUser.id) {
-          const contactToCreate = { ...this.newUserContact, user_id: lastUser.id };
+      // Escuchar la acción createUserSuccess para obtener el ID correcto del backend
+      const sub = this.actions$.pipe(
+        ofType(UserActions.createUserSuccess),
+        take(1)
+      ).subscribe(({ user: createdUser }) => {
+        if (createdUser && createdUser.id) {
+          const contactToCreate = { ...this.newUserContact, user_id: createdUser.id };
           if (this.hasContactInformation(contactToCreate)) {
             this.store.dispatch(UserContactActions.createUserContact({ userContact: contactToCreate }));
           }
           this.alertService.success('Usuario creado con éxito');
           this.closeFormModal();
-          sub.unsubscribe();
         }
       });
       this.subscriptions.push(sub);
+
+      // Despachar la acción de crear usuario
+      this.store.dispatch(UserActions.createUser({ user: this.newUser }));
     }
   }
 

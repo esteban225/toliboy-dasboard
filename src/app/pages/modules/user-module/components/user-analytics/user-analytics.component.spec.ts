@@ -1,18 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { UserFormComponent } from './user-form.component';
+import { UserAnalyticsComponent } from './user-analytics.component';
 
-describe('UserFormComponent', () => {
-  let component: UserFormComponent;
-  let fixture: ComponentFixture<UserFormComponent>;
+describe('UserAnalyticsComponent', () => {
+  let component: UserAnalyticsComponent;
+  let fixture: ComponentFixture<UserAnalyticsComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [UserFormComponent]
+      imports: [UserAnalyticsComponent]
     })
     .compileComponents();
     
-    fixture = TestBed.createComponent(UserFormComponent);
+    fixture = TestBed.createComponent(UserAnalyticsComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

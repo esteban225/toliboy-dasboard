@@ -1,0 +1,281 @@
+<div class="analytics-page container-fluid py-4">
+	<!-- Hero Section -->
+	<section class="card bg-gradient text-white border-0 shadow mb-4 rounded-4 overflow-hidden" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+		<div class="card-body p-4 p-lg-5">
+			<div class="row align-items-center g-4">
+				<div class="col-lg-8">
+					<span class="badge bg-white bg-opacity-25 text-white mb-3">
+						<i class="bi bi-graph-up-arrow me-1"></i> Panel de Analíticas
+					</span>
+					<h1 class="display-6 fw-bold mb-2">Analíticas de Productividad</h1>
+					<p class="lead mb-0 opacity-75">Visualiza métricas clave sobre usuarios y horas de trabajo en tiempo real.</p>
+				</div>
+				<div class="col-lg-4 text-lg-end">
+					<button type="button" class="btn btn-light text-primary fw-semibold" (click)="loadData()" [disabled]="loading">
+						<ng-container *ngIf="!loading">
+							<i class="bi bi-arrow-clockwise me-2"></i>Actualizar
+						</ng-container>
+						<ng-container *ngIf="loading">
+							<span class="spinner-border spinner-border-sm me-2"></span>Cargando...
+						</ng-container>
+					</button>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<!-- Filtros -->
+	<div class="card border-0 shadow-sm mb-4 rounded-3">
+		<div class="card-header bg-transparent border-0 pb-0 pt-3 px-4">
+			<h5 class="card-title mb-0 d-flex align-items-center gap-2">
+				<i class="bi bi-funnel text-primary"></i> Filtros
+			</h5>
+		</div>
+		<div class="card-body p-4">
+			<form [formGroup]="filterForm" class="row g-3 align-items-end">
+				<div class="col-md-4 col-lg-3">
+					<label for="startDate" class="form-label fw-semibold">Fecha inicio</label>
+					<input type="date" id="startDate" class="form-control" formControlName="startDate" (change)="onFilterChange()" />
+				</div>
+				<div class="col-md-4 col-lg-3">
+					<label for="endDate" class="form-label fw-semibold">Fecha fin</label>
+					<input type="date" id="endDate" class="form-control" formControlName="endDate" (change)="onFilterChange()" />
+				</div>
+				<div class="col-md-4 col-lg-3">
+					<label for="roleId" class="form-label fw-semibold">Rol</label>
+					<select id="roleId" class="form-select" formControlName="roleId" (change)="onFilterChange()">
+						<option value="all">Todos los roles</option>
+						<option *ngFor="let role of roleOptions" [value]="role.id">{{ role.label }}</option>
+					</select>
+				</div>
+			</form>
+		</div>
+	</div>
+
+	<!-- Loading State -->
+	<div class="card border-0 shadow-sm text-center p-5 rounded-3" *ngIf="loading">
+		<div class="spinner-border text-primary mb-3" role="status" style="width: 3rem; height: 3rem;">
+			<span class="visually-hidden">Cargando...</span>
+		</div>
+		<p class="text-muted mb-0">Cargando datos de analíticas...</p>
+	</div>
+
+	<ng-container *ngIf="!loading && dataLoaded">
+		<!-- KPI Cards -->
+		<section class="row g-3 mb-4">
+			<div class="col-sm-6 col-xl-3">
+				<div class="card border-0 shadow-sm h-100 rounded-3">
+					<div class="card-body d-flex align-items-center justify-content-between p-4">
+						<div>
+							<p class="text-muted small mb-1 fw-semibold">Total Usuarios</p>
+							<h3 class="mb-0 fw-bold text-primary">{{ totalUsers }}</h3>
+							<small class="text-success"><i class="bi bi-check-circle me-1"></i>{{ activeUsersCount }} activos</small>
+						</div>
+						<div class="rounded-3 bg-primary bg-opacity-10 p-3">
+							<i class="bi bi-people fs-3 text-primary"></i>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="col-sm-6 col-xl-3">
+				<div class="card border-0 shadow-sm h-100 rounded-3">
+					<div class="card-body d-flex align-items-center justify-content-between p-4">
+						<div>
+							<p class="text-muted small mb-1 fw-semibold">Horas Trabajadas</p>
+							<h3 class="mb-0 fw-bold text-success">{{ totalHours | number:'1.1-1' }} h</h3>
+							<small class="text-muted">Período seleccionado</small>
+						</div>
+						<div class="rounded-3 bg-success bg-opacity-10 p-3">
+							<i class="bi bi-clock-history fs-3 text-success"></i>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="col-sm-6 col-xl-3">
+				<div class="card border-0 shadow-sm h-100 rounded-3">
+					<div class="card-body d-flex align-items-center justify-content-between p-4">
+						<div>
+							<p class="text-muted small mb-1 fw-semibold">Horas Extra</p>
+							<h3 class="mb-0 fw-bold text-warning">{{ totalOvertimeHours | number:'1.1-1' }} h</h3>
+							<small class="text-muted">Más de 8h/día</small>
+						</div>
+						<div class="rounded-3 bg-warning bg-opacity-10 p-3">
+							<i class="bi bi-lightning-charge fs-3 text-warning"></i>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="col-sm-6 col-xl-3">
+				<div class="card border-0 shadow-sm h-100 rounded-3">
+					<div class="card-body d-flex align-items-center justify-content-between p-4">
+						<div>
+							<p class="text-muted small mb-1 fw-semibold">Promedio/Usuario</p>
+							<h3 class="mb-0 fw-bold text-info">{{ avgHoursPerUser | number:'1.1-1' }} h</h3>
+							<small class="text-muted">Por usuario activo</small>
+						</div>
+						<div class="rounded-3 bg-info bg-opacity-10 p-3">
+							<i class="bi bi-bar-chart fs-3 text-info"></i>
+						</div>
+					</div>
+				</div>
+			</div>
+		</section>
+
+		<!-- Charts Row -->
+		<div class="row g-4 mb-4">
+			<!-- Trend Chart -->
+			<div class="col-lg-8">
+				<div class="card border-0 shadow-sm rounded-3 h-100">
+					<div class="card-header bg-transparent border-0 pt-4 px-4">
+						<h5 class="card-title mb-0 d-flex align-items-center gap-2">
+							<i class="bi bi-graph-up text-success"></i> Tendencia de Horas Diarias
+						</h5>
+					</div>
+					<div class="card-body p-4">
+						<apx-chart
+							*ngIf="dailyStats.length > 0"
+							[series]="trendChartOptions.series!"
+							[chart]="trendChartOptions.chart!"
+							[xaxis]="trendChartOptions.xaxis!"
+							[yaxis]="trendChartOptions.yaxis!"
+							[stroke]="trendChartOptions.stroke!"
+							[fill]="trendChartOptions.fill!"
+							[tooltip]="trendChartOptions.tooltip!"
+							[colors]="trendChartOptions.colors!"
+							[dataLabels]="trendChartOptions.dataLabels!"
+							[grid]="trendChartOptions.grid!"
+						></apx-chart>
+						<div class="text-center text-muted py-5" *ngIf="dailyStats.length === 0">
+							<i class="bi bi-graph-up fs-1 opacity-50"></i>
+							<p class="mt-2">No hay datos para mostrar en el período seleccionado</p>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- Role Distribution Chart -->
+			<div class="col-lg-4">
+				<div class="card border-0 shadow-sm rounded-3 h-100">
+					<div class="card-header bg-transparent border-0 pt-4 px-4">
+						<h5 class="card-title mb-0 d-flex align-items-center gap-2">
+							<i class="bi bi-pie-chart text-primary"></i> Distribución por Rol
+						</h5>
+					</div>
+					<div class="card-body p-4 d-flex align-items-center">
+						<apx-chart
+							*ngIf="userAnalytics.length > 0"
+							[series]="roleChartOptions.series!"
+							[chart]="roleChartOptions.chart!"
+							[labels]="roleChartOptions.labels!"
+							[colors]="roleChartOptions.colors!"
+							[legend]="roleChartOptions.legend!"
+							[plotOptions]="roleChartOptions.plotOptions!"
+							[dataLabels]="roleChartOptions.dataLabels!"
+							[responsive]="roleChartOptions.responsive!"
+							style="width: 100%;"
+						></apx-chart>
+						<div class="text-center text-muted py-5 w-100" *ngIf="userAnalytics.length === 0">
+							<i class="bi bi-pie-chart fs-1 opacity-50"></i>
+							<p class="mt-2">Sin datos</p>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- Hours by User Chart -->
+		<div class="row g-4 mb-4">
+			<div class="col-12">
+				<div class="card border-0 shadow-sm rounded-3">
+					<div class="card-header bg-transparent border-0 pt-4 px-4">
+						<h5 class="card-title mb-0 d-flex align-items-center gap-2">
+							<i class="bi bi-bar-chart-fill text-primary"></i> Top 10 - Horas por Usuario
+						</h5>
+					</div>
+					<div class="card-body p-4">
+						<apx-chart
+							*ngIf="userAnalytics.length > 0"
+							[series]="hoursChartOptions.series!"
+							[chart]="hoursChartOptions.chart!"
+							[plotOptions]="hoursChartOptions.plotOptions!"
+							[dataLabels]="hoursChartOptions.dataLabels!"
+							[xaxis]="hoursChartOptions.xaxis!"
+							[yaxis]="hoursChartOptions.yaxis!"
+							[fill]="hoursChartOptions.fill!"
+							[tooltip]="hoursChartOptions.tooltip!"
+							[colors]="hoursChartOptions.colors!"
+							[stroke]="hoursChartOptions.stroke!"
+							[grid]="hoursChartOptions.grid!"
+						></apx-chart>
+						<div class="text-center text-muted py-5" *ngIf="userAnalytics.length === 0">
+							<i class="bi bi-bar-chart fs-1 opacity-50"></i>
+							<p class="mt-2">No hay datos para mostrar</p>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- User Analytics Table -->
+		<div class="card border-0 shadow-sm rounded-3">
+			<div class="card-header bg-white d-flex justify-content-between align-items-center py-3 px-4 rounded-top-3">
+				<h5 class="mb-0 d-flex align-items-center gap-2">
+					<i class="bi bi-table text-primary"></i> Detalle por Usuario
+				</h5>
+				<span class="badge bg-primary rounded-pill">{{ userAnalytics.length }} usuarios</span>
+			</div>
+			<div class="card-body p-0">
+				<div class="table-responsive">
+					<table class="table table-hover align-middle mb-0">
+						<thead class="table-light">
+							<tr>
+								<th class="ps-4">Usuario</th>
+								<th>Rol</th>
+								<th class="text-center">Días trabajados</th>
+								<th class="text-center">Total horas</th>
+								<th class="text-center">Horas extra</th>
+								<th class="text-center">Promedio/día</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr *ngFor="let user of userAnalytics; let i = index">
+								<td class="ps-4">
+									<div class="d-flex align-items-center gap-3">
+										<div class="avatar-sm rounded-circle bg-primary bg-opacity-10 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+											<span class="text-primary fw-semibold">{{ getInitials(user.userName) }}</span>
+										</div>
+										<div>
+											<div class="fw-semibold">{{ user.userName }}</div>
+											<small class="text-muted">ID: {{ user.userId }}</small>
+										</div>
+									</div>
+								</td>
+								<td>
+									<span class="badge {{ getRoleBadgeClass(user.roleId) }}">{{ getRoleName(user.roleId) }}</span>
+								</td>
+								<td class="text-center">
+									<span class="fw-semibold">{{ user.workDays }}</span>
+								</td>
+								<td class="text-center">
+									<span class="fw-bold text-primary">{{ user.totalHours | number:'1.1-1' }} h</span>
+								</td>
+								<td class="text-center">
+									<span class="fw-semibold" [class.text-warning]="user.overtimeHours > 0" [class.text-muted]="user.overtimeHours === 0">
+										{{ user.overtimeHours | number:'1.1-1' }} h
+									</span>
+								</td>
+								<td class="text-center">
+									<span class="badge bg-light text-dark">{{ user.avgHoursPerDay | number:'1.1-1' }} h</span>
+								</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+				<div class="text-center text-muted py-5" *ngIf="userAnalytics.length === 0">
+					<i class="bi bi-inbox fs-1 opacity-50"></i>
+					<p class="mt-2">No hay datos de usuarios para mostrar</p>
+				</div>
+			</div>
+		</div>
+	</ng-container>
+</div>

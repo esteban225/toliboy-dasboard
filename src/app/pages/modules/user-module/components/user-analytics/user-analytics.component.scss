@@ -1,0 +1,78 @@
+.analytics-page {
+  .card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+    &:hover {
+      transform: translateY(-2px);
+    }
+  }
+
+  .avatar-sm {
+    width: 40px;
+    height: 40px;
+    font-size: 0.875rem;
+  }
+
+  // KPI Cards animation
+  .card-body {
+    .fs-3 {
+      transition: transform 0.2s ease;
+    }
+
+    &:hover .fs-3 {
+      transform: scale(1.1);
+    }
+  }
+
+  // Table styles
+  .table {
+    th {
+      font-weight: 600;
+      font-size: 0.8125rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #6c757d;
+      border-bottom-width: 2px;
+    }
+
+    td {
+      vertical-align: middle;
+      padding-top: 1rem;
+      padding-bottom: 1rem;
+    }
+
+    tbody tr {
+      transition: background-color 0.15s ease;
+
+      &:hover {
+        background-color: rgba(13, 110, 253, 0.04);
+      }
+    }
+  }
+
+  // Chart containers
+  apx-chart {
+    min-height: 300px;
+  }
+
+  // Badge improvements
+  .badge {
+    font-weight: 500;
+    letter-spacing: 0.3px;
+  }
+
+  // Responsive adjustments
+  @media (max-width: 768px) {
+    .display-6 {
+      font-size: 1.5rem;
+    }
+
+    .card-body {
+      padding: 1rem !important;
+    }
+
+    h3.fw-bold {
+      font-size: 1.5rem;
+    }
+  }
+}
