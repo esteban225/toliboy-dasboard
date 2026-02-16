@@ -2,6 +2,7 @@ import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RawMaterialsService } from '../services/raw-materials.service';
 import { InventoryMovementService } from '../services/inventory-movement.service';
+import { MaterialReleaseService, PendingReleaseBatch, ReleaseResult } from '../services/material-release.service';
 import { forkJoin, of, Subject } from 'rxjs';
 import { catchError, debounceTime, distinctUntilChanged, finalize, switchMap, takeUntil, tap } from 'rxjs/operators';
 import { NotificationGroup, NotificationItem, NotificationService } from 'src/app/core/services/notification.service';
@@ -124,6 +125,17 @@ export class InventoryComponent implements OnInit, OnDestroy {
 
   products: any[] = [];
 
+  // Material Release Properties
+  pendingReleaseBatches: PendingReleaseBatch[] = [];
+  releaseLoading = false;
+  releaseError: string | null = null;
+  releasingBatchId: number | null = null;
+  selectedProductionLine = 'principal';
+  productionLines: string[] = [];
+  releaseResults: ReleaseResult[] = [];
+  showReleaseModal = false;
+  selectedBatchForRelease: PendingReleaseBatch | null = null;
+
   private destroy$ = new Subject<void>();
   private deletingNotifications = new Set<string | number>();
 
@@ -131,8 +143,10 @@ export class InventoryComponent implements OnInit, OnDestroy {
     private rawMaterialsService: RawMaterialsService,
     private inventoryMovementService: InventoryMovementService,
     private notificationService: NotificationService,
-    private productsService: ProductsService
+    private productsService: ProductsService,
+    private materialReleaseService: MaterialReleaseService
   ) {
+    this.productionLines = this.materialReleaseService.getProductionLines();
 
     this.searchSubject.pipe(
       debounceTime(5000),            // ← espera 600ms sin escribir
@@ -170,6 +184,7 @@ export class InventoryComponent implements OnInit, OnDestroy {
     this.loadStatistics();
     this.subscribeToNotifications();
     this.loadNotifications();
+    this.loadPendingReleaseBatches();
   }
 
   ngOnDestroy(): void {
@@ -328,6 +343,7 @@ export class InventoryComponent implements OnInit, OnDestroy {
   refresh(): void {
     this.loadStatistics();
     this.loadNotifications();
+    this.loadPendingReleaseBatches();
   }
 
   refreshNotifications(): void {
@@ -519,5 +535,182 @@ export class InventoryComponent implements OnInit, OnDestroy {
     }
 
     return messages;
+  }
+
+  // ==================== MATERIAL RELEASE METHODS ====================
+
+  /**
+   * Carga los lotes pendientes de liberación de materias primas
+   */
+  loadPendingReleaseBatches(): void {
+    this.releaseLoading = true;
+    this.releaseError = null;
+
+    this.materialReleaseService.getPendingReleaseBatches()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (batches) => {
+          console.log('[Inventory] Lotes recibidos del servicio:', batches);
+          // Mostrar todos los lotes que no han sido liberados (incluso sin materiales)
+          this.pendingReleaseBatches = batches.filter(b => !b.alreadyReleased);
+          console.log('[Inventory] Lotes pendientes filtrados:', this.pendingReleaseBatches.length);
+          this.releaseLoading = false;
+        },
+        error: (err) => {
+          console.error('[Inventory] Error loading pending release batches:', err);
+          this.releaseError = 'Error cargando lotes pendientes de liberación';
+          this.releaseLoading = false;
+        }
+      });
+  }
+
+  /**
+   * Abre el modal de liberación para un lote específico
+   */
+  openReleaseModal(batch: PendingReleaseBatch): void {
+    this.selectedBatchForRelease = batch;
+    this.showReleaseModal = true;
+  }
+
+  /**
+   * Cierra el modal de liberación
+   */
+  closeReleaseModal(): void {
+    this.showReleaseModal = false;
+    this.selectedBatchForRelease = null;
+  }
+
+  /**
+   * Libera las materias primas para un lote con un solo click
+   */
+  releaseQuick(batch: PendingReleaseBatch): void {
+    if (!batch.canRelease || this.releasingBatchId !== null) {
+      return;
+    }
+
+    this.releasingBatchId = batch.batch.id || null;
+    
+    this.materialReleaseService.releaseMaterialsForBatch(batch, this.selectedProductionLine)
+      .pipe(
+        takeUntil(this.destroy$),
+        finalize(() => this.releasingBatchId = null)
+      )
+      .subscribe({
+        next: (result) => {
+          if (result.success) {
+            this.releaseResults.unshift(result);
+            // Recargar datos actualizados
+            this.loadPendingReleaseBatches();
+            this.loadStatistics();
+          } else {
+            this.releaseError = result.errors.join(', ');
+          }
+        },
+        error: (err) => {
+          console.error('[Inventory] Error releasing materials:', err);
+          this.releaseError = err?.errors?.join(', ') || 'Error al liberar materias primas';
+        }
+      });
+  }
+
+  /**
+   * Libera las materias primas desde el modal con opciones adicionales
+   */
+  releaseMaterialsFromModal(): void {
+    if (!this.selectedBatchForRelease || !this.selectedBatchForRelease.canRelease) {
+      return;
+    }
+
+    this.releasingBatchId = this.selectedBatchForRelease.batch.id || null;
+    
+    this.materialReleaseService.releaseMaterialsForBatch(
+      this.selectedBatchForRelease, 
+      this.selectedProductionLine
+    )
+      .pipe(
+        takeUntil(this.destroy$),
+        finalize(() => {
+          this.releasingBatchId = null;
+          this.closeReleaseModal();
+        })
+      )
+      .subscribe({
+        next: (result) => {
+          if (result.success) {
+            this.releaseResults.unshift(result);
+            this.loadPendingReleaseBatches();
+            this.loadStatistics();
+          } else {
+            this.releaseError = result.errors.join(', ');
+          }
+        },
+        error: (err) => {
+          console.error('[Inventory] Error releasing materials from modal:', err);
+          this.releaseError = err?.errors?.join(', ') || 'Error al liberar materias primas';
+        }
+      });
+  }
+
+  /**
+   * Verifica si un lote está siendo procesado
+   */
+  isReleasing(batch: PendingReleaseBatch): boolean {
+    return this.releasingBatchId === batch.batch.id;
+  }
+
+  /**
+   * Obtiene el estado visual del lote para mostrar badges
+   */
+  getBatchStatusBadge(status: string): string {
+    switch (status) {
+      case 'planned':
+        return 'bg-info text-white';
+      case 'in_process':
+        return 'bg-primary text-white';
+      case 'paused':
+        return 'bg-warning text-dark';
+      case 'completed':
+        return 'bg-success text-white';
+      case 'cancelled':
+        return 'bg-danger text-white';
+      default:
+        return 'bg-secondary text-white';
+    }
+  }
+
+  /**
+   * Traduce el estado del lote al español
+   */
+  translateBatchStatus(status: string): string {
+    const statusMap: Record<string, string> = {
+      'planned': 'Planeado',
+      'in_process': 'En proceso',
+      'paused': 'Pausado',
+      'completed': 'Completado',
+      'delivered': 'Entregado',
+      'cancelled': 'Cancelado'
+    };
+    return statusMap[status] || status;
+  }
+
+  /**
+   * Limpia los resultados de liberación anteriores
+   */
+  clearReleaseResults(): void {
+    this.releaseResults = [];
+  }
+
+  /**
+   * Limpia el error de liberación
+   */
+  clearReleaseError(): void {
+    this.releaseError = null;
+  }
+
+  /**
+   * Trackea los lotes pendientes para el ngFor
+   */
+  trackPendingBatch(index: number, item: PendingReleaseBatch): number | undefined {
+    return item.batch.id;
   }
 }

@@ -59,7 +59,8 @@
         "PRODUCTS": "Inventario Materia Prima",
         "INVENTORYMOVEMENT": "Movimiento de Inventario",
         "RAWMATERIALS": "Materias Primas",
-        "INVENTORYEXPENSEREPORT": "Reporte de Gastos de Inventario"
+        "INVENTORYEXPENSEREPORT": "Reporte de Gastos de Inventario",
+        "BATCHEMOVEMENT": "Movimiento de Lotes"
       }
     },
     "PRODUCT": {

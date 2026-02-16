@@ -1,0 +1,90 @@
+/* Batch Movement Component Styles */
+
+/* Spin animation for loading icons */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.spin-animation {
+  animation: spin 1s linear infinite;
+}
+
+/* Table responsive styling */
+.table-responsive {
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Hover effect for table rows */
+.table-hover tbody tr:hover {
+  background-color: rgba(255, 193, 7, 0.1);
+}
+
+/* Badge styling */
+.badge {
+  font-weight: 500;
+}
+
+/* Card styling */
+.card {
+  border-radius: 0.75rem;
+  overflow: hidden;
+}
+
+.card-header {
+  border-radius: 0.75rem 0.75rem 0 0 !important;
+}
+
+/* Modal improvements */
+.modal-content {
+  border: none;
+  border-radius: 1rem;
+}
+
+.modal-header {
+  border-radius: 1rem 1rem 0 0;
+}
+
+/* Button hover effects */
+.btn-success:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(25, 135, 84, 0.3);
+}
+
+.btn-warning:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3);
+}
+
+.btn-secondary {
+  cursor: not-allowed;
+}
+
+/* Input group styling */
+.input-group-lg .form-control {
+  font-size: 1.1rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 767.98px) {
+  .table th, .table td {
+    padding: 0.5rem;
+    font-size: 0.85rem;
+  }
+  
+  .btn-sm {
+    padding: 0.35rem 0.5rem;
+    font-size: 0.8rem;
+  }
+  
+  .modal-dialog {
+    margin: 0.5rem;
+  }
+}
+
+/* Row with released material */
+tr:has(.btn-secondary) {
+  opacity: 0.7;
+  background-color: rgba(108, 117, 125, 0.05);
+}

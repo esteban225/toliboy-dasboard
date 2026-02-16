@@ -3,8 +3,9 @@ import { CommonModule } from '@angular/common';
 import { InventoryMovementService } from '../../services/inventory-movement.service';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormsModule } from '@angular/forms';
 import { RawMaterialsService } from '../../services/raw-materials.service';
+import { MaterialReleaseService, PendingReleaseBatch, MaterialRequirement } from '../../services/material-release.service';
 import { Subject, Subscription, of, forkJoin } from 'rxjs';
-import { debounceTime, distinctUntilChanged, switchMap, catchError, map } from 'rxjs/operators';
+import { debounceTime, distinctUntilChanged, switchMap, catchError, map, takeUntil, finalize } from 'rxjs/operators';
 import { AlertService } from 'src/app/core/services/alert.service';
 import { ReportService } from 'src/app/core/services/report.service';
 
@@ -95,6 +96,14 @@ export class InventoryMovementComponent implements OnInit, OnDestroy {
   currentDetailsModal: { label: string; value: string }[] = [];
   showDetailsModalFlag = false;
 
+  // Pending release batches (Release automation)
+  pendingReleaseBatches: PendingReleaseBatch[] = [];
+  releaseLoading = false;
+  releasingMaterial: { batchId: number; materialId: number } | null = null;
+  releasedMaterials: Set<string> = new Set(); // Rastrea materiales ya liberados ("batchId-materialId")
+  productionLines = ['Línea 1', 'Línea 2', 'Línea 3', 'Producción General'];
+  private destroy$ = new Subject<void>();
+
   /**
    * Parsea las notas formateadas y extrae campos específicos
    */
@@ -110,7 +119,8 @@ export class InventoryMovementComponent implements OnInit, OnDestroy {
     private fb: FormBuilder,
     private rawService: RawMaterialsService,
     private alert: AlertService,
-    private reportService: ReportService
+    private reportService: ReportService,
+    private materialReleaseService: MaterialReleaseService
   ) {
     this.form = this.fb.group({
       id: [null],
@@ -141,6 +151,7 @@ export class InventoryMovementComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.loadMovements();
     this.loadRawMaterials();
+    this.loadPendingReleaseBatches();
     // subscribe product search
     this.productSearchSub = this.productSearch$
       .pipe(
@@ -228,6 +239,8 @@ export class InventoryMovementComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.productSearchSub?.unsubscribe();
     this.productSearchControlSub?.unsubscribe();
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   // Limpiar caché de productos si es necesario
@@ -1603,6 +1616,8 @@ export class InventoryMovementComponent implements OnInit, OnDestroy {
         if (res?.success) {
           this.showModal = false;
           this.loadMovements();
+          // Refrescar lotes pendientes después de un movimiento exitoso
+          this.refreshAfterRelease();
           // Mostrar mensaje de éxito si está disponible
           if (res.message) {
             try { this.alert.success('Éxito', res.message); } catch (e) { /* noop */ }
@@ -1946,5 +1961,119 @@ export class InventoryMovementComponent implements OnInit, OnDestroy {
     });
 
     return { in: totalIn, out: totalOut, adjustment: totalAdjustment, total: totalIn - totalOut + totalAdjustment };
+  }
+
+  // ============================================================================
+  // Material Release Automation - Liberación de materias primas para lotes
+  // ============================================================================
+
+  /**
+   * Carga los lotes pendientes de liberación de materias primas
+   */
+  loadPendingReleaseBatches(): void {
+    this.releaseLoading = true;
+    console.log('[RELEASE] Iniciando carga de lotes pendientes...');
+    
+    this.materialReleaseService.getPendingReleaseBatches()
+      .pipe(
+        takeUntil(this.destroy$),
+        finalize(() => {
+          this.releaseLoading = false;
+          console.log('[RELEASE] Carga finalizada');
+        })
+      )
+      .subscribe({
+        next: (batches) => {
+          this.pendingReleaseBatches = batches;
+          console.log('[RELEASE] Lotes cargados:', batches.length);
+          batches.forEach(b => {
+            console.log(`[RELEASE] Lote #${b.batch?.id} - ${b.product?.name}: ${b.requiredMaterials.length} materiales`);
+            b.requiredMaterials.forEach((m: MaterialRequirement) => {
+              console.log(`  - ${m.rawMaterialName}: ${m.totalQuantityNeeded} (stock: ${m.currentStock}, OK: ${m.hasSufficientStock})`);
+            });
+          });
+        },
+        error: (err) => {
+          console.error('[RELEASE] Error cargando lotes:', err);
+          this.alert.error('Error', 'No se pudieron cargar los lotes pendientes');
+        }
+      });
+  }
+
+  /**
+   * Abre el modal de liberación prellenado con los datos del material
+   */
+  openReleaseForMaterial(batch: PendingReleaseBatch, material: MaterialRequirement): void {
+    console.log('[RELEASE] Abriendo modal para material:', material.rawMaterialName, 'lote:', batch.batch?.id);
+    
+    // Marcar que estamos liberando este material
+    this.releasingMaterial = { batchId: batch.batch?.id || 0, materialId: material.rawMaterialId };
+    
+    // Resetear y configurar el formulario
+    this.isEditing = false;
+    this.formError = null;
+    this.productSuggestions = [];
+    this.availableBatches = [];
+    
+    // Prellenar el formulario con los datos del material
+    this.form.reset({
+      id: null,
+      type: 'out', // Salida (liberación)
+      product_id: material.rawMaterialId,
+      product_search: `${material.rawMaterialCode || ''} ${material.rawMaterialName}`.trim(),
+      batch_id: batch.batch?.id, // Vincular al lote de producción
+      quantity: material.totalQuantityNeeded,
+      unit_cost: 0, // Se puede actualizar si hay costo
+      production_line: this.productionLines[0] || 'Producción General',
+      notes: `Liberación automática para lote #${batch.batch?.id} - ${batch.product?.name} (${batch.batch?.quantity ?? 0} unidades)`
+    });
+    
+    // Cargar el costo unitario del material si está disponible
+    if (material.rawMaterialId) {
+      this.rawService.getById(material.rawMaterialId).subscribe({
+        next: (response: any) => {
+          const product = response?.data ?? response;
+          const unitCost = product?.unit_cost ?? product?.price ?? product?.cost ?? 0;
+          if (unitCost) {
+            this.form.patchValue({ unit_cost: unitCost });
+          }
+        },
+        error: () => {
+          // No es crítico, continuar sin costo
+        }
+      });
+    }
+    
+    // Abrir el modal
+    this.showModal = true;
+  }
+
+  /**
+   * Verifica si un material específico está siendo liberado
+   */
+  isReleasingMaterial(batchId: number, materialId: number): boolean {
+    return this.releasingMaterial?.batchId === batchId && 
+           this.releasingMaterial?.materialId === materialId;
+  }
+
+  /**
+   * Verifica si un material ya fue liberado para un lote específico
+   */
+  isMaterialReleased(batchId: number, materialId: number): boolean {
+    return this.releasedMaterials.has(`${batchId}-${materialId}`);
+  }
+
+  /**
+   * Refresca los lotes pendientes después de una liberación exitosa
+   */
+  refreshAfterRelease(): void {
+    // Marcar el material como liberado si había uno en proceso
+    if (this.releasingMaterial) {
+      const key = `${this.releasingMaterial.batchId}-${this.releasingMaterial.materialId}`;
+      this.releasedMaterials.add(key);
+      console.log('[RELEASE] Material marcado como liberado:', key);
+    }
+    this.releasingMaterial = null;
+    this.loadPendingReleaseBatches();
   }
 }

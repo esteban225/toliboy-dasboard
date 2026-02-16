@@ -1,0 +1,566 @@
+<div class="container-fluid py-4">
+    <!-- Header Section -->
+    <div class="row mb-4 p-1">
+        <div class="col">
+            <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
+                <div>
+                    <h2 class="fw-bold mb-1">
+                        <i class="bi bi-box-arrow-right text-warning me-2"></i>
+                        Liberación de Materias Primas
+                    </h2>
+                    <p class="text-muted mb-0">
+                        <i class="bi bi-info-circle me-1"></i>
+                        Gestiona la liberación de materiales para lotes de producción
+                    </p>
+                </div>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-outline-warning" (click)="loadPendingReleaseBatches()" [disabled]="releaseLoading">
+                        <i class="bi bi-arrow-clockwise me-2" [class.spin-animation]="releaseLoading"></i>
+                        <span class="d-none d-sm-inline">Actualizar</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="releaseLoading && pendingReleaseBatches.length === 0" class="card border-0 shadow-sm mb-4">
+        <div class="card-body text-center py-5">
+            <div class="spinner-border text-warning mb-3" role="status" style="width: 3rem; height: 3rem;">
+                <span class="visually-hidden">Cargando...</span>
+            </div>
+            <p class="text-muted mb-0">Cargando lotes pendientes de liberación...</p>
+        </div>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="!releaseLoading && pendingReleaseBatches.length === 0" class="card border-0 shadow-sm mb-4">
+        <div class="card-body text-center py-5">
+            <i class="bi bi-check-circle-fill text-success fs-1 mb-3 d-block"></i>
+            <h5 class="mb-2">No hay lotes pendientes</h5>
+            <p class="text-muted mb-0">Todos los lotes de producción tienen sus materiales liberados.</p>
+        </div>
+    </div>
+
+    <!-- Pending Release Batches Section -->
+    <div *ngIf="pendingReleaseBatches.length > 0" class="card border-0 shadow-sm mb-4 border-start border-warning border-4">
+        <div class="card-header bg-warning bg-opacity-10 border-0">
+            <div class="d-flex align-items-center justify-content-between">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-box-seam text-warning fs-4 me-2"></i>
+                    <div>
+                        <h5 class="mb-0 fw-semibold text-dark">Lotes Pendientes de Liberación</h5>
+                        <small class="text-muted">Materias primas requeridas para producción</small>
+                    </div>
+                </div>
+                <span class="badge bg-warning text-dark">{{ pendingReleaseBatches.length }} lotes</span>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="ps-3" style="width: 120px;">Lote</th>
+                            <th>Producto</th>
+                            <th style="width: 100px;">Cantidad</th>
+                            <th>Materia Prima</th>
+                            <th class="text-center" style="width: 120px;">Necesario</th>
+                            <th class="text-center" style="width: 120px;">Disponible</th>
+                            <th class="text-center" style="width: 100px;">Estado</th>
+                            <th class="text-end pe-3" style="width: 120px;">Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <ng-container *ngFor="let batch of pendingReleaseBatches">
+                            <ng-container *ngFor="let material of batch.requiredMaterials; let isFirst = first">
+                                <tr [class.table-warning]="!material.hasSufficientStock" [class.table-success]="isBatchFullyReleased(batch.batch?.id || 0)">
+                                    <td class="ps-3 align-middle" *ngIf="isFirst" [attr.rowspan]="batch.requiredMaterials.length">
+                                        <span class="badge bg-primary fs-6">#{{ batch.batch?.id }}</span>
+                                        <span *ngIf="isBatchFullyReleased(batch.batch?.id || 0)" class="badge bg-success ms-1 fs-7">
+                                            <i class="bi bi-play-circle me-1"></i>En Proceso
+                                        </span>
+                                    </td>
+                                    <td class="align-middle" *ngIf="isFirst" [attr.rowspan]="batch.requiredMaterials.length">
+                                        <div class="fw-semibold">{{ batch.product?.name }}</div>
+                                        <small class="text-muted" *ngIf="batch.product?.code">{{ batch.product?.code }}</small>
+                                    </td>
+                                    <td class="align-middle" *ngIf="isFirst" [attr.rowspan]="batch.requiredMaterials.length">
+                                        <span class="fw-semibold">{{ batch.batch?.quantity }}</span>
+                                        <small class="text-muted ms-1">unid.</small>
+                                    </td>
+                                    <td class="align-middle">
+                                        <div class="d-flex align-items-center">
+                                            <i class="bi bi-box-fill text-secondary me-2"></i>
+                                            <div>
+                                                <div class="fw-medium">{{ material.rawMaterialName }}</div>
+                                                <small class="text-muted" *ngIf="material.rawMaterialCode">{{ material.rawMaterialCode }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="text-center align-middle">
+                                        <span class="badge bg-dark">{{ material.totalQuantityNeeded | number:'1.2-2' }}</span>
+                                    </td>
+                                    <td class="text-center align-middle">
+                                        <span class="badge" [ngClass]="{'bg-success': material.hasSufficientStock, 'bg-danger': !material.hasSufficientStock}">
+                                            {{ material.currentStock | number:'1.2-2' }}
+                                        </span>
+                                    </td>
+                                    <td class="text-center align-middle">
+                                        <span class="badge rounded-pill" [ngClass]="{'bg-success-subtle text-success': material.hasSufficientStock, 'bg-danger-subtle text-danger': !material.hasSufficientStock}">
+                                            <i class="bi" [ngClass]="{'bi-check-circle-fill': material.hasSufficientStock, 'bi-exclamation-circle-fill': !material.hasSufficientStock}"></i>
+                                            {{ material.hasSufficientStock ? 'OK' : 'Sin stock' }}
+                                        </span>
+                                    </td>
+                                    <td class="text-end pe-3 align-middle">
+                                        <button 
+                                            class="btn btn-sm"
+                                            [ngClass]="{
+                                                'btn-secondary': isMaterialReleased(batch.batch?.id || 0, material.rawMaterialId) || isBatchFullyReleased(batch.batch?.id || 0),
+                                                'btn-success': material.hasSufficientStock && !isMaterialReleased(batch.batch?.id || 0, material.rawMaterialId) && !isBatchFullyReleased(batch.batch?.id || 0),
+                                                'btn-outline-danger': !material.hasSufficientStock && !isMaterialReleased(batch.batch?.id || 0, material.rawMaterialId) && !isBatchFullyReleased(batch.batch?.id || 0)
+                                            }"
+                                            [disabled]="!material.hasSufficientStock || isReleasingMaterial(batch.batch?.id || 0, material.rawMaterialId) || isMaterialReleased(batch.batch?.id || 0, material.rawMaterialId) || isBatchFullyReleased(batch.batch?.id || 0)"
+                                            (click)="openReleaseForMaterial(batch, material)"
+                                            [title]="isBatchFullyReleased(batch.batch?.id || 0) ? 'Lote en proceso' : (isMaterialReleased(batch.batch?.id || 0, material.rawMaterialId) ? 'Ya liberado' : (material.hasSufficientStock ? 'Liberar material' : 'Stock insuficiente'))">
+                                            <i class="bi" [ngClass]="{
+                                                'bi-check-circle-fill': isMaterialReleased(batch.batch?.id || 0, material.rawMaterialId),
+                                                'bi-box-arrow-right': material.hasSufficientStock && !isReleasingMaterial(batch.batch?.id || 0, material.rawMaterialId) && !isMaterialReleased(batch.batch?.id || 0, material.rawMaterialId),
+                                                'bi-hourglass-split spin-animation': isReleasingMaterial(batch.batch?.id || 0, material.rawMaterialId),
+                                                'bi-x-circle': !material.hasSufficientStock && !isMaterialReleased(batch.batch?.id || 0, material.rawMaterialId)
+                                            }"></i>
+                                            <span class="ms-1 d-none d-md-inline">
+                                                {{ isMaterialReleased(batch.batch?.id || 0, material.rawMaterialId) ? 'Liberado' : (material.hasSufficientStock ? 'Liberar' : 'Sin stock') }}
+                                            </span>
+                                        </button>
+                                    </td>
+                                </tr>
+                            </ng-container>
+                        </ng-container>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="card-footer bg-transparent border-0 text-muted small py-2 px-3">
+            <i class="bi bi-info-circle me-1"></i>
+            Haz clic en "Liberar" para registrar la salida de material vinculada al lote de producción
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Liberación (Igual que inventory-movement) -->
+<div *ngIf="showModal" class="modal fade show d-block" tabindex="-1" role="dialog" style="background-color: rgba(0,0,0,0.5);">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header border-0 pb-0 bg-danger bg-opacity-10">
+                <div>
+                    <h4 class="modal-title fw-bold mb-1 text-danger">
+                        <i class="bi bi-arrow-up-circle-fill me-2"></i>
+                        {{ isEditing ? 'Editar' : 'Nueva' }} Liberación de Material
+                    </h4>
+                    <p class="text-muted small mb-0">
+                        Registra la salida de materia prima para producción
+                    </p>
+                </div>
+                <button type="button" class="btn-close" aria-label="Close" (click)="cancelModal()"></button>
+            </div>
+            <div class="modal-body px-4 py-4">
+                <form [formGroup]="form" (ngSubmit)="submit()">
+                    
+                    <!-- Selección de producto -->
+                    <div class="mb-4 position-relative">
+                        <label class="form-label fw-semibold">
+                            <i class="bi bi-box-seam text-primary me-2"></i>
+                            Producto (buscar por código o nombre) *
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light">
+                                <i class="bi bi-upc-scan"></i>
+                            </span>
+                            <input class="form-control" formControlName="product_search"
+                                placeholder="Busca por código o nombre" autocomplete="off"
+                                [class.is-invalid]="form.controls['product_id'].invalid && form.controls['product_id'].touched"
+                                [disabled]="loadingProductDetails">
+                            <input type="hidden" formControlName="product_id">
+                            <span *ngIf="loadingProductDetails" class="input-group-text bg-light">
+                                <div class="spinner-border spinner-border-sm" role="status">
+                                    <span class="visually-hidden">Cargando...</span>
+                                </div>
+                            </span>
+                        </div>
+                        <!-- Suggestions -->
+                        <ul *ngIf="productSuggestions?.length" class="list-group position-absolute mt-1 shadow"
+                            style="z-index:1055; max-height:240px; overflow:auto; left:0; right:0;">
+                            <li *ngFor="let p of productSuggestions" class="list-group-item list-group-item-action"
+                                (click)="selectProduct(p)">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div class="flex-grow-1">
+                                        <div class="fw-semibold" style="font-size: 0.9rem;">
+                                            {{ p?.name ?? p?.product_name ?? 'Sin nombre' }}
+                                        </div>
+                                        <span *ngIf="p?.code ?? p?.product_code" class="text-muted" style="font-size: 0.8rem;">
+                                            {{ p?.code ?? p?.product_code }}
+                                        </span>
+                                    </div>
+                                    <small class="text-success fw-semibold" *ngIf="p?.unit_cost ?? p?.price ?? p?.cost">
+                                        ${{ (p?.unit_cost ?? p?.price ?? p?.cost) | number:'1.2-2' }}
+                                    </small>
+                                </div>
+                            </li>
+                        </ul>
+                        <div *ngIf="form.controls['product_id'].invalid && form.controls['product_id'].touched"
+                            class="text-danger small mt-2">
+                            <i class="bi bi-exclamation-circle-fill me-1"></i>Debes seleccionar un producto
+                        </div>
+                        <div class="form-text">
+                            <i class="bi bi-info-circle me-1"></i>
+                            <span *ngIf="!loadingProductDetails">Escribe para buscar productos por nombre o código</span>
+                            <span *ngIf="loadingProductDetails" class="text-primary">
+                                <i class="bi bi-clock me-1"></i>Cargando detalles del producto...
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Cantidad -->
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold">
+                            <i class="bi bi-hash text-primary me-2"></i>
+                            Cantidad *
+                        </label>
+                        <div class="input-group input-group-lg">
+                            <span class="input-group-text bg-light">
+                                <i class="bi bi-123"></i>
+                            </span>
+                            <input type="number" class="form-control" formControlName="quantity" min="1" placeholder="0"
+                                [class.is-invalid]="form.controls['quantity'].invalid && form.controls['quantity'].touched">
+                            <span class="input-group-text bg-light">unidades</span>
+                        </div>
+                        <div *ngIf="form.controls['quantity'].invalid && form.controls['quantity'].touched"
+                            class="text-danger small mt-2">
+                            <i class="bi bi-exclamation-circle-fill me-1"></i>La cantidad debe ser mayor a 0
+                        </div>
+                        <div class="form-text">
+                            <i class="bi bi-info-circle me-1"></i>
+                            Cantidad de unidades a liberar para producción
+                        </div>
+                    </div>
+
+                    <!-- Campos de Detalles de Notas - LIBERACIONES -->
+                    <div class="mb-4">
+                        <!-- Header -->
+                        <div class="d-flex align-items-center mb-3 pb-2 border-bottom">
+                            <i class="bi bi-arrow-up-circle-fill text-danger fs-5 me-2"></i>
+                            <h6 class="mb-0 fw-bold text-danger">Información de Salida</h6>
+                        </div>
+
+                        <!-- Búsqueda de Lote -->
+                        <div class="bg-light rounded p-3 mb-4">
+                            <label class="form-label small fw-semibold mb-2">
+                                <i class="bi bi-search text-primary me-1"></i>Buscar Lote de Entrada
+                            </label>
+                            <div class="row g-2">
+                                <div class="col-12 col-md-6">
+                                    <div class="input-group">
+                                        <input type="text" class="form-control" id="batchOut"
+                                            (input)="updateNotesSummary()" placeholder="Código de lote...">
+                                        <button type="button" class="btn btn-primary" (click)="prefillOutByBatch()"
+                                            [disabled]="loadingBatchLookup">
+                                            <span *ngIf="!loadingBatchLookup">
+                                                <i class="bi bi-arrow-right"></i>
+                                            </span>
+                                            <span *ngIf="loadingBatchLookup"
+                                                class="spinner-border spinner-border-sm"></span>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="col-12 col-md-6">
+                                    <button type="button" class="btn btn-outline-primary w-100"
+                                        (click)="openBatchSearchModal()">
+                                        <i class="bi bi-list-ul me-1"></i>Buscar en Historial
+                                    </button>
+                                </div>
+                            </div>
+                            <small class="text-muted d-block mt-2">
+                                <i class="bi bi-info-circle me-1"></i>Busca un lote para precargar los datos
+                                automáticamente
+                            </small>
+                        </div>
+
+                        <!-- Información Principal -->
+                        <div class="row g-3 mb-4">
+                            <div class="col-sm-6">
+                                <label class="form-label small fw-semibold">
+                                    <i class="bi bi-gear text-muted me-1"></i>Línea de Producción
+                                </label>
+                                <select class="form-select" formControlName="production_line">
+                                    <option value="">Seleccione una línea</option>
+                                    <option value="richard">Línea Richard</option>
+                                    <option value="panaderia">Línea Panadería</option>
+                                    <option value="pasteleria">Línea Pastelería</option>
+                                </select>
+                            </div>
+                            <div class="col-sm-6">
+                                <label class="form-label small fw-semibold">
+                                    <i class="bi bi-calendar-event text-muted me-1"></i>Fecha de Vencimiento
+                                </label>
+                                <input type="date" class="form-control" id="expiryDateOut" (change)="updateNotesSummary()">
+                            </div>
+                            <div class="col-sm-6">
+                                <label class="form-label small fw-semibold">
+                                    <i class="bi bi-truck text-muted me-1"></i>Proveedor
+                                </label>
+                                <input type="text" class="form-control" id="supplierOut" (input)="updateNotesSummary()" placeholder="Nombre del proveedor">
+                            </div>
+                            <div class="col-sm-6">
+                                <label class="form-label small fw-semibold">
+                                    <i class="bi bi-person-check text-muted me-1"></i>Quién Recibió
+                                </label>
+                                <input type="text" class="form-control" id="receivedByOut" (input)="updateNotesSummary()" placeholder="Nombre de quien recibió">
+                            </div>
+                            <div class="col-sm-6">
+                                <label class="form-label small fw-semibold">
+                                    <i class="bi bi-person-badge text-muted me-1"></i>Quién Entrega
+                                </label>
+                                <input type="text" class="form-control" id="deliveredByOut" (input)="updateNotesSummary()" placeholder="Nombre de quien entrega">
+                            </div>
+                        </div>
+
+                        <!-- Verificación -->
+                        <div class="d-flex align-items-center mb-3 pb-2 border-bottom">
+                            <i class="bi bi-clipboard-check text-info fs-5 me-2"></i>
+                            <h6 class="mb-0 fw-bold text-secondary">Verificación de Calidad</h6>
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-sm-6">
+                                <label for="sealsOut" class="form-label small fw-semibold">
+                                    <i class="bi bi-shield-lock text-muted me-1"></i>Sellos
+                                </label>
+                                <select id="sealsOut" class="form-select" (change)="updateNotesSummary()">
+                                    <option value="">Seleccione...</option>
+                                    <option value="Sellado">Sellado</option>
+                                    <option value="Intacto">Intacto</option>
+                                    <option value="Roto">Roto</option>
+                                    <option value="Sin sello">Sin sello</option>
+                                </select>
+                            </div>
+                            <div class="col-sm-6">
+                                <label for="packageTypeOut" class="form-label small fw-semibold">
+                                    <i class="bi bi-box text-muted me-1"></i>Tipo de Empaque
+                                </label>
+                                <input type="text" class="form-control" id="packageTypeOut" (input)="updateNotesSummary()" placeholder="Ej: Caja, Bolsa...">
+                            </div>
+                            <div class="col-sm-6">
+                                <label for="cleanPackageOut" class="form-label small fw-semibold">
+                                    <i class="bi bi-check-circle text-muted me-1"></i>Empaque Limpio
+                                </label>
+                                <select class="form-select" id="cleanPackageOut" (change)="updateNotesSummary()">
+                                    <option value="">Seleccione...</option>
+                                    <option value="Si">Sí</option>
+                                    <option value="No">No</option>
+                                </select>
+                            </div>
+                            <div class="col-sm-6">
+                                <label for="transportConditionsOut" class="form-label small fw-semibold">
+                                    <i class="bi bi-truck text-muted me-1"></i>Condiciones de Transporte
+                                </label>
+                                <select class="form-select" id="transportConditionsOut" (change)="updateNotesSummary()">
+                                    <option value="">Seleccione...</option>
+                                    <option value="Buenas">Buenas</option>
+                                    <option value="Regulares">Regulares</option>
+                                    <option value="Malas">Malas</option>
+                                    <option value="Danado">Dañado</option>
+                                </select>
+                            </div>
+                            <div class="col-sm-6">
+                                <label for="acceptedOut" class="form-label small fw-semibold">
+                                    <i class="bi bi-patch-check text-muted me-1"></i>Aceptado
+                                </label>
+                                <select class="form-select" id="acceptedOut" (change)="updateNotesSummary()">
+                                    <option value="">Seleccione...</option>
+                                    <option value="Si">Sí</option>
+                                    <option value="No">No</option>
+                                </select>
+                            </div>
+                            <div class="col-12">
+                                <label for="observationsOut" class="form-label small fw-semibold">
+                                    <i class="bi bi-chat-left-text text-muted me-1"></i>Observaciones
+                                </label>
+                                <textarea class="form-control" rows="2" id="observationsOut" (input)="updateNotesSummary()" placeholder="Comentarios adicionales..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div *ngIf="formError" class="alert alert-danger d-flex align-items-start" role="alert">
+                        <i class="bi bi-exclamation-triangle-fill me-3 fs-5 mt-1"></i>
+                        <div style="white-space: pre-line;">{{ formError }}</div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer border-0 bg-light">
+                <button class="btn btn-outline-secondary" (click)="cancelModal()" [disabled]="loading">
+                    <i class="bi bi-x-circle me-2"></i>Cancelar
+                </button>
+                <button class="btn btn-danger" (click)="submit()" [disabled]="loading || form.invalid">
+                    <span *ngIf="loading" class="spinner-border spinner-border-sm me-2"></span>
+                    <i *ngIf="!loading" class="bi bi-arrow-up-circle-fill me-2"></i>
+                    {{ loading ? 'Procesando...' : 'Confirmar Liberación' }}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Buscar Lote (filtrado y paginado) -->
+<div *ngIf="showBatchSearchModal" class="modal fade show d-block" tabindex="-1" role="dialog"
+    style="background-color: rgba(0,0,0,0.35);">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header border-0 bg-primary bg-opacity-10">
+                <h5 class="modal-title mb-0 fw-bold text-primary">
+                    <i class="bi bi-filter-circle me-2"></i>Buscar lote de entrada
+                </h5>
+                <button type="button" class="btn-close" aria-label="Close"
+                    (click)="closeBatchSearchModal()"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row g-3 mb-3">
+                    <div class="col-md-4">
+                        <label class="form-label small fw-semibold">Producto (código o nombre)</label>
+                        <input type="text" class="form-control" placeholder="Ej: HAR-01 o Harina"
+                            [(ngModel)]="batchSearchFilters.productText" (input)="onBatchFiltersChange()">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label small fw-semibold">Proveedor</label>
+                        <input type="text" class="form-control" placeholder="Nombre del proveedor"
+                            [(ngModel)]="batchSearchFilters.supplier" (input)="onBatchFiltersChange()">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label small fw-semibold">Fecha de ingreso</label>
+                        <input type="date" class="form-control" [(ngModel)]="batchSearchFilters.ingressDate"
+                            (change)="onBatchFiltersChange()">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label small fw-semibold">Vencimiento</label>
+                        <input type="date" class="form-control" [(ngModel)]="batchSearchFilters.expiryDate"
+                            (change)="onBatchFiltersChange()">
+                    </div>
+                    <div class="col-md-1">
+                        <label class="form-label small fw-semibold">Estado</label>
+                        <select class="form-select" [(ngModel)]="batchSearchFilters.status"
+                            (change)="onBatchFiltersChange()">
+                            <option value="">Todos</option>
+                            <option value="si">Aceptado</option>
+                            <option value="no">Rechazado</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-semibold">Texto libre (lote, notas, observaciones)</label>
+                        <input type="text" class="form-control" placeholder="Busca en notas, lote o detalles"
+                            [(ngModel)]="batchSearchFilters.freeText" (keyup.enter)="onBatchFiltersChange()"
+                            (input)="onBatchFiltersChange()">
+                    </div>
+                    <div class="col-md-6 d-flex align-items-end justify-content-end gap-2">
+                        <button type="button" class="btn btn-outline-info" (click)="reloadBatchSearchData()"
+                            [disabled]="batchSearchLoading" title="Recargar datos desde el servidor">
+                            <i class="bi bi-arrow-clockwise"></i>
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary" (click)="resetBatchFilters()">
+                            <i class="bi bi-eraser me-1"></i>Limpiar filtros
+                        </button>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="text-muted small">Ordenar por fecha:</span>
+                        <button type="button" class="btn btn-sm btn-outline-primary" (click)="toggleBatchSort()">
+                            <i class="bi"
+                                [ngClass]="batchSearchSort === 'desc' ? 'bi-arrow-down' : 'bi-arrow-up'"></i>
+                            {{ batchSearchSort === 'desc' ? 'Más recientes' : 'Más antiguos' }}
+                        </button>
+                    </div>
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-sm btn-outline-secondary"
+                            (click)="batchSearchPrevPage()"
+                            [disabled]="batchSearchPage === 1 || batchSearchLoading">
+                            <i class="bi bi-chevron-left"></i>
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary"
+                            (click)="batchSearchNextPage()"
+                            [disabled]="batchSearchLoading || (batchSearchMeta?.last_page && batchSearchPage >= batchSearchMeta?.last_page)">
+                            <i class="bi bi-chevron-right"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="table-responsive border rounded shadow-sm">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width: 14%">Lote</th>
+                                <th style="width: 22%">Producto</th>
+                                <th style="width: 16%">Proveedor</th>
+                                <th style="width: 12%">Vencimiento</th>
+                                <th style="width: 12%">Estado</th>
+                                <th style="width: 12%">Ingreso</th>
+                                <th style="width: 12%" class="text-end">Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr *ngIf="batchSearchLoading">
+                                <td colspan="7" class="text-center py-4">
+                                    <div class="d-inline-flex align-items-center gap-2 text-muted">
+                                        <span class="spinner-border spinner-border-sm" role="status"
+                                            aria-hidden="true"></span>
+                                        Cargando lotes...
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr *ngFor="let row of batchSearchView">
+                                <td class="fw-semibold">{{ row?.parsed?.batch || '—' }}</td>
+                                <td>
+                                    <div class="fw-semibold">{{ row?.product_name || row?.raw_material_name }}</div>
+                                    <div class="text-muted small">{{ row?.product_code || row?.raw_material_code }}
+                                    </div>
+                                </td>
+                                <td>{{ row?.parsed?.supplier || '—' }}</td>
+                                <td>{{ row?.parsed?.expiry || '—' }}</td>
+                                <td>
+                                    <span class="badge" [ngClass]="{
+                                            'bg-success': (row?.parsed?.accepted || '').toLowerCase() === 'si' || (row?.parsed?.accepted || '').toLowerCase() === 'sí',
+                                            'bg-danger': (row?.parsed?.accepted || '').toLowerCase() === 'no',
+                                            'bg-secondary': !(row?.parsed?.accepted)
+                                        }">
+                                        {{ row?.parsed?.accepted || 'N/D' }}
+                                    </span>
+                                </td>
+                                <td>{{ row?.created_at | date:'yyyy-MM-dd' }}</td>
+                                <td class="text-end">
+                                    <button type="button" class="btn btn-sm btn-primary"
+                                        (click)="selectBatchFromModal(row)">
+                                        <i class="bi bi-check2-circle me-1"></i>Usar lote
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr *ngIf="!batchSearchLoading && batchSearchView.length === 0">
+                                <td colspan="7" class="text-center py-4 text-muted">
+                                    <i class="bi bi-inbox me-2"></i>Sin resultados con los filtros actuales
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer border-0 bg-light">
+                <div class="text-muted small">
+                    Página {{ batchSearchPage }}<span *ngIf="batchSearchMeta?.last_page"> de {{
+                        batchSearchMeta?.last_page }}</span>
+                </div>
+                <button type="button" class="btn btn-outline-secondary" (click)="closeBatchSearchModal()">
+                    <i class="bi bi-x-circle me-1"></i>Cerrar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
