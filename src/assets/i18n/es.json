@@ -75,7 +75,8 @@
       "LIST": {
         "BATCHLIST": "Lista de Lotes",
         "BATCHTRACKING": "Seguimiento de Lotes",
-        "ANALYTICS": "Análisis de Lotes"
+        "ANALYTICS": "Análisis de Lotes",
+        "BATCHREPORT": "Reporte de Lotes"
       }
     },
     "ADMIN": {

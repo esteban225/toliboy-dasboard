@@ -1,0 +1,338 @@
+<div class="container-fluid p-4">
+  <!-- Header -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="d-flex align-items-center justify-content-between">
+        <div>
+          <h1 class="mb-1">
+            <i class="bi bi-graph-up-arrow me-2"></i>Reporte de Trazabilidad de Lotes
+          </h1>
+          <p class="text-muted mb-0">Análisis completo y estadísticas de producción</p>
+        </div>
+        <div>
+          <button *ngIf="batchTraceability" 
+                  class="btn btn-primary me-2"
+                  [disabled]="reportGenerating"
+                  (click)="generatePDF()">
+            <i class="bi" [ngClass]="reportGenerating ? 'bi-hourglass-split spin-animation' : 'bi-file-pdf'"></i>
+            {{ reportGenerating ? 'Generando...' : 'PDF' }}
+          </button>
+          <button *ngIf="batchTraceability" 
+                  class="btn btn-info"
+                  (click)="downloadCSV()">
+            <i class="bi bi-download"></i> CSV
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <!-- Panel de búsqueda -->
+    <div class="col-lg-4 mb-4">
+      <div class="card h-100 shadow-sm">
+        <div class="card-header bg-primary text-white">
+          <h5 class="mb-0">
+            <i class="bi bi-search me-2"></i>Buscar Lote
+          </h5>
+        </div>
+        <div class="card-body">
+          <form [formGroup]="searchForm">
+            <div class="mb-3">
+              <label class="form-label">Lote o Código</label>
+              <input type="text" 
+                     class="form-control form-control-lg"
+                     placeholder="Escribe ID, nombre o código..."
+                     formControlName="batchSearch">
+            </div>
+          </form>
+
+          <!-- Lista de lotes -->
+          <div class="list-group" [ngClass]="{'opacity-50': isLoading}">
+            <div *ngIf="isLoading" class="text-center py-4">
+              <div class="spinner-border spinner-border-sm text-primary" role="status">
+                <span class="visually-hidden">Cargando...</span>
+              </div>
+            </div>
+
+            <div *ngIf="!isLoading && filteredBatches.length === 0" class="alert alert-info">
+              <i class="bi bi-info-circle me-2"></i>
+              {{ searchQuery ? 'No se encontraron lotes' : 'Carga los lotes primero' }}
+            </div>
+
+            <button *ngFor="let batch of filteredBatches | slice:0:20"
+                    class="list-group-item list-group-item-action"
+                    [class.active]="selectedBatchId === batch.id"
+                    (click)="loadBatchTraceability(batch.id || 0)">
+              <div class="d-flex w-100 justify-content-between">
+                <strong>#{{ batch.id }} - {{ batch.name }}</strong>
+                <span class="badge" [ngClass]="getStatusBgClass(batch.status)">
+                  {{ getStatusLabel(batch.status) }}
+                </span>
+              </div>
+              <small class="text-muted">{{ batch.code }} • {{ batch.quantity }} unid. • {{ batch.product_name }}</small>
+            </button>
+
+            <div *ngIf="filteredBatches.length > 20" class="text-center py-2 text-muted small">
+              +{{ filteredBatches.length - 20 }} más...
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Panel de contenido principal -->
+    <div class="col-lg-8">
+      <!-- Sin selección -->
+      <div *ngIf="!batchTraceability && !isLoading" class="card shadow-sm">
+        <div class="card-body text-center py-5">
+          <i class="bi bi-inbox display-1 text-muted mb-3 d-block"></i>
+          <h5>Selecciona un lote de la lista</h5>
+          <p class="text-muted">Elige un lote para ver su análisis completo de trazabilidad, estadísticas y reporte</p>
+        </div>
+      </div>
+
+      <!-- Cargando -->
+      <div *ngIf="isLoading" class="card shadow-sm">
+        <div class="card-body text-center py-5">
+          <div class="spinner-border text-primary mb-3" role="status">
+            <span class="visually-hidden">Cargando...</span>
+          </div>
+          <p>Cargando trazabilidad del lote...</p>
+        </div>
+      </div>
+
+      <!-- Datos del lote -->
+      <ng-container *ngIf="batchTraceability && !isLoading">
+
+        <!-- 1. Información General -->
+        <div class="card shadow-sm mb-4">
+          <div class="card-header bg-gradient" [ngStyle]="{'background-color': statusColors[batchTraceability.batch.status || 'planned']}">
+            <div class="d-flex align-items-center justify-content-between">
+              <h5 class="mb-0 text-white">
+                <i class="bi bi-box-seam me-2"></i>Lote #{{ batchTraceability.batch.id }}
+              </h5>
+              <span class="badge bg-white" [style.color]="statusColors[batchTraceability.batch.status || 'planned']">
+                {{ getStatusLabel(batchTraceability.batch.status) }}
+              </span>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="row g-4">
+              <div class="col-md-6">
+                <p class="mb-2"><strong>Nombre:</strong></p>
+                <p>{{ batchTraceability.batch.name }}</p>
+              </div>
+              <div class="col-md-6">
+                <p class="mb-2"><strong>Código:</strong></p>
+                <p>{{ batchTraceability.batch.code || 'N/A' }}</p>
+              </div>
+              <div class="col-md-6">
+                <p class="mb-2"><strong>Producto:</strong></p>
+                <p>{{ getProductName(batchTraceability.batch.product_id) }}</p>
+              </div>
+              <div class="col-md-6">
+                <p class="mb-2"><strong>Cantidad:</strong></p>
+                <p>{{ batchTraceability.batch.quantity }} unidades</p>
+              </div>
+              <div class="col-md-6">
+                <p class="mb-2"><strong>Fecha Inicio:</strong></p>
+                <p>{{ batchTraceability.batch.start_date ? (batchTraceability.batch.start_date | date:'dd/MM/yyyy HH:mm') : 'N/A' }}</p>
+              </div>
+              <div class="col-md-6">
+                <p class="mb-2"><strong>Fecha Esperada:</strong></p>
+                <p>{{ batchTraceability.batch.expected_end_date ? (batchTraceability.batch.expected_end_date | date:'dd/MM/yyyy') : 'N/A' }}</p>
+              </div>
+              <div class="col-md-6">
+                <p class="mb-2"><strong>Fecha Real:</strong></p>
+                <p>{{ batchTraceability.batch.actual_end_date ? (batchTraceability.batch.actual_end_date | date:'dd/MM/yyyy') : 'En progreso' }}</p>
+              </div>
+              <div class="col-md-6">
+                <p class="mb-2"><strong>Defectos:</strong></p>
+                <p>{{ batchTraceability.batch.defect_quantity || 0 }} unidades</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. Métricas de Calidad -->
+        <div class="card shadow-sm mb-4">
+          <div class="card-header bg-success text-white">
+            <h5 class="mb-0">
+              <i class="bi bi-graph-up me-2"></i>Métricas de Calidad
+            </h5>
+          </div>
+          <div class="card-body">
+            <div class="row g-3">
+              <div class="col-md-6">
+                <div class="metric-card border-start border-warning">
+                  <div class="metric-value text-warning">{{ batchTraceability.qualityMetrics.defectPercentage }}%</div>
+                  <div class="metric-label">Tasa de Defectos</div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="metric-card border-start border-success">
+                  <div class="metric-value text-success">{{ batchTraceability.qualityMetrics.productivityPercentage }}%</div>
+                  <div class="metric-label">Productividad</div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="metric-card border-start border-info">
+                  <div class="metric-value text-info">{{ batchTraceability.qualityMetrics.materialEfficiency }}%</div>
+                  <div class="metric-label">Eficiencia de Materiales</div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="metric-card border-start" [ngClass]="batchTraceability.qualityMetrics.timelineCompliance ? 'border-success' : 'border-danger'">
+                  <div class="metric-value" [ngClass]="batchTraceability.qualityMetrics.timelineCompliance ? 'text-success' : 'text-danger'">
+                    {{ batchTraceability.qualityMetrics.timelineCompliance ? 'Cumplido' : 'Retrasado' }}
+                  </div>
+                  <div class="metric-label">Timeline</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. Materiales Liberados -->
+        <div class="card shadow-sm mb-4">
+          <div class="card-header bg-info text-white">
+            <h5 class="mb-0">
+              <i class="bi bi-box-fill me-2"></i>Materiales Liberados 
+              ({{ batchTraceability.materialStats.materialsReleased }}/{{ batchTraceability.materialStats.totalMaterials }})
+            </h5>
+          </div>
+          <div class="card-body">
+            <div *ngIf="batchTraceability.materialStats.materials.length === 0" class="alert alert-info">
+              No hay materiales registrados para este lote
+            </div>
+            <div *ngIf="batchTraceability.materialStats.materials.length > 0" class="table-responsive">
+              <table class="table table-hover mb-0">
+                <thead class="table-light">
+                  <tr>
+                    <th>Material</th>
+                    <th class="text-end">Requerido</th>
+                    <th class="text-end">Stock</th>
+                    <th class="text-end">Estado</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let material of batchTraceability.materialStats.materials">
+                    <td>
+                      <strong>{{ material.rawMaterialName }}</strong><br>
+                      <small class="text-muted">{{ material.rawMaterialCode }}</small>
+                    </td>
+                    <td class="text-end">{{ material.totalQuantityNeeded }}</td>
+                    <td class="text-end">{{ material.currentStock }}</td>
+                    <td class="text-end">
+                      <span class="badge" [ngClass]="material.hasSufficientStock ? 'bg-success' : 'bg-danger'">
+                        {{ material.hasSufficientStock ? 'Liberado' : 'Insuficiente' }}
+                      </span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4. Movimientos de Inventario -->
+        <div class="card shadow-sm mb-4">
+          <div class="card-header bg-warning text-dark">
+            <h5 class="mb-0">
+              <i class="bi bi-arrow-left-right me-2"></i>Movimientos de Inventario ({{ batchTraceability.movements.length }})
+            </h5>
+          </div>
+          <div class="card-body">
+            <div *ngIf="batchTraceability.movements.length === 0" class="alert alert-info">
+              No hay movimientos registrados
+            </div>
+            <div *ngIf="batchTraceability.movements.length > 0" class="table-responsive">
+              <table class="table table-hover mb-0">
+                <thead class="table-light">
+                  <tr>
+                    <th>Fecha</th>
+                    <th>Tipo</th>
+                    <th class="text-end">Cantidad</th>
+                    <th>Línea de Producción</th>
+                    <th>Notas</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let mov of batchTraceability.movements">
+                    <td><small>{{ mov.created_at | date:'dd/MM/yyyy HH:mm' }}</small></td>
+                    <td>
+                      <span class="badge" [ngClass]="mov.type === 'out' ? 'bg-danger' : 'bg-success'">
+                        {{ mov.type === 'out' ? 'Salida' : 'Entrada' }}
+                      </span>
+                    </td>
+                    <td class="text-end"><strong>{{ mov.quantity }}</strong></td>
+                    <td><small>{{ mov.production_line || '-' }}</small></td>
+                    <td><small>{{ mov.notes || '-' }}</small></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- 5. Formularios -->
+        <div class="card shadow-sm mb-4">
+          <div class="card-header bg-danger text-white">
+            <h5 class="mb-0">
+              <i class="bi bi-file-text me-2"></i>Formularios Completados ({{ batchTraceability.forms.length }})
+            </h5>
+          </div>
+          <div class="card-body">
+            <div *ngIf="batchTraceability.forms.length === 0" class="alert alert-info">
+              No hay formularios registrados
+            </div>
+            <div *ngIf="batchTraceability.forms.length > 0" class="table-responsive">
+              <table class="table table-hover mb-0">
+                <thead class="table-light">
+                  <tr>
+                    <th>Formulario</th>
+                    <th>Fecha</th>
+                    <th>Respondido por</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let form of batchTraceability.forms">
+                    <td><strong>{{ form.form_name || 'Sin nombre' }}</strong></td>
+                    <td><small>{{ form.created_at | date:'dd/MM/yyyy HH:mm' }}</small></td>
+                    <td><small>{{ getUserName(form.answered_by) }}</small></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- 6. Timeline de Eventos -->
+        <div class="card shadow-sm">
+          <div class="card-header bg-secondary text-white">
+            <h5 class="mb-0">
+              <i class="bi bi-clock-history me-2"></i>Timeline de Eventos
+            </h5>
+          </div>
+          <div class="card-body">
+            <div class="timeline">
+              <div *ngFor="let event of batchTraceability.timelineEvents; let last = last" class="timeline-item" [class.last]="last">
+                <div class="timeline-marker" [ngClass]="'event-' + event.type"></div>
+                <div class="timeline-content">
+                  <h6 class="mb-1">{{ event.title }}</h6>
+                  <p class="mb-1 text-muted">{{ event.description }}</p>
+                  <small class="text-secondary">
+                    <i class="bi bi-calendar3 me-1"></i>{{ event.date }}
+                    <span *ngIf="event.user"> • Por: {{ event.user }}</span>
+                  </small>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </ng-container>
+    </div>
+  </div>
+</div>

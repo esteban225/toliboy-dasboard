@@ -1,0 +1,289 @@
+// Variables
+$primary-color: #0D6EFD;
+$success-color: #198754;
+$warning-color: #FFC107;
+$danger-color: #DC3545;
+$info-color: #0DCAF0;
+
+// Animación de rotación
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.spin-animation {
+  animation: spin 1s linear infinite;
+}
+
+// Estilos de tarjetas de métrica
+.metric-card {
+  padding: 20px;
+  background: #F8F9FA;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+
+  .metric-value {
+    font-size: 32px;
+    font-weight: bold;
+    line-height: 1;
+    margin-bottom: 10px;
+  }
+
+  .metric-label {
+    font-size: 13px;
+    color: #6C757D;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  &:hover {
+    background: #E9ECEF;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+}
+
+// Timeline
+.timeline {
+  position: relative;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    left: 19px;
+    top: 20px;
+    bottom: 0;
+    width: 2px;
+    background: #DEE2E6;
+  }
+}
+
+.timeline-item {
+  padding-left: 60px;
+  padding-bottom: 30px;
+  position: relative;
+
+  &.last {
+    padding-bottom: 10px;
+  }
+}
+
+.timeline-marker {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: white;
+  border: 3px solid #DEE2E6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &.event-batch_created {
+    background: #E7F5FF;
+    border-color: $primary-color;
+    color: $primary-color;
+
+    &::after {
+      content: '📦';
+      font-size: 20px;
+    }
+  }
+
+  &.event-materials_released {
+    background: #F0F9FF;
+    border-color: $info-color;
+    color: $info-color;
+
+    &::after {
+      content: '📤';
+      font-size: 20px;
+    }
+  }
+
+  &.event-status_changed {
+    background: #FFF3CD;
+    border-color: $warning-color;
+    color: $warning-color;
+
+    &::after {
+      content: '⚙️';
+      font-size: 18px;
+    }
+  }
+
+  &.event-form_filled {
+    background: #F1E7FF;
+    border-color: #9775FA;
+    color: #9775FA;
+
+    &::after {
+      content: '📋';
+      font-size: 20px;
+    }
+  }
+
+  &.event-batch_completed {
+    background: #D3F9D8;
+    border-color: $success-color;
+    color: $success-color;
+
+    &::after {
+      content: '✅';
+      font-size: 20px;
+    }
+  }
+}
+
+.timeline-content {
+  h6 {
+    color: #212529;
+    margin-bottom: 8px;
+    font-weight: 600;
+  }
+
+  p {
+    font-size: 14px;
+    margin-bottom: 8px;
+    color: #495057;
+  }
+
+  small {
+    font-size: 12px;
+  }
+}
+
+// Gradient header
+.bg-gradient {
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.1), rgba(255, 255, 255, 0.1)) !important;
+}
+
+// Tabla responsiva mejorada
+.table {
+  font-size: 14px;
+
+  thead {
+    th {
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 12px;
+      letter-spacing: 0.5px;
+      vertical-align: middle;
+    }
+  }
+
+  tbody {
+    tr {
+      &:hover {
+        background-color: rgba(13, 110, 253, 0.05);
+      }
+
+      td {
+        vertical-align: middle;
+      }
+    }
+  }
+}
+
+// Badge mejorado
+.badge {
+  padding: 6px 10px;
+  font-weight: 600;
+  font-size: 11px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+// Status badge para lotes
+.status-badge {
+  display: inline-block;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: 0.5px;
+}
+
+// Card shadow mejorado
+.card {
+  border: none;
+  border-radius: 8px;
+
+  .card-header {
+    border-radius: 8px 8px 0 0;
+    border-bottom: none;
+    font-weight: 600;
+
+    h5 {
+      font-size: 16px;
+      letter-spacing: 0.5px;
+    }
+  }
+
+  .card-body {
+    padding: 20px;
+  }
+}
+
+// Estilos de entrada para búsqueda
+.form-control {
+  border: 2px solid #E9ECEF;
+  border-radius: 6px;
+  transition: border-color 0.3s ease;
+
+  &:focus {
+    border-color: $primary-color;
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.1);
+  }
+}
+
+// Lista de lotes
+.list-group-item {
+  border: 1px solid #E9ECEF;
+  cursor: pointer;
+  transition: all 0.3s ease;
+
+  &:hover {
+    background-color: #F8F9FA;
+  }
+
+  &.active {
+    background-color: $primary-color;
+    border-color: $primary-color;
+
+    strong, small {
+      color: white;
+    }
+  }
+}
+
+// Mensaje vacío
+.alert {
+  border-radius: 6px;
+  border: none;
+}
+
+// Responsive adjustments
+@media (max-width: 768px) {
+  .metric-card {
+    .metric-value {
+      font-size: 24px;
+    }
+
+    .metric-label {
+      font-size: 11px;
+    }
+  }
+
+  .timeline-item {
+    padding-left: 50px;
+  }
+
+  .timeline-marker {
+    width: 36px;
+    height: 36px;
+  }
+}

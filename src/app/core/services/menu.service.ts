@@ -230,6 +230,12 @@ export class MenuService {
             label: 'MENUITEMS.BATCHES.LIST.BATCHTRACKING',
             link: '/modules/batches/batch-tracking',
             parentId: 400
+          },
+          {
+            id:404,
+            label: "MENUITEMS.BATCHES.LIST.BATCHREPORT",
+            link: '/modules/batches/batch-report',
+            parentId: 400
           }
         ],
         parentId: 100

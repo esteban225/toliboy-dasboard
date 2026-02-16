@@ -4,6 +4,7 @@ import {BatchesListComponent} from './pages/batches-list/batches-list.component'
 import{BatchesAnalyticsComponent} from './pages/batches-analytics/batches-analytics.component';
 
 import{BatchesTrackingComponent} from './pages/batches-tracking/batches-tracking.component';
+import { BatcheReportComponent } from "./pages/batche-report/batche-report.component";
 const routes: Routes = [
   { 
      path: '',
@@ -16,6 +17,10 @@ const routes: Routes = [
     {
         path: 'batch-tracking',  
         component: BatchesTrackingComponent
+    },
+    {
+        path: 'batch-report',
+        component: BatcheReportComponent
     }
 ];
 

@@ -4,6 +4,7 @@ import { BatchesModuleRoutingModule } from './batches-module-routing.module';
 import { BatchesListComponent } from './pages/batches-list/batches-list.component';
 import { BatchesAnalyticsComponent } from './pages/batches-analytics/batches-analytics.component';
 import { BatchesTrackingComponent } from './pages/batches-tracking/batches-tracking.component';
+import { BatcheReportComponent } from './pages/batche-report/batche-report.component';
 
 
 
@@ -14,7 +15,8 @@ import { BatchesTrackingComponent } from './pages/batches-tracking/batches-track
     BatchesModuleRoutingModule,
     BatchesListComponent,
     BatchesAnalyticsComponent,
-    BatchesTrackingComponent
+    BatchesTrackingComponent,
+    BatcheReportComponent
   ]
 })
 export class BatchesModuleModule { }
