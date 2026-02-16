@@ -164,7 +164,7 @@ export class BatcheReportComponent implements OnInit, OnDestroy {
    */
   loadBatches(): void {
     this.isLoading = true;
-    this.batchesService.list({}, 1, 1000)
+    this.batchesService.list({}, 1, 500)
       .pipe(
         takeUntil(this.destroy$),
         finalize(() => this.isLoading = false)
@@ -232,16 +232,18 @@ export class BatcheReportComponent implements OnInit, OnDestroy {
       this.loadBatchMaterialStats(batchId)
     ])
       .then(([movements, forms, materialStats]) => {
+        console.log('[BATCH-REPORT] ✅ Datos cargados - Movimientos:', movements?.length, 'Formularios:', forms?.length, 'Materiales:', materialStats?.materials?.length);
+        
         this.batchTraceability = {
           batch,
           product: this.getProductInfo(batch),
-          movements,
-          forms,
-          materialStats,
+          movements: movements || [],
+          forms: forms || [],
+          materialStats: materialStats || { totalMaterials: 0, materialsReleased: 0, materials: [] },
           timelineEvents: this.buildTimeline(batch, movements, forms),
           qualityMetrics: this.calculateQualityMetrics(batch, movements, forms)
         };
-        console.log('[BATCH-REPORT] Trazabilidad completa:', this.batchTraceability);
+        console.log('[BATCH-REPORT] ✅ Trazabilidad completa construida - Timeline events:', this.batchTraceability.timelineEvents.length);
         this.alert.success('Éxito', 'Trazabilidad del lote cargada correctamente');
       })
       .catch(err => {
@@ -258,15 +260,33 @@ export class BatcheReportComponent implements OnInit, OnDestroy {
    */
   private loadBatchMovements(batchId: number): Promise<any[]> {
     return new Promise((resolve) => {
-      this.invMovementService.list({ batch_id: batchId }, 1, 1000)
+      console.log(`[BATCH-REPORT] 🔄 Iniciando carga de movimientos para batch_id=${batchId}`);
+      // Usar listWithoutDate para evitar filtro de fecha automático
+      this.invMovementService.listWithoutDate({ batch_id: batchId }, 500, 1)
         .pipe(takeUntil(this.destroy$))
         .subscribe({
           next: (response) => {
-            console.log('[BATCH-REPORT] Movimientos cargados:', response.data?.length || 0);
-            resolve(response.data || []);
+            console.log('[BATCH-REPORT] 📦 Respuesta completa de movimientos:', response);
+            console.log('[BATCH-REPORT] 📦 Tipo de respuesta:', typeof response);
+            console.log('[BATCH-REPORT] 📦 Es Array?:', Array.isArray(response));
+            console.log('[BATCH-REPORT] 📦 Tiene .data?:', response?.data !== undefined);
+            
+            let movements = [];
+            if (Array.isArray(response)) {
+              movements = response;
+            } else if (response?.data && Array.isArray(response.data)) {
+              movements = response.data;
+            } else if (response?.data) {
+              movements = Array.isArray(response.data) ? response.data : [];
+            }
+            
+            console.log('[BATCH-REPORT] ✅ Movimientos extraídos:', movements.length);
+            resolve(movements);
           },
           error: (err) => {
-            console.warn('[BATCH-REPORT] Error cargando movimientos, continuando sin ellos:', err?.message || err);
+            console.error('[BATCH-REPORT] ❌ Error cargando movimientos:', err);
+            console.error('[BATCH-REPORT] ❌ Status:', err?.status);
+            console.error('[BATCH-REPORT] ❌ Message:', err?.message);
             resolve([]); // Resolver con array vacío en lugar de rechazar
           }
         });
@@ -278,18 +298,64 @@ export class BatcheReportComponent implements OnInit, OnDestroy {
    */
   private loadBatchForms(batchId: number): Promise<any[]> {
     return new Promise((resolve) => {
-      this.formResponseService.getFormResponses({ batch_id: batchId, per_page: 400 })
+      console.log(`[BATCH-REPORT] 🔄 Iniciando carga de formularios para batch_id=${batchId}`);
+      this.formResponseService.getFormResponses({ batch_id: batchId, per_page: 500, page: 1 })
         .pipe(takeUntil(this.destroy$))
         .subscribe({
           next: (response: any) => {
-            console.log('[BATCH-REPORT] Formularios cargados:', response.data?.length || 0);
-            resolve(response.data || []);
+            console.log('[BATCH-REPORT] 📦 Respuesta completa de formularios:', response);
+            console.log('[BATCH-REPORT] 📦 Tipo de respuesta:', typeof response);
+            console.log('[BATCH-REPORT] 📦 Es Array?:', Array.isArray(response));
+            console.log('[BATCH-REPORT] 📦 Tiene .data?:', response?.data !== undefined);
+            
+            let forms = [];
+            if (Array.isArray(response)) {
+              forms = response;
+            } else if (response?.data && Array.isArray(response.data)) {
+              forms = response.data;
+            } else if (response?.data) {
+              forms = Array.isArray(response.data) ? response.data : [];
+            }
+            
+            // Transformar estructura para que coincida con el template
+            forms = this.transformFormResponses(forms);
+            console.log('[BATCH-REPORT] ✅ Formularios extraídos y transformados:', forms.length);
+            resolve(forms);
           },
           error: (err) => {
-            console.warn('[BATCH-REPORT] Error cargando formularios, continuando sin ellos:', err?.message || err?.status);
+            console.error('[BATCH-REPORT] ❌ Error cargando formularios (batch_id: ' + batchId + '):', err);
+            console.error('[BATCH-REPORT] ❌ Status:', err?.status);
+            console.error('[BATCH-REPORT] ❌ Message:', err?.message);
             resolve([]); // Resolver con array vacío en lugar de rechazar
           }
         });
+    });
+  }
+
+  /**
+   * Transforma respuestas de formularios para que el template pueda acceder a las propiedades correctas
+   */
+  private transformFormResponses(forms: any[]): any[] {
+    if (!forms || !Array.isArray(forms)) {
+      console.warn('[BATCH-REPORT] transformFormResponses recibio no-array:', typeof forms);
+      return [];
+    }
+    
+    return forms.map(form => {
+      const transformed = {
+        id: form.id,
+        form_id: form.form_id,
+        user_id: form.user_id,
+        batch_id: form.batch_id,
+        created_at: form.created_at || form.submitted_at || new Date().toISOString(),
+        updated_at: form.updated_at,
+        status: form.status,
+        submitted_at: form.submitted_at,
+        form_name: form.form?.name || form.form?.title || form.formName || form.form_name || 'Formulario #' + form.form_id,
+        answered_by: form.user_id || form.answered_by || form.userId
+      };
+      console.log('[BATCH-REPORT] Formulario transformado:', transformed);
+      return transformed;
     });
   }
 

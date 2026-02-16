@@ -416,8 +416,8 @@ export class MaterialReleaseService {
    */
   private getAllMovements(): Observable<any[]> {
     let params = new HttpParams()
-      .set('per_page', 1000)
-      .set('page', 1);
+      .set('per_page', String(500))
+      .set('page', String(1));
 
     return this.http.get<any>(this.movementsUrl, { headers: this.getHeaders(), params }).pipe(
       map(res => res?.data || res || []),
