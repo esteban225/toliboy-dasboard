@@ -39,7 +39,8 @@
       "TEXT": "Gestión de Usuarios",
       "LIST": {
         "USERMANAGEMENT": "Gestión de Usuarios",
-        "WORKLOGUSERS": "Registro de Trabajo de Usuarios"
+        "WORKLOGUSERS": "Registro de Horarios de Usuarios",
+        "ANALYTICS": "Analítica de Usuarios"
       }
     },
     "FORMMANAGER": {
@@ -82,6 +83,14 @@
         "USERS": "Gestión de Usuarios",
         "SETTINGS": "Configuraciones",
         "REPORTS": "Reportes"
+      }
+    },
+    "TRAZEABILITY": {
+      "TEXT": "Trazabilidad",
+      "LIST": {
+        "DASHBOARDTRAZABILITY": "Tablero de Trazabilidad",
+        "TRAZABILITY": "Trazabilidad de Productos",
+        "BATCHTRAZABILITY": "Trazabilidad de Lotes"
       }
     }
   }

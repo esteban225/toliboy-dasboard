@@ -19,7 +19,7 @@ export class MenuService {
   private menuConfig: MenuConfig = {
     // DEV: Desarrollador - Acceso completo
     'DEV': [
-      {
+      /*{
         id: 1,
         label: 'MENUITEMS.MENU.TEXT',
         isTitle: true
@@ -49,7 +49,7 @@ export class MenuService {
         link: '/apps/calendar',
         parentId: 8
       },
-      /*{
+      {
         id: 10,
         label: 'MENUITEMS.APPS.LIST.CHAT',
         icon: 'ti ti-messages',
@@ -69,7 +69,7 @@ export class MenuService {
         icon: 'ti ti-folders',
         link: '/apps/file-manager',
         parentId: 8,
-      },*/
+      },
       {
         id: 24,
         label: 'MENUITEMS.APPS.LIST.TODO',
@@ -77,13 +77,13 @@ export class MenuService {
         link: '/apps/to-do',
         parentId: 8,
       },
-      /*{
+      {
         id: 25,
         label: 'MENUITEMS.APPS.LIST.CONTACTS',
         icon: 'ti ti-address-book',
         link: '/apps/contacts',
         parentId: 8,
-      },*/
+      },
       {
         id: 26,
         label: 'MENUITEMS.APPS.LIST.KANBANBOARD',
@@ -96,6 +96,7 @@ export class MenuService {
         label: 'MENUITEMS.MODULES.TEXT',
         isTitle: true
       },
+      */
       {
         id: 101,
         label: 'MENUITEMS.USERMANAGEMENT.TEXT',
@@ -227,7 +228,7 @@ export class MenuService {
         ],
         parentId: 100
       },
-      {
+      /*{
         id: 500,
         label: 'MENUITEMS.TRACEABILITY.TEXT',
         icon: 'ti ti-route',
@@ -241,7 +242,7 @@ export class MenuService {
         ],
         parentId: 100
       }
-      /*
+      
       {INVENTORY
         id: 200,
         label: 'MENUITEMS.ADMIN.TEXT',
@@ -574,7 +575,7 @@ export class MenuService {
   getDefaultRouteByRole(role: string): string {
     const normalizedRole = (role || '').trim().toUpperCase();
     const routeMap: { [key: string]: string } = {
-      'DEV': '/', // Dashboard completo
+      'DEV': '/modules/users/analytics', // Dashboard completo
       'GG': '/', // Dashboard gerencial  
       'INGPL': '/', // Dashboard de planta
       'INGPR': '/', // Dashboard de producción
