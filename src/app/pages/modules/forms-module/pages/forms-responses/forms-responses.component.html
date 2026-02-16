@@ -419,7 +419,7 @@
                         <div class="values-grid">
                             @for (value of selectedResponse()!.values; track value.id) {
                                 <div class="value-item">
-                                    <span class="value-label">{{ value.field?.name || 'Campo ' + value.form_field_id }}</span>
+                                    <span class="value-label">{{ value.field_label || value.field_code || 'Campo ' + value.form_field_id }}</span>
                                     <span class="value-content">{{ value.value || '-' }}</span>
                                 </div>
                             }
