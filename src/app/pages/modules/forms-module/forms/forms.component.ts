@@ -43,6 +43,10 @@ export class FormsComponent implements OnInit, OnDestroy {
   selectedForm: any = null;
   selectedFormValidationRules: any = null;
 
+  // Loading & submitting states
+  loadingFields = false;
+  submitting = false;
+
   // Formulario dinámico
   dynamicForm!: FormGroup;
 
@@ -125,17 +129,21 @@ export class FormsComponent implements OnInit, OnDestroy {
     this.selectedForm = null;
     this.selectedFormValidationRules = null;
     this.dynamicForm = this.fb.group({});
+    this.loadingFields = false;
+    this.submitting = false;
     console.log('🎯 Modal cerrado y estado limpiado');
   }
 
   // Cargar campos de un formulario específico
   loadFormFields(formId: number) {
+    this.loadingFields = true;
     this.store.dispatch(FormResponseActions.loadFormFields({ formId }));
     
     // Suscribirse a los campos específicos del formulario
     const fieldsSub = this.store.select(FormResponseSelectors.selectFormFieldsByFormId(formId)).subscribe(fields => {
       if (fields && fields.length > 0) {
         console.log(`✅ Campos cargados para formulario ${formId}:`, fields);
+        this.loadingFields = false;
         
         // Crear una nueva copia inmutable del selectedForm con los campos agregados
         if (this.selectedForm && this.selectedForm.id === formId) {
@@ -344,6 +352,8 @@ export class FormsComponent implements OnInit, OnDestroy {
       return;
     }
     
+    this.submitting = true;
+    
     const formValue = {
       form_id: this.selectedForm.id,
       values: this.dynamicForm.value
@@ -352,9 +362,12 @@ export class FormsComponent implements OnInit, OnDestroy {
     console.log('📤 Enviando formulario:', formValue);
     this.store.dispatch(FormResponseActions.submitForm({ formData: formValue }));
     
-    // Mostrar mensaje de éxito y cerrar modal
-    this.alertService.success('Formulario enviado correctamente');
-    this.closeModal();
+    // Simular delay y cerrar modal
+    setTimeout(() => {
+      this.submitting = false;
+      this.alertService.success('Formulario enviado correctamente');
+      this.closeModal();
+    }, 1500);
   }
 
   // Resetear formulario
@@ -591,6 +604,126 @@ export class FormsComponent implements OnInit, OnDestroy {
     };
     
     return iconMap[type] || 'fas fa-question-circle';
+  }
+
+  // ===== MÉTODOS HELPER PARA NUEVO UI =====
+
+  /**
+   * Cuenta formularios activos
+   */
+  getActiveFormsCount(forms: any[]): number {
+    if (!forms) return 0;
+    return forms.filter(f => f.status === 'active' || !f.status).length;
+  }
+
+  /**
+   * Obtiene el progreso del formulario (campos completados / total)
+   */
+  getFormProgress(): number {
+    if (!this.selectedForm?.form_fields || !this.dynamicForm) return 0;
+    const totalFields = this.selectedForm.form_fields.length;
+    if (totalFields === 0) return 0;
+    const completedFields = this.getCompletedFieldsCount();
+    return Math.round((completedFields / totalFields) * 100);
+  }
+
+  /**
+   * Cuenta campos completados
+   */
+  getCompletedFieldsCount(): number {
+    if (!this.selectedForm?.form_fields || !this.dynamicForm) return 0;
+    let count = 0;
+    this.selectedForm.form_fields.forEach((field: any) => {
+      const fieldCode = this.getFieldCode(field);
+      const value = this.dynamicForm.get(fieldCode)?.value;
+      if (value !== null && value !== undefined && value !== '') {
+        count++;
+      }
+    });
+    return count;
+  }
+
+  /**
+   * Verifica si el campo es de tipo input text-like
+   */
+  isTextInputField(field: any): boolean {
+    const type = this.getFieldType(field);
+    const textTypes = ['text', 'string', 'email', 'password', 'tel', 'phone', 'url', 'search'];
+    return textTypes.includes(type);
+  }
+
+  /**
+   * Retorna el tipo HTML de input correcto
+   */
+  getInputType(field: any): string {
+    const type = this.getFieldType(field);
+    const typeMap: { [key: string]: string } = {
+      'string': 'text',
+      'phone': 'tel',
+      'integer': 'number',
+      'decimal': 'number',
+      'float': 'number'
+    };
+    return typeMap[type] || type;
+  }
+
+  /**
+   * Verifica si el campo es numérico
+   */
+  isNumericField(field: any): boolean {
+    const type = this.getFieldType(field);
+    const numericTypes = ['number', 'integer', 'decimal', 'float'];
+    return numericTypes.includes(type);
+  }
+
+  /**
+   * Verifica si el valor del campo está llenado
+   */
+  isFieldFilled(fieldCode: string): boolean {
+    const value = this.dynamicForm?.get(fieldCode)?.value;
+    return value !== null && value !== undefined && value !== '';
+  }
+
+  /**
+   * Verifica si el campo tiene errores
+   */
+  hasFieldError(fieldCode: string): boolean {
+    const control = this.dynamicForm?.get(fieldCode);
+    return !!(control?.invalid && control?.touched);
+  }
+
+  /**
+   * Obtiene el valor actual del campo para caracteres restantes
+   */
+  getFieldLength(fieldCode: string): number {
+    return this.dynamicForm?.get(fieldCode)?.value?.length || 0;
+  }
+
+  /**
+   * Obtiene el máximo de caracteres permitidos
+   */
+  getMaxLength(field: any): number {
+    return field.maxLength || field.max_length || 0;
+  }
+
+  /**
+   * Verifica si el checkbox está marcado
+   */
+  isChecked(fieldCode: string, value: string): boolean {
+    const currentValue = this.dynamicForm?.get(fieldCode)?.value;
+    if (Array.isArray(currentValue)) {
+      return currentValue.includes(value);
+    }
+    return currentValue === value;
+  }
+
+  /**
+   * Obtiene categorías únicas de formularios
+   */
+  getCategoriesCount(forms: any[]): number {
+    if (!forms) return 0;
+    const categories = new Set(forms.map(f => f.category || 'Sin categoría'));
+    return categories.size;
   }
 
   ngOnDestroy(): void {

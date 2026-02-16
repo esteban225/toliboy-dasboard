@@ -74,3 +74,68 @@ export const selectFormFieldsByFormId = (formId: number) => createSelector(
   selectFormResponseState,
   (state: FormResponseState) => state.formFields ? state.formFields[formId] : null
 );
+
+// ==================== FORM RESPONSES CRUD SELECTORS ====================
+
+// Selector para obtener todas las respuestas de formularios
+export const selectAllResponses = createSelector(
+  selectFormResponseState,
+  (state: FormResponseState) => state.responses
+);
+
+// Selector para obtener la respuesta seleccionada
+export const selectSelectedResponse = createSelector(
+  selectFormResponseState,
+  (state: FormResponseState) => state.selectedResponse
+);
+
+// Selector para obtener el estado de carga de respuestas
+export const selectResponsesLoading = createSelector(
+  selectFormResponseState,
+  (state: FormResponseState) => state.responsesLoading
+);
+
+// Selector para obtener metadatos de paginación
+export const selectResponsesMeta = createSelector(
+  selectFormResponseState,
+  (state: FormResponseState) => state.responsesMeta
+);
+
+// Selector para obtener los filtros actuales
+export const selectCurrentFilters = createSelector(
+  selectFormResponseState,
+  (state: FormResponseState) => state.currentFilters
+);
+
+// Selector para obtener el estado de envío
+export const selectSubmitting = createSelector(
+  selectFormResponseState,
+  (state: FormResponseState) => state.submitting
+);
+
+// Selector para obtener el estado de revisión
+export const selectReviewing = createSelector(
+  selectFormResponseState,
+  (state: FormResponseState) => state.reviewing
+);
+
+// Selector para obtener respuestas por estado
+export const selectResponsesByStatus = (status: string) => createSelector(
+  selectAllResponses,
+  (responses) => responses.filter(r => r.status === status)
+);
+
+// Selector para contar respuestas por estado
+export const selectResponsesCountByStatus = createSelector(
+  selectAllResponses,
+  (responses) => {
+    return {
+      pending: responses.filter(r => r.status === 'pending').length,
+      in_progress: responses.filter(r => r.status === 'in_progress').length,
+      completed: responses.filter(r => r.status === 'completed').length,
+      approved: responses.filter(r => r.status === 'approved').length,
+      rejected: responses.filter(r => r.status === 'rejected').length,
+      total: responses.length
+    };
+  }
+);

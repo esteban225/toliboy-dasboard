@@ -1,5 +1,6 @@
 import { createReducer, on } from "@ngrx/store";
 import * as FormResponseActions from "../actions/formResponse.actions";
+import { FormResponse, FormResponseFilters, PaginationMeta } from "../../model/forms.model";
 
 export interface FormResponseState {
   response: any | null;
@@ -10,6 +11,14 @@ export interface FormResponseState {
   validationRulesLoading: boolean;
   formFields: { [formId: number]: any[] } | null;
   formFieldsLoading: boolean;
+  // Form Responses CRUD state
+  responses: FormResponse[];
+  selectedResponse: FormResponse | null;
+  responsesLoading: boolean;
+  responsesMeta: PaginationMeta | null;
+  currentFilters: FormResponseFilters;
+  submitting: boolean;
+  reviewing: boolean;
 }
 
 export const initialState: FormResponseState = {
@@ -21,6 +30,14 @@ export const initialState: FormResponseState = {
   validationRulesLoading: false,
   formFields: null,
   formFieldsLoading: false,
+  // Form Responses CRUD state
+  responses: [],
+  selectedResponse: null,
+  responsesLoading: false,
+  responsesMeta: null,
+  currentFilters: { page: 1, per_page: 10 },
+  submitting: false,
+  reviewing: false,
 };
 
 export const formResponseReducer = createReducer(
@@ -50,18 +67,19 @@ export const formResponseReducer = createReducer(
   })),
   on(FormResponseActions.submitForm, (state) => ({
     ...state,
-    loading: true,
+    submitting: true,
     error: null,
   })),
   on(FormResponseActions.submitFormSuccess, (state, { response }) => ({
     ...state,
     response,
-    loading: false,
+    responses: [response, ...state.responses],
+    submitting: false,
     error: null,
   })),
   on(FormResponseActions.submitFormFailure, (state, { error }) => ({
     ...state,
-    loading: false,
+    submitting: false,
     error,
   })),
   // Casos para reglas de validación
@@ -103,5 +121,95 @@ export const formResponseReducer = createReducer(
     ...state,
     formFieldsLoading: false,
     error,
+  })),
+
+  // ==================== FORM RESPONSES CRUD ====================
+  
+  // Load all form responses
+  on(FormResponseActions.loadFormResponses, (state, { filters }) => ({
+    ...state,
+    responsesLoading: true,
+    error: null,
+    currentFilters: filters || state.currentFilters,
+  })),
+  on(FormResponseActions.loadFormResponsesSuccess, (state, { paginatedData }) => ({
+    ...state,
+    responses: paginatedData.data,
+    responsesMeta: paginatedData.meta,
+    responsesLoading: false,
+    error: null,
+  })),
+  on(FormResponseActions.loadFormResponsesFailure, (state, { error }) => ({
+    ...state,
+    responsesLoading: false,
+    error,
+  })),
+
+  // Load single response by ID
+  on(FormResponseActions.loadFormResponseById, (state) => ({
+    ...state,
+    responsesLoading: true,
+    error: null,
+  })),
+  on(FormResponseActions.loadFormResponseByIdSuccess, (state, { response }) => ({
+    ...state,
+    selectedResponse: response,
+    responsesLoading: false,
+    error: null,
+  })),
+  on(FormResponseActions.loadFormResponseByIdFailure, (state, { error }) => ({
+    ...state,
+    responsesLoading: false,
+    error,
+  })),
+
+  // Update form response
+  on(FormResponseActions.updateFormResponse, (state) => ({
+    ...state,
+    submitting: true,
+    error: null,
+  })),
+  on(FormResponseActions.updateFormResponseSuccess, (state, { response }) => ({
+    ...state,
+    responses: state.responses.map(r => r.id === response.id ? response : r),
+    selectedResponse: response,
+    submitting: false,
+    error: null,
+  })),
+  on(FormResponseActions.updateFormResponseFailure, (state, { error }) => ({
+    ...state,
+    submitting: false,
+    error,
+  })),
+
+  // Review form response
+  on(FormResponseActions.reviewFormResponse, (state) => ({
+    ...state,
+    reviewing: true,
+    error: null,
+  })),
+  on(FormResponseActions.reviewFormResponseSuccess, (state, { response }) => ({
+    ...state,
+    responses: state.responses.map(r => r.id === response.id ? response : r),
+    selectedResponse: response,
+    reviewing: false,
+    error: null,
+  })),
+  on(FormResponseActions.reviewFormResponseFailure, (state, { error }) => ({
+    ...state,
+    reviewing: false,
+    error,
+  })),
+
+  // Clear selected response
+  on(FormResponseActions.clearSelectedResponse, (state) => ({
+    ...state,
+    selectedResponse: null,
+  })),
+
+  // Set filters
+  on(FormResponseActions.setResponseFilters, (state, { filters }) => ({
+    ...state,
+    currentFilters: { ...state.currentFilters, ...filters },
   }))
 );

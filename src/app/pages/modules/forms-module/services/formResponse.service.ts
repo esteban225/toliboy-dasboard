@@ -1,10 +1,16 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError, tap, map } from 'rxjs/operators';
-//import {FormResponse}from '../models/formResponse.model';
 import { environment } from 'src/environments/environment';
-import { GlobalComponent } from 'src/app/global-component';
+import { 
+    FormResponse, 
+    FormResponseFilters, 
+    CreateFormResponsePayload, 
+    UpdateFormResponsePayload, 
+    ReviewFormResponsePayload,
+    PaginatedResponse 
+} from '../model/forms.model';
 
 @Injectable({
     providedIn: 'root'
@@ -29,15 +35,12 @@ export class FormResponseService {
     getForms(): Observable<any[]> {
         console.log('🔄 FormResponseService.getForms() - iniciando petición...');
         return this.http.get<{ status: boolean; message: string; data: any[] }>(`${this.apiUrl}/forms?per_page=100`).pipe(
-            // Extrae solo el arreglo de formularios
             map(response => {
                 console.log('📦 Respuesta completa del backend:', response);
-                console.log('📋 Formularios extraídos:', response.data);
                 return response.data;
             }),
             tap(forms => {
                 console.log('✅ Formularios procesados en servicio:', forms);
-                console.log('📊 Cantidad de formularios:', forms?.length || 0);
             }),
             catchError(error => {
                 console.error('❌ Error en FormResponseService.getForms():', error);
@@ -48,9 +51,7 @@ export class FormResponseService {
 
     // Obtener reglas de validación de formularios
     getFormValidatorRules(): Observable<any> {
-        // const headers = GlobalComponent.headerToken || '';
         return this.http.get<{ status: boolean; message: string; data: any }>(`${this.apiUrl}/validator-rules`).pipe(
-            // Extrae solo las reglas de validación
             map(response => response.data),
             catchError(this.handleError)
         );
@@ -69,13 +70,9 @@ export class FormResponseService {
     getFormFields(formId: number): Observable<any[]> {
         console.log(`🔄 FormResponseService.getFormFields(${formId}) - iniciando petición...`);
         return this.http.get<{ status: boolean; message: string; data: any[] }>(`${this.apiUrl}/forms/${formId}/fields`).pipe(
-            map(response => {
-                console.log(`📦 Respuesta de campos para formulario ${formId}:`, response);
-                return response.data || [];
-            }),
+            map(response => response.data || []),
             tap(fields => {
                 console.log(`✅ Campos obtenidos para formulario ${formId}:`, fields);
-                console.log(`📊 Cantidad de campos: ${fields?.length || 0}`);
             }),
             catchError(error => {
                 console.error(`❌ Error al obtener campos para formulario ${formId}:`, error);
@@ -84,29 +81,75 @@ export class FormResponseService {
         );
     }
 
-    // Enviar una nueva respuesta de formulario
-    submitFormResponse(formData: any): Observable<any> {
-        return this.http.post<any>(`${this.apiUrl}/forms/responses`, formData).pipe(
-            // si el backend devuelve { status, message, data: formResponse }
-            map((resp) => resp?.data ?? resp),
+    // ==================== FORM RESPONSES CRUD ====================
+
+    // Obtener todas las respuestas de formularios con filtros y paginación
+    getFormResponses(filters?: FormResponseFilters): Observable<PaginatedResponse<FormResponse>> {
+        let params = new HttpParams();
+        
+        if (filters) {
+            if (filters.form_id) params = params.set('form_id', filters.form_id.toString());
+            if (filters.user_id) params = params.set('user_id', filters.user_id.toString());
+            if (filters.batch_id) params = params.set('batch_id', filters.batch_id.toString());
+            if (filters.status) params = params.set('status', filters.status);
+            if (filters.page) params = params.set('page', filters.page.toString());
+            if (filters.per_page) params = params.set('per_page', filters.per_page.toString());
+        }
+
+        return this.http.get<PaginatedResponse<FormResponse>>(`${this.apiUrl}/forms/responses`, { params }).pipe(
+            tap(response => console.log('✅ Respuestas de formularios obtenidas:', response)),
             catchError(this.handleError)
         );
     }
 
-    // Obtener todas las respuestas de formularios
-    getFormResponses(): Observable<any[]> {
-        // const headers = GlobalComponent.headerToken || '';
-        return this.http.get<{ status: boolean; message: string; data: any[] }>(`${this.apiUrl}?per_page=100`).pipe(
-            // Extrae solo el arreglo de respuestas de formularios
+    // Obtener una respuesta específica por ID
+    getFormResponseById(id: number): Observable<FormResponse> {
+        return this.http.get<{ status: boolean; message: string; data: FormResponse }>(`${this.apiUrl}/forms/responses/${id}`).pipe(
             map(response => response.data),
+            tap(data => console.log(`✅ Respuesta ${id} obtenida:`, data)),
             catchError(this.handleError)
         );
     }
 
-    //responder respuesta de formulario por id
-    responseFormReviewById(id: number): Observable<any> {
-        return this.http.get<any>(`${this.apiUrl}/${id}`).pipe(
+    // Crear una nueva respuesta de formulario
+    submitFormResponse(payload: CreateFormResponsePayload): Observable<FormResponse> {
+        return this.http.post<{ status: string; message: string; data: FormResponse }>(`${this.apiUrl}/forms/responses`, payload).pipe(
+            map(response => response.data),
+            tap(data => console.log('✅ Respuesta de formulario creada:', data)),
             catchError(this.handleError)
         );
+    }
+
+    // Actualizar una respuesta de formulario existente
+    updateFormResponse(id: number, payload: UpdateFormResponsePayload): Observable<FormResponse> {
+        return this.http.put<{ status: boolean; message: string; data: FormResponse }>(`${this.apiUrl}/forms/responses/${id}`, payload).pipe(
+            map(response => response.data),
+            tap(data => console.log(`✅ Respuesta ${id} actualizada:`, data)),
+            catchError(this.handleError)
+        );
+    }
+
+    // Revisar una respuesta de formulario (aprobar/rechazar)
+    reviewFormResponse(id: number, payload: ReviewFormResponsePayload): Observable<FormResponse> {
+        return this.http.post<{ status: boolean; message: string; data: FormResponse }>(`${this.apiUrl}/forms/responses/${id}/review`, payload).pipe(
+            map(response => response.data),
+            tap(data => console.log(`✅ Respuesta ${id} revisada:`, data)),
+            catchError(this.handleError)
+        );
+    }
+
+    // Descargar reporte PDF de un formulario
+    downloadFormReportPdf(formId: number): Observable<Blob> {
+        return this.http.get(`${this.apiUrl}/forms/${formId}/report/pdf`, {
+            responseType: 'blob'
+        }).pipe(
+            tap(() => console.log(`✅ Descargando PDF para formulario ${formId}`)),
+            catchError(this.handleError)
+        );
+    }
+
+    // Método legacy para compatibilidad
+    responseFormReviewById(id: number): Observable<any> {
+        return this.getFormResponseById(id);
     }
 }

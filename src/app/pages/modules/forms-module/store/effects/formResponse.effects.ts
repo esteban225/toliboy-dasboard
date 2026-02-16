@@ -90,13 +90,13 @@ export class FormResponseEffects {
     );
 
 
-    //fetch respuestas de formularios
+    //fetch respuestas de formularios (legacy - usa el nuevo endpoint paginado)
     fetchFormResponses$ = createEffect(() =>
         this.actions$.pipe(
             ofType(FormResponseActions.fetchForms),
             mergeMap(() =>
                 this.formResponseService.getFormResponses().pipe(
-                    map(responses => FormResponseActions.fetchFormsSuccess({ forms: responses })),
+                    map(paginatedResponse => FormResponseActions.fetchFormsSuccess({ forms: paginatedResponse.data || [] })),
                     catchError(error => {
                         console.error('❌ Error al obtener las respuestas de formularios:', error);
                         return of(FormResponseActions.fetchFormsFailure({ error }));
@@ -150,6 +150,76 @@ export class FormResponseEffects {
                     catchError(error => {
                         console.error(`❌ Error al obtener campos para formulario ${formId}:`, error);
                         return of(FormResponseActions.loadFormFieldsFailure({ formId, error }));
+                    })
+                )
+            )
+        )
+    );
+
+    // ==================== FORM RESPONSES CRUD ====================
+
+    // Load all form responses with filters
+    loadFormResponses$ = createEffect(() =>
+        this.actions$.pipe(
+            ofType(FormResponseActions.loadFormResponses),
+            switchMap(({ filters }) =>
+                this.formResponseService.getFormResponses(filters).pipe(
+                    tap(response => console.log('✅ Respuestas de formularios obtenidas:', response)),
+                    map(paginatedData => FormResponseActions.loadFormResponsesSuccess({ paginatedData })),
+                    catchError(error => {
+                        console.error('❌ Error al obtener respuestas de formularios:', error);
+                        return of(FormResponseActions.loadFormResponsesFailure({ error }));
+                    })
+                )
+            )
+        )
+    );
+
+    // Load single response by ID
+    loadFormResponseById$ = createEffect(() =>
+        this.actions$.pipe(
+            ofType(FormResponseActions.loadFormResponseById),
+            switchMap(({ id }) =>
+                this.formResponseService.getFormResponseById(id).pipe(
+                    tap(response => console.log(`✅ Respuesta ${id} obtenida:`, response)),
+                    map(response => FormResponseActions.loadFormResponseByIdSuccess({ response })),
+                    catchError(error => {
+                        console.error(`❌ Error al obtener respuesta ${id}:`, error);
+                        return of(FormResponseActions.loadFormResponseByIdFailure({ error }));
+                    })
+                )
+            )
+        )
+    );
+
+    // Update form response
+    updateFormResponse$ = createEffect(() =>
+        this.actions$.pipe(
+            ofType(FormResponseActions.updateFormResponse),
+            switchMap(({ id, payload }) =>
+                this.formResponseService.updateFormResponse(id, payload).pipe(
+                    tap(response => console.log(`✅ Respuesta ${id} actualizada:`, response)),
+                    map(response => FormResponseActions.updateFormResponseSuccess({ response })),
+                    catchError(error => {
+                        console.error(`❌ Error al actualizar respuesta ${id}:`, error);
+                        return of(FormResponseActions.updateFormResponseFailure({ error }));
+                    })
+                )
+            )
+        )
+    );
+
+    // Review form response
+    reviewFormResponse$ = createEffect(() =>
+        this.actions$.pipe(
+            ofType(FormResponseActions.reviewFormResponse),
+            switchMap(({ id, payload }) =>
+                this.formResponseService.reviewFormResponse(id, payload).pipe(
+                    tap(response => console.log(`✅ Respuesta ${id} revisada:`, response)),
+                    map(response => FormResponseActions.reviewFormResponseSuccess({ response })),
+                    catchError(error => {
+                        console.error(`❌ Error al revisar respuesta ${id}:`, error);
+                        return of(FormResponseActions.reviewFormResponseFailure({ error }));
                     })
                 )
             )

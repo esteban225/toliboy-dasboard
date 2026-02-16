@@ -1,1 +1,476 @@
-<p>forms-trazability works!</p>
+<div class="trazability-container" @fadeIn>
+  <!-- Hero Section -->
+  <section class="trazability-hero">
+    <div class="hero-background"></div>
+    <div class="hero-content">
+      <div class="hero-text">
+        <h1 class="hero-title">
+          <i class="ti ti-timeline"></i>
+          Trazabilidad de Formularios
+        </h1>
+        <p class="hero-subtitle">Seguimiento completo del ciclo de vida de formularios y respuestas</p>
+      </div>
+      <div class="hero-stats">
+        <div class="stat-card">
+          <div class="stat-icon total">
+            <i class="ti ti-file-text"></i>
+          </div>
+          <div class="stat-info">
+            <span class="stat-value">{{ stats.totalEvents }}</span>
+            <span class="stat-label">Total Registros</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon pending">
+            <i class="ti ti-clock"></i>
+          </div>
+          <div class="stat-info">
+            <span class="stat-value">{{ stats.pendingCount }}</span>
+            <span class="stat-label">Pendientes</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon approved">
+            <i class="ti ti-circle-check"></i>
+          </div>
+          <div class="stat-info">
+            <span class="stat-value">{{ stats.approvedCount }}</span>
+            <span class="stat-label">Aprobados</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon today">
+            <i class="ti ti-calendar-event"></i>
+          </div>
+          <div class="stat-info">
+            <span class="stat-value">{{ stats.todayCount }}</span>
+            <span class="stat-label">Hoy</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Toolbar -->
+  <section class="toolbar">
+    <div class="toolbar-left">
+      <!-- View Toggle -->
+      <div class="view-toggle">
+        <button 
+          class="toggle-btn" 
+          [class.active]="currentView === 'timeline'"
+          (click)="toggleView('timeline')">
+          <i class="ti ti-timeline"></i>
+          Timeline
+        </button>
+        <button 
+          class="toggle-btn" 
+          [class.active]="currentView === 'table'"
+          (click)="toggleView('table')">
+          <i class="ti ti-table"></i>
+          Tabla
+        </button>
+      </div>
+      
+      <!-- Search -->
+      <div class="search-box">
+        <i class="ti ti-search search-icon"></i>
+        <input 
+          type="text" 
+          class="search-input"
+          placeholder="Buscar formulario, usuario, lote..."
+          [ngModel]="filters.search"
+          (ngModelChange)="onSearchChange($event)">
+        <button *ngIf="filters.search" class="clear-search" (click)="onSearchChange('')">
+          <i class="ti ti-x"></i>
+        </button>
+      </div>
+    </div>
+    
+    <div class="toolbar-right">
+      <button class="btn-filter" (click)="showFilters = !showFilters">
+        <i class="ti ti-filter"></i>
+        Filtros
+        <span *ngIf="filters.formId || filters.status || filters.dateFrom || filters.dateTo" class="filter-badge">
+          {{ (filters.formId ? 1 : 0) + (filters.status ? 1 : 0) + (filters.dateFrom ? 1 : 0) + (filters.dateTo ? 1 : 0) }}
+        </span>
+      </button>
+      <button class="btn-export" (click)="exportToCSV()">
+        <i class="ti ti-download"></i>
+        Exportar CSV
+      </button>
+    </div>
+  </section>
+
+  <!-- Filters Panel -->
+  <section class="filters-panel" *ngIf="showFilters" @fadeIn>
+    <div class="filters-grid">
+      <!-- Formulario -->
+      <div class="filter-group">
+        <label class="filter-label">
+          <i class="ti ti-forms"></i>
+          Formulario
+        </label>
+        <select 
+          class="filter-select"
+          [(ngModel)]="filters.formId"
+          (ngModelChange)="applyFilters()">
+          <option [ngValue]="null">Todos los formularios</option>
+          <option *ngFor="let form of forms$ | async" [ngValue]="form.id">
+            {{ form.name }}
+          </option>
+        </select>
+      </div>
+      
+      <!-- Estado -->
+      <div class="filter-group">
+        <label class="filter-label">
+          <i class="ti ti-status-change"></i>
+          Estado
+        </label>
+        <select 
+          class="filter-select"
+          [(ngModel)]="filters.status"
+          (ngModelChange)="applyFilters()">
+          <option [ngValue]="null">Todos los estados</option>
+          <option value="pending">Pendiente</option>
+          <option value="in_progress">En Progreso</option>
+          <option value="completed">Completado</option>
+          <option value="approved">Aprobado</option>
+          <option value="rejected">Rechazado</option>
+        </select>
+      </div>
+      
+      <!-- Fecha desde -->
+      <div class="filter-group">
+        <label class="filter-label">
+          <i class="ti ti-calendar"></i>
+          Desde
+        </label>
+        <input 
+          type="date" 
+          class="filter-input"
+          [(ngModel)]="filters.dateFrom"
+          (ngModelChange)="applyFilters()">
+      </div>
+      
+      <!-- Fecha hasta -->
+      <div class="filter-group">
+        <label class="filter-label">
+          <i class="ti ti-calendar-due"></i>
+          Hasta
+        </label>
+        <input 
+          type="date" 
+          class="filter-input"
+          [(ngModel)]="filters.dateTo"
+          (ngModelChange)="applyFilters()">
+      </div>
+    </div>
+    
+    <div class="filters-actions">
+      <button class="btn-clear-filters" (click)="resetFilters()">
+        <i class="ti ti-refresh"></i>
+        Limpiar filtros
+      </button>
+      <span class="results-count">
+        {{ filteredEvents.length }} de {{ traceEvents.length }} registros
+      </span>
+    </div>
+  </section>
+
+  <!-- Loading State -->
+  <section class="loading-state" *ngIf="loading$ | async">
+    <div class="loading-spinner"></div>
+    <p>Cargando trazabilidad...</p>
+  </section>
+
+  <!-- Empty State -->
+  <section class="empty-state" *ngIf="!(loading$ | async) && filteredEvents.length === 0">
+    <div class="empty-icon">
+      <i class="ti ti-timeline-event-x"></i>
+    </div>
+    <h3>No hay registros de trazabilidad</h3>
+    <p>No se encontraron eventos que coincidan con los filtros seleccionados.</p>
+    <button class="btn-primary" (click)="resetFilters()">
+      <i class="ti ti-refresh"></i>
+      Mostrar todos
+    </button>
+  </section>
+
+  <!-- Timeline View -->
+  <section class="timeline-section" *ngIf="currentView === 'timeline' && filteredEvents.length > 0" @listAnimation>
+    <div class="timeline">
+      <div class="timeline-item" *ngFor="let event of paginatedEvents; let i = index" (click)="openDetail(event)">
+        <div class="timeline-marker" [ngClass]="getStatusClass(event.status)">
+          <i [class]="getEventIcon(event.type)"></i>
+        </div>
+        <div class="timeline-connector"></div>
+        <div class="timeline-content">
+          <div class="timeline-header">
+            <span class="event-type-badge" [ngClass]="getStatusClass(event.status)">
+              {{ getEventLabel(event.type) }}
+            </span>
+            <span class="event-time">{{ formatRelativeTime(event.date) }}</span>
+          </div>
+          <h4 class="event-title">{{ event.formName }}</h4>
+          <div class="event-meta">
+            <span class="meta-item">
+              <i class="ti ti-user"></i>
+              {{ event.userName }}
+            </span>
+            <span class="meta-item" *ngIf="event.batchCode">
+              <i class="ti ti-package"></i>
+              {{ event.batchCode }}
+            </span>
+            <span class="meta-item">
+              <i class="ti ti-hash"></i>
+              {{ event.formCode }}
+            </span>
+          </div>
+          <p class="event-notes" *ngIf="event.notes">
+            <i class="ti ti-note"></i>
+            {{ event.notes }}
+          </p>
+          <div class="event-footer">
+            <span class="status-badge" [ngClass]="getStatusClass(event.status)">
+              {{ getStatusLabel(event.status) }}
+            </span>
+            <span class="event-date">
+              <i class="ti ti-calendar"></i>
+              {{ formatDate(event.date) }} · {{ formatTime(event.date) }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Table View -->
+  <section class="table-section" *ngIf="currentView === 'table' && filteredEvents.length > 0">
+    <div class="table-container">
+      <table class="trace-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Formulario</th>
+            <th>Usuario</th>
+            <th>Lote</th>
+            <th>Estado</th>
+            <th>Evento</th>
+            <th>Fecha</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let event of paginatedEvents" (click)="openDetail(event)">
+            <td class="td-id">#{{ event.id }}</td>
+            <td class="td-form">
+              <div class="form-cell">
+                <span class="form-name">{{ event.formName }}</span>
+                <span class="form-code">{{ event.formCode }}</span>
+              </div>
+            </td>
+            <td class="td-user">
+              <div class="user-cell">
+                <div class="user-avatar">{{ event.userName.charAt(0) }}</div>
+                <span>{{ event.userName }}</span>
+              </div>
+            </td>
+            <td class="td-batch">
+              <span *ngIf="event.batchCode" class="batch-badge">{{ event.batchCode }}</span>
+              <span *ngIf="!event.batchCode" class="no-batch">-</span>
+            </td>
+            <td class="td-status">
+              <span class="status-badge" [ngClass]="getStatusClass(event.status)">
+                {{ getStatusLabel(event.status) }}
+              </span>
+            </td>
+            <td class="td-event">
+              <span class="event-badge" [ngClass]="getStatusClass(event.status)">
+                <i [class]="getEventIcon(event.type)"></i>
+                {{ getEventLabel(event.type) }}
+              </span>
+            </td>
+            <td class="td-date">
+              <div class="date-cell">
+                <span class="date">{{ formatDate(event.date) }}</span>
+                <span class="time">{{ formatTime(event.date) }}</span>
+              </div>
+            </td>
+            <td class="td-actions">
+              <button class="btn-action" (click)="openDetail(event); $event.stopPropagation()">
+                <i class="ti ti-eye"></i>
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Pagination -->
+  <section class="pagination-section" *ngIf="filteredEvents.length > itemsPerPage">
+    <div class="pagination-info">
+      Mostrando {{ (currentPage - 1) * itemsPerPage + 1 }} - {{ currentPage * itemsPerPage > totalItems ? totalItems : currentPage * itemsPerPage }} de {{ totalItems }}
+    </div>
+    <div class="pagination-controls">
+      <button 
+        class="page-btn" 
+        [disabled]="currentPage === 1"
+        (click)="goToPage(1)">
+        <i class="ti ti-chevrons-left"></i>
+      </button>
+      <button 
+        class="page-btn" 
+        [disabled]="currentPage === 1"
+        (click)="goToPage(currentPage - 1)">
+        <i class="ti ti-chevron-left"></i>
+      </button>
+      
+      <ng-container *ngFor="let page of [].constructor(totalPages); let i = index">
+        <button 
+          *ngIf="i + 1 === 1 || i + 1 === totalPages || (i + 1 >= currentPage - 2 && i + 1 <= currentPage + 2)"
+          class="page-btn page-number" 
+          [class.active]="currentPage === i + 1"
+          (click)="goToPage(i + 1)">
+          {{ i + 1 }}
+        </button>
+        <span *ngIf="(i + 1 === currentPage - 3 && currentPage > 4) || (i + 1 === currentPage + 3 && currentPage < totalPages - 3)" class="pagination-ellipsis">...</span>
+      </ng-container>
+      
+      <button 
+        class="page-btn" 
+        [disabled]="currentPage === totalPages"
+        (click)="goToPage(currentPage + 1)">
+        <i class="ti ti-chevron-right"></i>
+      </button>
+      <button 
+        class="page-btn" 
+        [disabled]="currentPage === totalPages"
+        (click)="goToPage(totalPages)">
+        <i class="ti ti-chevrons-right"></i>
+      </button>
+    </div>
+  </section>
+</div>
+
+<!-- Detail Modal -->
+<div class="modal-overlay" *ngIf="showDetailModal" (click)="closeDetail()" @fadeIn>
+  <div class="modal-container" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-header-left">
+        <div class="modal-icon" [ngClass]="selectedEvent ? getStatusClass(selectedEvent.status) : ''">
+          <i [class]="selectedEvent ? getEventIcon(selectedEvent.type) : 'ti ti-file'"></i>
+        </div>
+        <div class="modal-title-section">
+          <h3 class="modal-title">Detalle de Trazabilidad</h3>
+          <p class="modal-subtitle">#{{ selectedEvent?.id }} · {{ selectedEvent?.formName }}</p>
+        </div>
+      </div>
+      <button class="btn-modal-close" (click)="closeDetail()">
+        <i class="ti ti-x"></i>
+      </button>
+    </div>
+    
+    <div class="modal-body" *ngIf="selectedEvent">
+      <!-- Status Timeline -->
+      <div class="detail-section">
+        <h4 class="section-title">
+          <i class="ti ti-timeline"></i>
+          Estado Actual
+        </h4>
+        <div class="status-timeline">
+          <div class="status-step" [class.active]="true" [class.completed]="true">
+            <div class="step-marker"><i class="ti ti-check"></i></div>
+            <span>Creado</span>
+          </div>
+          <div class="status-connector" [class.active]="selectedEvent.status !== 'pending'"></div>
+          <div class="status-step" [class.active]="selectedEvent.status !== 'pending'" [class.completed]="selectedEvent.status !== 'pending' && selectedEvent.status !== 'in_progress'">
+            <div class="step-marker"><i class="ti ti-send"></i></div>
+            <span>Enviado</span>
+          </div>
+          <div class="status-connector" [class.active]="selectedEvent.status === 'approved' || selectedEvent.status === 'rejected'"></div>
+          <div class="status-step" 
+               [class.active]="selectedEvent.status === 'approved' || selectedEvent.status === 'rejected'"
+               [class.completed]="selectedEvent.status === 'approved'"
+               [class.rejected]="selectedEvent.status === 'rejected'">
+            <div class="step-marker">
+              <i [class]="selectedEvent.status === 'rejected' ? 'ti ti-x' : 'ti ti-check'"></i>
+            </div>
+            <span>{{ selectedEvent.status === 'rejected' ? 'Rechazado' : 'Aprobado' }}</span>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Info Grid -->
+      <div class="detail-section">
+        <h4 class="section-title">
+          <i class="ti ti-info-circle"></i>
+          Información General
+        </h4>
+        <div class="info-grid">
+          <div class="info-item">
+            <span class="info-label">Formulario</span>
+            <span class="info-value">{{ selectedEvent.formName }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Código</span>
+            <span class="info-value code">{{ selectedEvent.formCode }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Usuario</span>
+            <span class="info-value">{{ selectedEvent.userName }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Lote</span>
+            <span class="info-value">{{ selectedEvent.batchCode || 'Sin lote' }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Fecha</span>
+            <span class="info-value">{{ formatDate(selectedEvent.date) }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Hora</span>
+            <span class="info-value">{{ formatTime(selectedEvent.date) }}</span>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Review Notes -->
+      <div class="detail-section" *ngIf="selectedEvent.notes || selectedEvent.reviewer">
+        <h4 class="section-title">
+          <i class="ti ti-message-circle"></i>
+          Revisión
+        </h4>
+        <div class="review-card">
+          <div class="reviewer-info" *ngIf="selectedEvent.reviewer">
+            <div class="reviewer-avatar">{{ selectedEvent.reviewer.charAt(0) }}</div>
+            <span class="reviewer-name">{{ selectedEvent.reviewer }}</span>
+          </div>
+          <p class="review-notes" *ngIf="selectedEvent.notes">"{{ selectedEvent.notes }}"</p>
+        </div>
+      </div>
+      
+      <!-- Response Values -->
+      <div class="detail-section" *ngIf="selectedEvent.response.values && selectedEvent.response.values.length > 0">
+        <h4 class="section-title">
+          <i class="ti ti-list-details"></i>
+          Valores del Formulario
+        </h4>
+        <div class="values-list">
+          <div class="value-item" *ngFor="let val of selectedEvent.response.values">
+            <span class="value-label">{{ val.field_label || val.field_code }}</span>
+            <span class="value-content">{{ val.value }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="modal-footer">
+      <button class="btn-secondary" (click)="closeDetail()">
+        Cerrar
+      </button>
+    </div>
+  </div>
+</div>
