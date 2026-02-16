@@ -599,7 +599,281 @@ $transition-base: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     padding: 1.75rem;
 }
 
+// ====================================
+// BATCH SELECTION SECTION
+// ====================================
+
+.batch-selection-section {
+    background: $primary-light;
+    border: 2px solid $primary;
+    border-radius: $border-radius;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+
+    .batch-header {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+
+        i {
+            font-size: 1.25rem;
+            color: $primary;
+        }
+
+        h5 {
+            font-size: 1rem;
+            font-weight: 600;
+            color: $gray-800;
+            margin: 0;
+            flex: 1;
+        }
+
+        .batch-required {
+            font-size: 0.65rem;
+            padding: 0.15rem 0.5rem;
+            background: $danger;
+            color: white;
+            border-radius: 4px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+    }
+
+    .batch-search {
+        margin-bottom: 1rem;
+
+        .search-input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+
+            i {
+                position: absolute;
+                left: 1rem;
+                color: $gray-400;
+                font-size: 1rem;
+                pointer-events: none;
+            }
+
+            .batch-search-input {
+                width: 100%;
+                padding: 0.75rem 1rem 0.75rem 2.5rem;
+                border: 2px solid $gray-300;
+                border-radius: 8px;
+                font-size: 0.9rem;
+                transition: $transition-base;
+
+                &::placeholder {
+                    color: $gray-400;
+                }
+
+                &:focus {
+                    outline: none;
+                    border-color: $primary;
+                    box-shadow: 0 0 0 3px rgba($primary, 0.1);
+                }
+            }
+        }
+    }
+
+    .batch-list-wrapper {
+        max-height: 300px;
+        overflow-y: auto;
+        border: 1px solid $gray-300;
+        border-radius: 8px;
+        background: white;
+
+        .batch-options {
+            &:empty, &:has(.batch-empty) {
+                min-height: 80px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+        }
+
+        .batch-empty {
+            text-align: center;
+            color: $gray-500;
+            padding: 1.5rem;
+
+            i {
+                font-size: 2rem;
+                margin-bottom: 0.5rem;
+                opacity: 0.5;
+            }
+
+            p {
+                margin: 0;
+                font-size: 0.9rem;
+            }
+        }
+
+        .batch-option {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.875rem 1rem;
+            border-bottom: 1px solid $gray-200;
+            cursor: pointer;
+            transition: $transition-base;
+
+            &:last-child {
+                border-bottom: none;
+            }
+
+            &:hover {
+                background: $gray-50;
+            }
+
+            &.selected {
+                background: rgba($primary, 0.05);
+                border-left: 3px solid $primary;
+                padding-left: calc(1rem - 3px);
+
+                .batch-option-check i {
+                    color: $primary;
+                }
+            }
+
+            .batch-option-check {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 20px;
+                height: 20px;
+                flex-shrink: 0;
+
+                i {
+                    font-size: 1.25rem;
+                    color: $gray-400;
+                    transition: $transition-base;
+                }
+            }
+
+            .batch-option-info {
+                flex: 1;
+                min-width: 0;
+
+                .batch-name {
+                    font-weight: 500;
+                    color: $gray-800;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                }
+
+                .batch-meta {
+                    display: flex;
+                    gap: 0.75rem;
+                    margin-top: 0.25rem;
+                    font-size: 0.8rem;
+
+                    .batch-code {
+                        padding: 0.25rem 0.5rem;
+                        background: $gray-200;
+                        color: $gray-600;
+                        border-radius: 4px;
+                        font-family: monospace;
+                    }
+
+                    .batch-status {
+                        padding: 0.25rem 0.5rem;
+                        border-radius: 4px;
+                        font-weight: 500;
+                        text-transform: uppercase;
+                        font-size: 0.7rem;
+
+                        &.status-planned {
+                            background: rgba(#FFC107, 0.2);
+                            color: #b38600;
+                        }
+
+                        &.status-in_process {
+                            background: rgba(#0D6EFD, 0.2);
+                            color: #0a4fc4;
+                        }
+
+                        &.status-paused {
+                            background: rgba(#6C757D, 0.2);
+                            color: #5a6268;
+                        }
+
+                        &.status-completed {
+                            background: rgba($success, 0.2);
+                            color: #1e7e34;
+                        }
+
+                        &.status-delivered {
+                            background: rgba(#20C997, 0.2);
+                            color: #0f766e;
+                        }
+
+                        &.status-cancelled {
+                            background: rgba($danger, 0.2);
+                            color: #b02c2c;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    .batch-selected-summary {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-top: 1rem;
+        padding: 0.75rem 1rem;
+        background: rgba($success, 0.1);
+        border: 1px solid rgba($success, 0.3);
+        border-radius: 8px;
+        color: #1e7e34;
+        font-size: 0.9rem;
+        font-weight: 500;
+
+        i {
+            font-size: 1.1rem;
+        }
+    }
+}
+
+.batch-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    background: $primary-light;
+    border: 2px dashed $primary;
+    border-radius: $border-radius;
+    margin-bottom: 1.5rem;
+
+    .loading-spinner {
+        width: 36px;
+        height: 36px;
+        border: 2px solid $gray-200;
+        border-top-color: $primary;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+    }
+
+    p {
+        margin-top: 1rem;
+        color: $gray-500;
+        font-size: 0.9rem;
+    }
+}
+
+.form-section-separator {
+    height: 2px;
+    background: linear-gradient(to right, transparent, $gray-300, transparent);
+    margin: 1.5rem 0;
+}
+
 // Loading State
+
 .loading-state {
     display: flex;
     flex-direction: column;

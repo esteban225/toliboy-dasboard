@@ -211,6 +211,71 @@
             </div>
 
             <div *ngIf="!loadingFields && selectedForm" class="form-container">
+                <!-- Batch Selection Section -->
+                <div class="batch-selection-section" *ngIf="!loadingBatches">
+                    <div class="batch-header">
+                        <i class="ti ti-cube-send"></i>
+                        <h5>Selecciona un Lote</h5>
+                        <span class="batch-required">Requerido</span>
+                    </div>
+                    
+                    <!-- Search Input -->
+                    <div class="batch-search">
+                        <div class="search-input-wrapper">
+                            <i class="ti ti-search"></i>
+                            <input type="text" 
+                                   placeholder="Buscar por nombre, código o ID..." 
+                                   [(ngModel)]="batchesSearchText"
+                                   (ngModelChange)="filterBatches()"
+                                   class="batch-search-input">
+                        </div>
+                    </div>
+
+                    <!-- Batches Dropdown/List -->
+                    <div class="batch-list-wrapper">
+                        <div class="batch-options">
+                            <div *ngIf="filteredBatches.length === 0" class="batch-empty">
+                                <i class="ti ti-inbox"></i>
+                                <p>No hay lotes disponibles</p>
+                            </div>
+                            
+                            <div *ngFor="let batch of filteredBatches" 
+                                 class="batch-option"
+                                 [class.selected]="selectedBatchId === batch.id"
+                                 (click)="selectedBatchId = batch.id; filterBatches()">
+                                <div class="batch-option-check">
+                                    <i class="ti ti-circle-filled" *ngIf="selectedBatchId !== batch.id"></i>
+                                    <i class="ti ti-circle-check text-primary" *ngIf="selectedBatchId === batch.id"></i>
+                                </div>
+                                <div class="batch-option-info">
+                                    <div class="batch-name">{{ batch.name || 'Lote sin nombre' }}</div>
+                                    <div class="batch-meta">
+                                        <span class="batch-code">{{ batch.code }}</span>
+                                        <span class="batch-status" [ngClass]="'status-' + batch.status">
+                                            {{ batch.status || 'N/A' }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Selected Batch Summary -->
+                    <div class="batch-selected-summary" *ngIf="selectedBatchId">
+                        <i class="ti ti-check-circle text-success"></i>
+                        <span>{{ getSelectedBatchDisplay() }}</span>
+                    </div>
+                </div>
+
+                <!-- Loading Batches -->
+                <div *ngIf="loadingBatches" class="batch-loading">
+                    <div class="loading-spinner"></div>
+                    <p>Cargando lotes disponibles...</p>
+                </div>
+
+                <!-- Separator -->
+                <div class="form-section-separator" *ngIf="!loadingBatches && batches.length > 0"></div>
+
                 <form [formGroup]="dynamicForm" (ngSubmit)="onSubmitForm()" 
                       *ngIf="dynamicForm && selectedForm.form_fields?.length > 0">
                     <div class="fields-grid">
@@ -426,7 +491,8 @@
             </button>
             <button type="submit" class="btn-primary" 
                     (click)="onSubmitForm()"
-                    [disabled]="!dynamicForm || dynamicForm.invalid || submitting">
+                    [disabled]="!dynamicForm || dynamicForm.invalid || submitting || !selectedBatchId"
+                    [title]="!selectedBatchId ? 'Selecciona un lote para continuar' : 'Enviar formulario'">
                 <ng-container *ngIf="!submitting">
                     <i class="ti ti-send me-2"></i>
                     Enviar Formulario

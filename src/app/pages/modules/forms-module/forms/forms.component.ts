@@ -11,6 +11,7 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import * as FormResponseActions from '../store/actions/formResponse.actions';
 import * as FormResponseSelectors from '../store/selectors/formResponse.selectors';
 import { AlertService } from 'src/app/core/services/alert.service';
+import { BatchesService } from 'src/app/pages/modules/batches-module/services/batches.service';
 
 @Component({
   selector: 'app-forms',
@@ -50,10 +51,18 @@ export class FormsComponent implements OnInit, OnDestroy {
   // Formulario dinámico
   dynamicForm!: FormGroup;
 
+  // Propiedades para gestionar lotes
+  batches: any[] = [];
+  selectedBatchId: number | null = null;
+  loadingBatches = false;
+  batchesSearchText = '';
+  filteredBatches: any[] = [];
+
   constructor(
     private store: Store,
     private alertService: AlertService,
-    private fb: FormBuilder
+    private fb: FormBuilder,
+    private batchesService: BatchesService
   ) {
     this.forms$ = this.store.select(FormResponseSelectors.selectForms);
     this.formResponse$ = this.store.select(FormResponseSelectors.selectFormResponse);
@@ -106,10 +115,15 @@ export class FormsComponent implements OnInit, OnDestroy {
     this.selectedForm = { ...form };
     this.modalTitle = form.title || form.name || 'Formulario';
     this.modalVisible = true;
+    this.selectedBatchId = null; // Reset batch selection
+    this.batchesSearchText = ''; // Reset search
     
     console.log('🎯 selectedForm asignado (copia inmutable):', this.selectedForm);
     console.log('🎯 modalTitle:', this.modalTitle);
     console.log('🎯 modalVisible:', this.modalVisible);
+    
+    // Cargar lotes disponibles
+    this.loadBatches();
     
     // Cargar campos y reglas de validación específicas para este formulario
     if (form && form.id) {
@@ -123,6 +137,47 @@ export class FormsComponent implements OnInit, OnDestroy {
     }
   }
 
+  // Cargar lotes disponibles
+  private loadBatches(): void {
+    this.loadingBatches = true;
+    this.batchesService.list({}, 1, 999).subscribe({
+      next: (response: any) => {
+        this.batches = response.data || response || [];
+        this.filteredBatches = this.batches;
+        console.log('✅ Lotes cargados:', this.batches.length);
+        this.loadingBatches = false;
+      },
+      error: (err) => {
+        console.error('❌ Error cargando lotes:', err);
+        this.batches = [];
+        this.filteredBatches = [];
+        this.loadingBatches = false;
+        this.alertService.error('Error cargando lotes', err?.message || 'Error desconocido');
+      }
+    });
+  }
+
+  // Filtrar lotes según búsqueda
+  filterBatches(): void {
+    if (!this.batchesSearchText.trim()) {
+      this.filteredBatches = this.batches;
+      return;
+    }
+    const search = this.batchesSearchText.toLowerCase();
+    this.filteredBatches = this.batches.filter(batch => 
+      (batch.name && batch.name.toLowerCase().includes(search)) ||
+      (batch.code && batch.code.toLowerCase().includes(search)) ||
+      (batch.id && batch.id.toString().includes(search))
+    );
+  }
+
+  // Obtener texto a mostrar del lote seleccionado
+  getSelectedBatchDisplay(): string {
+    if (!this.selectedBatchId) return '';
+    const batch = this.batches.find(b => b.id === this.selectedBatchId);
+    return batch ? `${batch.name || 'Lote'} (${batch.code || '#' + batch.id})` : '';
+  }
+
   // Close the modal
   closeModal() {
     this.modalVisible = false;
@@ -131,6 +186,10 @@ export class FormsComponent implements OnInit, OnDestroy {
     this.dynamicForm = this.fb.group({});
     this.loadingFields = false;
     this.submitting = false;
+    this.selectedBatchId = null;
+    this.batchesSearchText = '';
+    this.filteredBatches = [];
+    this.batches = [];
     console.log('🎯 Modal cerrado y estado limpiado');
   }
 
@@ -352,10 +411,18 @@ export class FormsComponent implements OnInit, OnDestroy {
       return;
     }
     
+    // Validar que se haya seleccionado un lote
+    if (!this.selectedBatchId) {
+      this.alertService.warning('Selecciona un lote', 'Debes seleccionar un lote para enviar el formulario');
+      console.log('⚠️ No se ha seleccionado ningún lote');
+      return;
+    }
+    
     this.submitting = true;
     
     const formValue = {
       form_id: this.selectedForm.id,
+      batch_id: this.selectedBatchId,
       values: this.dynamicForm.value
     };
     

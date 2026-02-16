@@ -1,6 +1,6 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule } from '@angular/forms';
+import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { StoreModule } from '@ngrx/store';
 import { EffectsModule } from '@ngrx/effects';
 import { FormsModuleRoutingModule } from './forms-module-routing.module';
@@ -30,6 +30,7 @@ import { FormsTrazabilityComponent } from "./pages/forms-trazability/forms-traza
   imports: [
     CommonModule,
     ReactiveFormsModule,
+    FormsModule,
     FormsModuleRoutingModule,
     StoreModule.forFeature('formResponse', formResponseReducer),
     StoreModule.forFeature('forms', formReducer),
