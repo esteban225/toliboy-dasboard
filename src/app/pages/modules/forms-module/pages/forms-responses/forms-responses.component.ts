@@ -294,7 +294,7 @@ export class FormsResponsesComponent implements OnInit, OnDestroy {
   }
 
   // Format date
-  formatDate(dateString: string): string {
+  formatDate(dateString: string | undefined | null): string {
     if (!dateString) return '-';
     const date = new Date(dateString);
     return date.toLocaleDateString('es-ES', {
