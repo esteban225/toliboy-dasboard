@@ -178,6 +178,12 @@ export class MenuService {
             label: 'MENUITEMS.INVENTORY.LIST.RAWMATERIALS',
             link: '/modules/inventory/rawMaterial',
             parentId: 200
+          },
+          {
+            id: 204,
+            label: 'MENUITEMS.INVENTORY.LIST.BATCHEMOVEMENT',
+            link: '/modules/inventory/batchMovement',
+            parentId: 200
           }
         ],
         parentId: 100
