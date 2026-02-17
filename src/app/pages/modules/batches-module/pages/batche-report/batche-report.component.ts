@@ -233,7 +233,7 @@ export class BatcheReportComponent implements OnInit, OnDestroy {
     ])
       .then(([movements, forms, materialStats]) => {
         console.log('[BATCH-REPORT] ✅ Datos cargados - Movimientos:', movements?.length, 'Formularios:', forms?.length, 'Materiales:', materialStats?.materials?.length);
-        
+
         this.batchTraceability = {
           batch,
           product: this.getProductInfo(batch),
@@ -270,7 +270,7 @@ export class BatcheReportComponent implements OnInit, OnDestroy {
             console.log('[BATCH-REPORT] 📦 Tipo de respuesta:', typeof response);
             console.log('[BATCH-REPORT] 📦 Es Array?:', Array.isArray(response));
             console.log('[BATCH-REPORT] 📦 Tiene .data?:', response?.data !== undefined);
-            
+
             let movements = [];
             if (Array.isArray(response)) {
               movements = response;
@@ -279,7 +279,7 @@ export class BatcheReportComponent implements OnInit, OnDestroy {
             } else if (response?.data) {
               movements = Array.isArray(response.data) ? response.data : [];
             }
-            
+
             console.log('[BATCH-REPORT] ✅ Movimientos extraídos:', movements.length);
             resolve(movements);
           },
@@ -307,7 +307,7 @@ export class BatcheReportComponent implements OnInit, OnDestroy {
             console.log('[BATCH-REPORT] 📦 Tipo de respuesta:', typeof response);
             console.log('[BATCH-REPORT] 📦 Es Array?:', Array.isArray(response));
             console.log('[BATCH-REPORT] 📦 Tiene .data?:', response?.data !== undefined);
-            
+
             let forms = [];
             if (Array.isArray(response)) {
               forms = response;
@@ -316,7 +316,7 @@ export class BatcheReportComponent implements OnInit, OnDestroy {
             } else if (response?.data) {
               forms = Array.isArray(response.data) ? response.data : [];
             }
-            
+
             // Transformar estructura para que coincida con el template
             forms = this.transformFormResponses(forms);
             console.log('[BATCH-REPORT] ✅ Formularios extraídos y transformados:', forms.length);
@@ -340,7 +340,7 @@ export class BatcheReportComponent implements OnInit, OnDestroy {
       console.warn('[BATCH-REPORT] transformFormResponses recibio no-array:', typeof forms);
       return [];
     }
-    
+
     return forms.map(form => {
       const transformed = {
         id: form.id,
@@ -493,8 +493,8 @@ export class BatcheReportComponent implements OnInit, OnDestroy {
       materialEfficiency: Math.round(materialEfficiency * 100) / 100,
       timelineCompliance,
       statusHealth: batch.status === 'completed' ? 'Completado' :
-                    batch.status === 'in_process' ? 'En Proceso' :
-                    batch.status === 'planned' ? 'Planificado' : 'Pausado'
+        batch.status === 'in_process' ? 'En Proceso' :
+          batch.status === 'planned' ? 'Planificado' : 'Pausado'
     };
   }
 
@@ -778,7 +778,7 @@ export class BatcheReportComponent implements OnInit, OnDestroy {
 
     const b = this.batchTraceability;
     let csv = 'REPORTE DE TRAZABILIDAD DEL LOTE\n\n';
-    
+
     csv += `Lote,${b.batch.id}\n`;
     csv += `Nombre,${b.batch.name}\n`;
     csv += `Producto,${b.batch.product_name}\n`;

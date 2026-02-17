@@ -15,13 +15,14 @@ import * as FormResponseSelectors from '../../store/selectors/formResponse.selec
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './forms-responses.component.html',
-  styleUrl: './forms-responses.component.scss'
+  styleUrls: ['./forms-responses.component.scss']
 })
 export class FormsResponsesComponent implements OnInit, OnDestroy {
   // Signals for state management
   responses = signal<FormResponse[]>([]);
   selectedResponse = signal<FormResponse | null>(null);
   loading = signal(false);
+  loadingDetail = signal(false);
   reviewing = signal(false);
   error = signal<string | null>(null);
   page = signal(1);
@@ -187,10 +188,32 @@ export class FormsResponsesComponent implements OnInit, OnDestroy {
     }
   }
 
-  // View response detail
+  // View response detail - Fetch full response with values
   viewDetail(response: FormResponse): void {
+    console.log('🔍 viewDetail called with response:', response);
     this.selectedResponse.set(response);
     this.showDetailModal.set(true);
+    this.loadingDetail.set(true);
+
+    // Fetch complete response with values from API
+    if (response.id) {
+      console.log('🔄 Fetching full response for ID:', response.id);
+      this.service.getFormResponseById(response.id).pipe(takeUntil(this.destroy$)).subscribe({
+        next: (fullResponse) => {
+          console.log('✅ Full response loaded:', fullResponse);
+          this.selectedResponse.set(fullResponse);
+          this.loadingDetail.set(false);
+        },
+        error: (err) => {
+          console.error('❌ Error loading response detail:', err);
+          this.loadingDetail.set(false);
+          // Keep the basic response data even if detail fetch fails
+        }
+      });
+    } else {
+      console.warn('⚠️ Response has no ID, skipping detail fetch');
+      this.loadingDetail.set(false);
+    }
   }
 
   closeDetailModal(): void {
@@ -198,11 +221,31 @@ export class FormsResponsesComponent implements OnInit, OnDestroy {
     this.selectedResponse.set(null);
   }
 
-  // Review response
+  // Open review modal from detail modal - handles the transition properly
+  openReviewFromDetail(): void {
+    const response = this.selectedResponse();
+    if (!response) return;
+    
+    this.showDetailModal.set(false);
+    this.reviewForm.reset({ status: 'approved', review_notes: '' });
+    this.showReviewModal.set(true);
+    // Note: selectedResponse is already set, don't reset it
+  }
+
+  // Review response - Only completed responses can be reviewed (API restriction)
   openReviewModal(response: FormResponse): void {
+    if (response.status !== 'completed') {
+      this.alert.warning('Acción no permitida', 'Solo se pueden revisar respuestas con estado "Completado"');
+      return;
+    }
     this.selectedResponse.set(response);
     this.reviewForm.reset({ status: 'approved', review_notes: '' });
     this.showReviewModal.set(true);
+  }
+
+  // Check if response can be reviewed (only completed responses)
+  canReview(response: FormResponse): boolean {
+    return response.status === 'completed';
   }
 
   closeReviewModal(): void {

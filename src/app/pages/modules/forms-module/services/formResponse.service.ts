@@ -104,9 +104,24 @@ export class FormResponseService {
 
     // Obtener una respuesta específica por ID
     getFormResponseById(id: number): Observable<FormResponse> {
-        return this.http.get<{ status: boolean; message: string; data: FormResponse }>(`${this.apiUrl}/forms/responses/${id}`).pipe(
-            map(response => response.data),
-            tap(data => console.log(`✅ Respuesta ${id} obtenida:`, data)),
+        return this.http.get<{ status: boolean; message: string; data: any }>(`${this.apiUrl}/forms/responses/${id}`).pipe(
+            map(response => {
+                const data = response.data;
+                // Map form_response_values to values with proper structure
+                if (data.form_response_values && Array.isArray(data.form_response_values)) {
+                    data.values = data.form_response_values.map((v: any) => ({
+                        id: v.id,
+                        form_response_id: v.response_id,
+                        form_field_id: v.field_id,
+                        field_code: v.form_field?.field_code,
+                        field_label: v.form_field?.label,
+                        value: v.value,
+                        field_type: v.form_field?.type
+                    }));
+                }
+                return data as FormResponse;
+            }),
+            tap(data => console.log(`✅ Respuesta ${id} obtenida (mapeada):`, data)),
             catchError(this.handleError)
         );
     }

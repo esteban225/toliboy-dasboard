@@ -355,7 +355,36 @@
     animation: modalSlideIn 0.3s ease;
 
     &.detail-modal {
-        max-width: 700px;
+        max-width: 800px;
+
+        .table-responsive {
+            margin: 0 -0.5rem;
+            
+            .table {
+                margin-bottom: 0;
+                
+                thead th {
+                    background: #f8fafc;
+                    font-size: 0.75rem;
+                    text-transform: uppercase;
+                    letter-spacing: 0.5px;
+                    color: #64748b;
+                    font-weight: 600;
+                    padding: 0.75rem 1rem;
+                    border-bottom: 2px solid #e2e8f0;
+                }
+                
+                tbody td {
+                    padding: 0.75rem 1rem;
+                    vertical-align: middle;
+                    border-color: #f1f5f9;
+                }
+                
+                tbody tr:hover {
+                    background: #f8fafc;
+                }
+            }
+        }
     }
 
     .modal-header {

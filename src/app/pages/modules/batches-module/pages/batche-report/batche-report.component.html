@@ -10,16 +10,12 @@
           <p class="text-muted mb-0">Análisis completo y estadísticas de producción</p>
         </div>
         <div>
-          <button *ngIf="batchTraceability" 
-                  class="btn btn-primary me-2"
-                  [disabled]="reportGenerating"
-                  (click)="generatePDF()">
+          <button *ngIf="batchTraceability" class="btn btn-primary me-2" [disabled]="reportGenerating"
+            (click)="generatePDF()">
             <i class="bi" [ngClass]="reportGenerating ? 'bi-hourglass-split spin-animation' : 'bi-file-pdf'"></i>
             {{ reportGenerating ? 'Generando...' : 'PDF' }}
           </button>
-          <button *ngIf="batchTraceability" 
-                  class="btn btn-info"
-                  (click)="downloadCSV()">
+          <button *ngIf="batchTraceability" class="btn btn-info" (click)="downloadCSV()">
             <i class="bi bi-download"></i> CSV
           </button>
         </div>
@@ -40,10 +36,8 @@
           <form [formGroup]="searchForm">
             <div class="mb-3">
               <label class="form-label">Lote o Código</label>
-              <input type="text" 
-                     class="form-control form-control-lg"
-                     placeholder="Escribe ID, nombre o código..."
-                     formControlName="batchSearch">
+              <input type="text" class="form-control form-control-lg" placeholder="Escribe ID, nombre o código..."
+                formControlName="batchSearch">
             </div>
           </form>
 
@@ -60,10 +54,8 @@
               {{ searchQuery ? 'No se encontraron lotes' : 'Carga los lotes primero' }}
             </div>
 
-            <button *ngFor="let batch of filteredBatches | slice:0:20"
-                    class="list-group-item list-group-item-action"
-                    [class.active]="selectedBatchId === batch.id"
-                    (click)="loadBatchTraceability(batch.id || 0)">
+            <button *ngFor="let batch of filteredBatches | slice:0:20" class="list-group-item list-group-item-action"
+              [class.active]="selectedBatchId === batch.id" (click)="loadBatchTraceability(batch.id || 0)">
               <div class="d-flex w-100 justify-content-between">
                 <strong>#{{ batch.id }} - {{ batch.name }}</strong>
                 <span class="badge" [ngClass]="getStatusBgClass(batch.status)">
@@ -107,7 +99,8 @@
 
         <!-- 1. Información General -->
         <div class="card shadow-sm mb-4">
-          <div class="card-header bg-gradient" [ngStyle]="{'background-color': statusColors[batchTraceability.batch.status || 'planned']}">
+          <div class="card-header bg-gradient"
+            [ngStyle]="{'background-color': statusColors[batchTraceability.batch.status || 'planned']}">
             <div class="d-flex align-items-center justify-content-between">
               <h5 class="mb-0 text-white">
                 <i class="bi bi-box-seam me-2"></i>Lote #{{ batchTraceability.batch.id }}
@@ -137,15 +130,18 @@
               </div>
               <div class="col-md-6">
                 <p class="mb-2"><strong>Fecha Inicio:</strong></p>
-                <p>{{ batchTraceability.batch.start_date ? (batchTraceability.batch.start_date | date:'dd/MM/yyyy HH:mm') : 'N/A' }}</p>
+                <p>{{ batchTraceability.batch.start_date ? (batchTraceability.batch.start_date | date:'dd/MM/yyyy
+                  HH:mm') : 'N/A' }}</p>
               </div>
               <div class="col-md-6">
                 <p class="mb-2"><strong>Fecha Esperada:</strong></p>
-                <p>{{ batchTraceability.batch.expected_end_date ? (batchTraceability.batch.expected_end_date | date:'dd/MM/yyyy') : 'N/A' }}</p>
+                <p>{{ batchTraceability.batch.expected_end_date ? (batchTraceability.batch.expected_end_date |
+                  date:'dd/MM/yyyy') : 'N/A' }}</p>
               </div>
               <div class="col-md-6">
                 <p class="mb-2"><strong>Fecha Real:</strong></p>
-                <p>{{ batchTraceability.batch.actual_end_date ? (batchTraceability.batch.actual_end_date | date:'dd/MM/yyyy') : 'En progreso' }}</p>
+                <p>{{ batchTraceability.batch.actual_end_date ? (batchTraceability.batch.actual_end_date |
+                  date:'dd/MM/yyyy') : 'En progreso' }}</p>
               </div>
               <div class="col-md-6">
                 <p class="mb-2"><strong>Defectos:</strong></p>
@@ -172,7 +168,8 @@
               </div>
               <div class="col-md-6">
                 <div class="metric-card border-start border-success">
-                  <div class="metric-value text-success">{{ batchTraceability.qualityMetrics.productivityPercentage }}%</div>
+                  <div class="metric-value text-success">{{ batchTraceability.qualityMetrics.productivityPercentage }}%
+                  </div>
                   <div class="metric-label">Productividad</div>
                 </div>
               </div>
@@ -183,8 +180,10 @@
                 </div>
               </div>
               <div class="col-md-6">
-                <div class="metric-card border-start" [ngClass]="batchTraceability.qualityMetrics.timelineCompliance ? 'border-success' : 'border-danger'">
-                  <div class="metric-value" [ngClass]="batchTraceability.qualityMetrics.timelineCompliance ? 'text-success' : 'text-danger'">
+                <div class="metric-card border-start"
+                  [ngClass]="batchTraceability.qualityMetrics.timelineCompliance ? 'border-success' : 'border-danger'">
+                  <div class="metric-value"
+                    [ngClass]="batchTraceability.qualityMetrics.timelineCompliance ? 'text-success' : 'text-danger'">
                     {{ batchTraceability.qualityMetrics.timelineCompliance ? 'Cumplido' : 'Retrasado' }}
                   </div>
                   <div class="metric-label">Timeline</div>
@@ -198,8 +197,9 @@
         <div class="card shadow-sm mb-4">
           <div class="card-header bg-info text-white">
             <h5 class="mb-0">
-              <i class="bi bi-box-fill me-2"></i>Materiales Liberados 
-              ({{ batchTraceability.materialStats.materialsReleased }}/{{ batchTraceability.materialStats.totalMaterials }})
+              <i class="bi bi-box-fill me-2"></i>Materiales Liberados
+              ({{ batchTraceability.materialStats.materialsReleased }}/{{ batchTraceability.materialStats.totalMaterials
+              }})
             </h5>
           </div>
           <div class="card-body">
@@ -240,7 +240,8 @@
         <div class="card shadow-sm mb-4">
           <div class="card-header bg-warning text-dark">
             <h5 class="mb-0">
-              <i class="bi bi-arrow-left-right me-2"></i>Movimientos de Inventario ({{ batchTraceability.movements.length }})
+              <i class="bi bi-arrow-left-right me-2"></i>Movimientos de Inventario ({{
+              batchTraceability.movements.length }})
             </h5>
           </div>
           <div class="card-body">
@@ -317,7 +318,8 @@
           </div>
           <div class="card-body">
             <div class="timeline">
-              <div *ngFor="let event of batchTraceability.timelineEvents; let last = last" class="timeline-item" [class.last]="last">
+              <div *ngFor="let event of batchTraceability.timelineEvents; let last = last" class="timeline-item"
+                [class.last]="last">
                 <div class="timeline-marker" [ngClass]="'event-' + event.type"></div>
                 <div class="timeline-content">
                   <h6 class="mb-1">{{ event.title }}</h6>

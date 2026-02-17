@@ -266,7 +266,7 @@
                                                         (click)="viewDetail(response)">
                                                     <i class="ti ti-eye"></i>
                                                 </button>
-                                                @if (response.status === 'completed' || response.status === 'pending') {
+                                                @if (canReview(response)) {
                                                     <button class="btn btn-sm btn-icon btn-outline-success" 
                                                             title="Revisar"
                                                             (click)="openReviewModal(response)">
@@ -344,93 +344,152 @@
                 <button class="btn-close" (click)="closeDetailModal()"></button>
             </div>
             <div class="modal-body">
-                <div class="response-info mb-4">
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <div class="info-item">
-                                <span class="info-label">Formulario</span>
-                                <span class="info-value">{{ selectedResponse()!.form?.name || 'ID: ' + selectedResponse()!.form_id }}</span>
-                            </div>
+                <!-- Loading State for Detail -->
+                @if (loadingDetail()) {
+                    <div class="text-center py-4">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Cargando...</span>
                         </div>
-                        <div class="col-md-6">
-                            <div class="info-item">
-                                <span class="info-label">Estado</span>
-                                <span class="badge {{ getStatusBadgeClass(selectedResponse()!.status) }}">
-                                    <i class="{{ getStatusIcon(selectedResponse()!.status) }} me-1"></i>
-                                    {{ getStatusLabel(selectedResponse()!.status) }}
-                                </span>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="info-item">
-                                <span class="info-label">Usuario</span>
-                                <span class="info-value">{{ selectedResponse()!.user?.name || 'Usuario ID: ' + selectedResponse()!.user_id }}</span>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="info-item">
-                                <span class="info-label">Fecha de Creación</span>
-                                <span class="info-value">{{ formatDate(selectedResponse()!.created_at) }}</span>
-                            </div>
-                        </div>
-                        @if (selectedResponse()!.batch_id) {
-                            <div class="col-md-6">
-                                <div class="info-item">
-                                    <span class="info-label">Lote</span>
-                                    <span class="info-value">Lote #{{ selectedResponse()!.batch_id }}</span>
-                                </div>
-                            </div>
-                        }
-                        @if (selectedResponse()!.reviewed_by) {
-                            <div class="col-md-6">
-                                <div class="info-item">
-                                    <span class="info-label">Revisado por</span>
-                                    <span class="info-value">{{ selectedResponse()!.reviewer?.name || 'Usuario ' + selectedResponse()!.reviewed_by }}</span>
-                                </div>
-                            </div>
-                        }
-                        @if (selectedResponse()!.reviewed_at) {
-                            <div class="col-md-6">
-                                <div class="info-item">
-                                    <span class="info-label">Fecha de Revisión</span>
-                                    <span class="info-value">{{ formatDate(selectedResponse()!.reviewed_at!) }}</span>
-                                </div>
-                            </div>
-                        }
+                        <p class="mt-2 text-muted mb-0">Cargando detalles de la respuesta...</p>
                     </div>
-                </div>
-
-                @if (selectedResponse()!.review_notes) {
-                    <div class="review-notes mb-4">
-                        <h6 class="text-muted mb-2">
-                            <i class="ti ti-note me-1"></i>
-                            Notas de Revisión
-                        </h6>
-                        <p class="mb-0">{{ selectedResponse()!.review_notes }}</p>
-                    </div>
-                }
-
-                @if (selectedResponse()!.values && selectedResponse()!.values!.length > 0) {
-                    <div class="response-values">
-                        <h6 class="text-muted mb-3">
-                            <i class="ti ti-forms me-1"></i>
-                            Valores del Formulario
-                        </h6>
-                        <div class="values-grid">
-                            @for (value of selectedResponse()!.values; track value.id) {
-                                <div class="value-item">
-                                    <span class="value-label">{{ value.field_label || value.field_code || 'Campo ' + value.form_field_id }}</span>
-                                    <span class="value-content">{{ value.value || '-' }}</span>
+                } @else {
+                    <div class="response-info mb-4">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="info-item">
+                                    <span class="info-label">Formulario</span>
+                                    <span class="info-value">{{ selectedResponse()!.form?.name || 'ID: ' + selectedResponse()!.form_id }}</span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="info-item">
+                                    <span class="info-label">Estado</span>
+                                    <span class="badge {{ getStatusBadgeClass(selectedResponse()!.status) }}">
+                                        <i class="{{ getStatusIcon(selectedResponse()!.status) }} me-1"></i>
+                                        {{ getStatusLabel(selectedResponse()!.status) }}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="info-item">
+                                    <span class="info-label">Usuario</span>
+                                    <span class="info-value">{{ selectedResponse()!.user?.name || 'Usuario ID: ' + selectedResponse()!.user_id }}</span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="info-item">
+                                    <span class="info-label">Fecha de Creación</span>
+                                    <span class="info-value">{{ formatDate(selectedResponse()!.created_at) }}</span>
+                                </div>
+                            </div>
+                            @if (selectedResponse()!.submitted_at) {
+                                <div class="col-md-6">
+                                    <div class="info-item">
+                                        <span class="info-label">Fecha de Envío</span>
+                                        <span class="info-value">{{ formatDate(selectedResponse()!.submitted_at!) }}</span>
+                                    </div>
+                                </div>
+                            }
+                            @if (selectedResponse()!.batch_id) {
+                                <div class="col-md-6">
+                                    <div class="info-item">
+                                        <span class="info-label">Lote</span>
+                                        <span class="info-value">{{ selectedResponse()!.batch?.name || 'Lote #' + selectedResponse()!.batch_id }}</span>
+                                    </div>
+                                </div>
+                            }
+                            @if (selectedResponse()!.reviewed_by) {
+                                <div class="col-md-6">
+                                    <div class="info-item">
+                                        <span class="info-label">Revisado por</span>
+                                        <span class="info-value">{{ selectedResponse()!.reviewer?.name || 'Usuario ' + selectedResponse()!.reviewed_by }}</span>
+                                    </div>
+                                </div>
+                            }
+                            @if (selectedResponse()!.reviewed_at) {
+                                <div class="col-md-6">
+                                    <div class="info-item">
+                                        <span class="info-label">Fecha de Revisión</span>
+                                        <span class="info-value">{{ formatDate(selectedResponse()!.reviewed_at!) }}</span>
+                                    </div>
                                 </div>
                             }
                         </div>
+                    </div>
+
+                    @if (selectedResponse()!.review_notes) {
+                        <div class="review-notes mb-4">
+                            <h6 class="text-muted mb-2">
+                                <i class="ti ti-note me-1"></i>
+                                Notas de Revisión
+                            </h6>
+                            <div class="alert alert-light mb-0">
+                                <p class="mb-0">{{ selectedResponse()!.review_notes }}</p>
+                            </div>
+                        </div>
+                    }
+
+                    <!-- Form Response Values Section -->
+                    <div class="response-values">
+                        <h6 class="text-muted mb-3">
+                            <i class="ti ti-forms me-1"></i>
+                            Respuestas del Formulario
+                        </h6>
+                        @if (selectedResponse()!.values && selectedResponse()!.values!.length > 0) {
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-striped mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th style="width: 40%">Campo</th>
+                                            <th>Respuesta</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @for (value of selectedResponse()!.values; track value.id || $index) {
+                                            <tr>
+                                                <td class="fw-medium">
+                                                    <i class="ti ti-forms me-1 text-muted"></i>
+                                                    {{ value.field_label || value.field_code || 'Campo #' + value.form_field_id }}
+                                                </td>
+                                                <td>
+                                                    @if (value.value !== null && value.value !== undefined && value.value !== '') {
+                                                        @if (value.field_type === 'checkbox' || value.field_type === 'boolean') {
+                                                            <span class="badge {{ value.value ? 'bg-success-subtle text-success' : 'bg-secondary-subtle text-secondary' }}">
+                                                                <i class="ti {{ value.value ? 'ti-check' : 'ti-x' }} me-1"></i>
+                                                                {{ value.value ? 'Sí' : 'No' }}
+                                                            </span>
+                                                        } @else if (value.field_type === 'file' || value.field_type === 'image') {
+                                                            <a href="{{ value.value }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                                                <i class="ti ti-download me-1"></i>
+                                                                Ver archivo
+                                                            </a>
+                                                        } @else if (value.field_type === 'date') {
+                                                            <span>{{ formatDate(value.value + '') }}</span>
+                                                        } @else {
+                                                            <span>{{ value.value }}</span>
+                                                        }
+                                                    } @else {
+                                                        <span class="text-muted fst-italic">Sin respuesta</span>
+                                                    }
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        } @else {
+                            <div class="alert alert-info mb-0">
+                                <i class="ti ti-info-circle me-2"></i>
+                                No hay respuestas registradas para este formulario.
+                            </div>
+                        }
                     </div>
                 }
             </div>
             <div class="modal-footer">
                 <button class="btn btn-secondary" (click)="closeDetailModal()">Cerrar</button>
-                @if (selectedResponse()!.status === 'completed' || selectedResponse()!.status === 'pending') {
-                    <button class="btn btn-primary" (click)="closeDetailModal(); openReviewModal(selectedResponse()!)">
+                @if (canReview(selectedResponse()!)) {
+                    <button class="btn btn-primary" (click)="openReviewFromDetail()">
                         <i class="ti ti-check me-1"></i>
                         Revisar
                     </button>

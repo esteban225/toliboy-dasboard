@@ -423,6 +423,7 @@ export class FormsComponent implements OnInit, OnDestroy {
     const formValue = {
       form_id: this.selectedForm.id,
       batch_id: this.selectedBatchId,
+      status: 'completed',
       values: this.dynamicForm.value
     };
     
