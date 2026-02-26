@@ -14,7 +14,8 @@
                     </p>
                 </div>
                 <div class="d-flex gap-2">
-                    <button class="btn btn-outline-warning" (click)="loadPendingReleaseBatches()" [disabled]="releaseLoading">
+                    <button class="btn btn-outline-warning" (click)="loadPendingReleaseBatches()"
+                        [disabled]="releaseLoading">
                         <i class="bi bi-arrow-clockwise me-2" [class.spin-animation]="releaseLoading"></i>
                         <span class="d-none d-sm-inline">Actualizar</span>
                     </button>
@@ -42,114 +43,148 @@
         </div>
     </div>
 
-    <!-- Pending Release Batches Section -->
-    <div *ngIf="pendingReleaseBatches.length > 0" class="card border-0 shadow-sm mb-4 border-start border-warning border-4">
-        <div class="card-header bg-warning bg-opacity-10 border-0">
+    <div *ngIf="pendingReleaseBatches.length > 0" class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-white py-3 border-bottom border-light">
             <div class="d-flex align-items-center justify-content-between">
                 <div class="d-flex align-items-center">
-                    <i class="bi bi-box-seam text-warning fs-4 me-2"></i>
+                    <div class="p-2 bg-warning bg-opacity-10 rounded-3 me-3">
+                        <i class="bi bi-boxes text-warning fs-4"></i>
+                    </div>
                     <div>
-                        <h5 class="mb-0 fw-semibold text-dark">Lotes Pendientes de Liberación</h5>
-                        <small class="text-muted">Materias primas requeridas para producción</small>
+                        <h5 class="mb-0 fw-bold text-dark">Lotes Pendientes de Liberación</h5>
+                        <p class="text-muted small mb-0">Gestión de insumos para órdenes de producción activas</p>
                     </div>
                 </div>
-                <span class="badge bg-warning text-dark">{{ pendingReleaseBatches.length }} lotes</span>
+                <div class="text-end">
+                    <span
+                        class="badge bg-warning-subtle text-warning-emphasis rounded-pill px-3 py-2 border border-warning-subtle">
+                        {{ pendingReleaseBatches.length }} Órdenes pendientes
+                    </span>
+                </div>
             </div>
         </div>
+
         <div class="card-body p-0">
             <div class="table-responsive">
-                <table class="table table-hover mb-0">
-                    <thead class="bg-light">
+                <table class="table align-middle mb-0">
+                    <thead class="bg-light-subtle border-bottom">
                         <tr>
-                            <th class="ps-3" style="width: 120px;">Lote</th>
-                            <th>Producto</th>
-                            <th style="width: 100px;">Cantidad</th>
-                            <th>Materia Prima</th>
-                            <th class="text-center" style="width: 120px;">Necesario</th>
-                            <th class="text-center" style="width: 120px;">Disponible</th>
-                            <th class="text-center" style="width: 100px;">Estado</th>
-                            <th class="text-end pe-3" style="width: 120px;">Acción</th>
+                            <th class="ps-4 py-3 text-uppercase fs-xs tracking-wider text-muted" style="width: 140px;">
+                                Orden/Lote</th>
+                            <th class="py-3 text-uppercase fs-xs tracking-wider text-muted">Producto Final</th>
+                            <th class="py-3 text-uppercase fs-xs tracking-wider text-muted">Materia Prima</th>
+                            <th class="py-3 text-center text-uppercase fs-xs tracking-wider text-muted"
+                                style="width: 110px;">Req.</th>
+                            <th class="py-3 text-center text-uppercase fs-xs tracking-wider text-muted"
+                                style="width: 110px;">Stock</th>
+                            <th class="py-3 text-center text-uppercase fs-xs tracking-wider text-muted"
+                                style="width: 130px;">Estado</th>
+                            <th class="pe-4 py-3 text-end text-uppercase fs-xs tracking-wider text-muted"
+                                style="width: 140px;">Acción</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody class="border-top-0">
                         <ng-container *ngFor="let batch of pendingReleaseBatches">
                             <ng-container *ngFor="let material of batch.requiredMaterials; let isFirst = first">
-                                <tr [class.table-warning]="!material.hasSufficientStock" [class.table-success]="isBatchFullyReleased(batch.batch?.id || 0)">
-                                    <td class="ps-3 align-middle" *ngIf="isFirst" [attr.rowspan]="batch.requiredMaterials.length">
-                                        <span class="badge bg-primary fs-6">#{{ batch.batch?.id }}</span>
-                                        <span *ngIf="isBatchFullyReleased(batch.batch?.id || 0)" class="badge bg-success ms-1 fs-7">
-                                            <i class="bi bi-play-circle me-1"></i>En Proceso
-                                        </span>
+                                <tr [class.bg-light-subtle]="isFirst"
+                                    [class.border-bottom]="isFirst && batch.requiredMaterials.length > 1">
+
+                                    <td class="ps-4" *ngIf="isFirst" [attr.rowspan]="batch.requiredMaterials.length">
+                                        <div class="d-flex flex-column">
+                                            <span class="fw-bold text-primary mb-1">#{{ batch.batch?.id }}</span>
+                                            <span *ngIf="isBatchFullyReleased(batch.batch?.id || 0)"
+                                                class="badge bg-success-subtle text-success border border-success-subtle small-badge w-fit">
+                                                En Proceso
+                                            </span>
+                                        </div>
                                     </td>
-                                    <td class="align-middle" *ngIf="isFirst" [attr.rowspan]="batch.requiredMaterials.length">
-                                        <div class="fw-semibold">{{ batch.product?.name }}</div>
-                                        <small class="text-muted" *ngIf="batch.product?.code">{{ batch.product?.code }}</small>
+
+                                    <td *ngIf="isFirst" [attr.rowspan]="batch.requiredMaterials.length">
+                                        <div class="fw-bold text-dark">{{ batch.product?.name }}</div>
+                                        <div class="d-flex align-items-center text-muted small">
+                                            <i class="bi bi-hash me-1"></i>{{ batch.product?.code }}
+                                            <span class="mx-2">|</span>
+                                            <span class="fw-medium text-dark">{{ batch.batch?.quantity }} und.</span>
+                                        </div>
                                     </td>
-                                    <td class="align-middle" *ngIf="isFirst" [attr.rowspan]="batch.requiredMaterials.length">
-                                        <span class="fw-semibold">{{ batch.batch?.quantity }}</span>
-                                        <small class="text-muted ms-1">unid.</small>
-                                    </td>
-                                    <td class="align-middle">
+
+                                    <td>
                                         <div class="d-flex align-items-center">
-                                            <i class="bi bi-box-fill text-secondary me-2"></i>
-                                            <div>
-                                                <div class="fw-medium">{{ material.rawMaterialName }}</div>
-                                                <small class="text-muted" *ngIf="material.rawMaterialCode">{{ material.rawMaterialCode }}</small>
+                                            <div class="flex-grow-1">
+                                                <div class="fw-semibold text-dark">{{ material.rawMaterialName }}</div>
+                                                <div class="text-muted small fs-xs text-uppercase">{{
+                                                    material.rawMaterialCode }}</div>
                                             </div>
                                         </div>
                                     </td>
-                                    <td class="text-center align-middle">
-                                        <span class="badge bg-dark">{{ material.totalQuantityNeeded | number:'1.2-2' }}</span>
+
+                                    <td class="text-center">
+                                        <span class="fw-bold text-dark">{{ material.totalQuantityNeeded | number:'1.2-2'
+                                            }}</span>
                                     </td>
-                                    <td class="text-center align-middle">
-                                        <span class="badge" [ngClass]="{'bg-success': material.hasSufficientStock, 'bg-danger': !material.hasSufficientStock}">
+
+                                    <td class="text-center">
+                                        <span class="fw-bold"
+                                            [ngClass]="material.hasSufficientStock ? 'text-success' : 'text-danger'">
                                             {{ material.currentStock | number:'1.2-2' }}
                                         </span>
                                     </td>
-                                    <td class="text-center align-middle">
-                                        <span class="badge rounded-pill" [ngClass]="{'bg-success-subtle text-success': material.hasSufficientStock, 'bg-danger-subtle text-danger': !material.hasSufficientStock}">
-                                            <i class="bi" [ngClass]="{'bi-check-circle-fill': material.hasSufficientStock, 'bi-exclamation-circle-fill': !material.hasSufficientStock}"></i>
-                                            {{ material.hasSufficientStock ? 'OK' : 'Sin stock' }}
+
+                                    <td class="text-center">
+                                        <span class="badge rounded-pill d-inline-flex align-items-center px-2 py-1"
+                                            [ngClass]="material.hasSufficientStock ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger'">
+                                            <i class="bi me-1"
+                                                [ngClass]="material.hasSufficientStock ? 'bi-check2' : 'bi-exclamation-triangle'"></i>
+                                            {{ material.hasSufficientStock ? 'Disponible' : 'Insuficiente' }}
                                         </span>
                                     </td>
-                                    <td class="text-end pe-3 align-middle">
-                                        <button 
-                                            class="btn btn-sm"
-                                            [ngClass]="{
-                                                'btn-secondary': isMaterialReleased(batch.batch?.id || 0, material.rawMaterialId) || isBatchFullyReleased(batch.batch?.id || 0),
-                                                'btn-success': material.hasSufficientStock && !isMaterialReleased(batch.batch?.id || 0, material.rawMaterialId) && !isBatchFullyReleased(batch.batch?.id || 0),
-                                                'btn-outline-danger': !material.hasSufficientStock && !isMaterialReleased(batch.batch?.id || 0, material.rawMaterialId) && !isBatchFullyReleased(batch.batch?.id || 0)
-                                            }"
-                                            [disabled]="!material.hasSufficientStock || isReleasingMaterial(batch.batch?.id || 0, material.rawMaterialId) || isMaterialReleased(batch.batch?.id || 0, material.rawMaterialId) || isBatchFullyReleased(batch.batch?.id || 0)"
-                                            (click)="openReleaseForMaterial(batch, material)"
-                                            [title]="isBatchFullyReleased(batch.batch?.id || 0) ? 'Lote en proceso' : (isMaterialReleased(batch.batch?.id || 0, material.rawMaterialId) ? 'Ya liberado' : (material.hasSufficientStock ? 'Liberar material' : 'Stock insuficiente'))">
+
+                                    <td class="pe-4 text-end">
+                                        <button class="btn btn-sm px-3 rounded-3 transition-all" [ngClass]="{
+                                            'btn-light text-muted border-0': isMaterialReleased(batch.batch?.id || 0, material.rawMaterialId) || isBatchFullyReleased(batch.batch?.id || 0),
+                                            'btn-primary shadow-sm': material.hasSufficientStock && !isMaterialReleased(batch.batch?.id || 0, material.rawMaterialId) && !isBatchFullyReleased(batch.batch?.id || 0),
+                                            'btn-outline-danger': !material.hasSufficientStock && !isMaterialReleased(batch.batch?.id || 0, material.rawMaterialId) && !isBatchFullyReleased(batch.batch?.id || 0)
+                                        }" [disabled]="!material.hasSufficientStock || isReleasingMaterial(batch.batch?.id || 0, material.rawMaterialId) || isMaterialReleased(batch.batch?.id || 0, material.rawMaterialId) || isBatchFullyReleased(batch.batch?.id || 0)"
+                                            (click)="openReleaseForMaterial(batch, material)">
+
                                             <i class="bi" [ngClass]="{
-                                                'bi-check-circle-fill': isMaterialReleased(batch.batch?.id || 0, material.rawMaterialId),
-                                                'bi-box-arrow-right': material.hasSufficientStock && !isReleasingMaterial(batch.batch?.id || 0, material.rawMaterialId) && !isMaterialReleased(batch.batch?.id || 0, material.rawMaterialId),
-                                                'bi-hourglass-split spin-animation': isReleasingMaterial(batch.batch?.id || 0, material.rawMaterialId),
-                                                'bi-x-circle': !material.hasSufficientStock && !isMaterialReleased(batch.batch?.id || 0, material.rawMaterialId)
-                                            }"></i>
-                                            <span class="ms-1 d-none d-md-inline">
-                                                {{ isMaterialReleased(batch.batch?.id || 0, material.rawMaterialId) ? 'Liberado' : (material.hasSufficientStock ? 'Liberar' : 'Sin stock') }}
+                                            'bi-check-all fs-5': isMaterialReleased(batch.batch?.id || 0, material.rawMaterialId),
+                                            'bi-arrow-right-short fs-5': material.hasSufficientStock && !isReleasingMaterial(batch.batch?.id || 0, material.rawMaterialId) && !isMaterialReleased(batch.batch?.id || 0, material.rawMaterialId),
+                                            'bi-arrow-repeat spin-animation': isReleasingMaterial(batch.batch?.id || 0, material.rawMaterialId),
+                                            'bi-slash-circle': !material.hasSufficientStock && !isMaterialReleased(batch.batch?.id || 0, material.rawMaterialId)
+                                        }"></i>
+                                            <span class="ms-1 fw-bold">
+                                                {{ isMaterialReleased(batch.batch?.id || 0, material.rawMaterialId) ?
+                                                'Listo' : (material.hasSufficientStock ? 'Liberar' : 'Bloqueado') }}
                                             </span>
                                         </button>
                                     </td>
                                 </tr>
                             </ng-container>
+                            <tr class="bg-light" style="height: 4px;">
+                                <td colspan="7" class="p-0 border-0"></td>
+                            </tr>
                         </ng-container>
                     </tbody>
                 </table>
             </div>
         </div>
-        <div class="card-footer bg-transparent border-0 text-muted small py-2 px-3">
-            <i class="bi bi-info-circle me-1"></i>
-            Haz clic en "Liberar" para registrar la salida de material vinculada al lote de producción
+
+        <div class="card-footer bg-light-subtle border-0 py-3 px-4">
+            <div class="d-flex align-items-center text-muted fs-xs">
+                <i class="bi bi-info-square-fill text-info me-2"></i>
+                <span>La liberación de materiales reduce automáticamente el stock y vincula el costo a la orden de
+                    producción seleccionada.</span>
+            </div>
         </div>
     </div>
+
+
 </div>
 
 <!-- Modal de Liberación (Igual que inventory-movement) -->
-<div *ngIf="showModal" class="modal fade show d-block" tabindex="-1" role="dialog" style="background-color: rgba(0,0,0,0.5);">
+<div *ngIf="showModal" class="modal fade show d-block" tabindex="-1" role="dialog"
+    style="background-color: rgba(0,0,0,0.5);">
     <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content border-0 shadow-lg">
             <div class="modal-header border-0 pb-0 bg-danger bg-opacity-10">
@@ -166,7 +201,7 @@
             </div>
             <div class="modal-body px-4 py-4">
                 <form [formGroup]="form" (ngSubmit)="submit()">
-                    
+
                     <!-- Selección de producto -->
                     <div class="mb-4 position-relative">
                         <label class="form-label fw-semibold">
@@ -198,7 +233,8 @@
                                         <div class="fw-semibold" style="font-size: 0.9rem;">
                                             {{ p?.name ?? p?.product_name ?? 'Sin nombre' }}
                                         </div>
-                                        <span *ngIf="p?.code ?? p?.product_code" class="text-muted" style="font-size: 0.8rem;">
+                                        <span *ngIf="p?.code ?? p?.product_code" class="text-muted"
+                                            style="font-size: 0.8rem;">
                                             {{ p?.code ?? p?.product_code }}
                                         </span>
                                     </div>
@@ -214,7 +250,8 @@
                         </div>
                         <div class="form-text">
                             <i class="bi bi-info-circle me-1"></i>
-                            <span *ngIf="!loadingProductDetails">Escribe para buscar productos por nombre o código</span>
+                            <span *ngIf="!loadingProductDetails">Escribe para buscar productos por nombre o
+                                código</span>
                             <span *ngIf="loadingProductDetails" class="text-primary">
                                 <i class="bi bi-clock me-1"></i>Cargando detalles del producto...
                             </span>
@@ -303,25 +340,29 @@
                                 <label class="form-label small fw-semibold">
                                     <i class="bi bi-calendar-event text-muted me-1"></i>Fecha de Vencimiento
                                 </label>
-                                <input type="date" class="form-control" id="expiryDateOut" (change)="updateNotesSummary()">
+                                <input type="date" class="form-control" id="expiryDateOut"
+                                    (change)="updateNotesSummary()">
                             </div>
                             <div class="col-sm-6">
                                 <label class="form-label small fw-semibold">
                                     <i class="bi bi-truck text-muted me-1"></i>Proveedor
                                 </label>
-                                <input type="text" class="form-control" id="supplierOut" (input)="updateNotesSummary()" placeholder="Nombre del proveedor">
+                                <input type="text" class="form-control" id="supplierOut" (input)="updateNotesSummary()"
+                                    placeholder="Nombre del proveedor">
                             </div>
                             <div class="col-sm-6">
                                 <label class="form-label small fw-semibold">
                                     <i class="bi bi-person-check text-muted me-1"></i>Quién Recibió
                                 </label>
-                                <input type="text" class="form-control" id="receivedByOut" (input)="updateNotesSummary()" placeholder="Nombre de quien recibió">
+                                <input type="text" class="form-control" id="receivedByOut"
+                                    (input)="updateNotesSummary()" placeholder="Nombre de quien recibió">
                             </div>
                             <div class="col-sm-6">
                                 <label class="form-label small fw-semibold">
                                     <i class="bi bi-person-badge text-muted me-1"></i>Quién Entrega
                                 </label>
-                                <input type="text" class="form-control" id="deliveredByOut" (input)="updateNotesSummary()" placeholder="Nombre de quien entrega">
+                                <input type="text" class="form-control" id="deliveredByOut"
+                                    (input)="updateNotesSummary()" placeholder="Nombre de quien entrega">
                             </div>
                         </div>
 
@@ -348,7 +389,8 @@
                                 <label for="packageTypeOut" class="form-label small fw-semibold">
                                     <i class="bi bi-box text-muted me-1"></i>Tipo de Empaque
                                 </label>
-                                <input type="text" class="form-control" id="packageTypeOut" (input)="updateNotesSummary()" placeholder="Ej: Caja, Bolsa...">
+                                <input type="text" class="form-control" id="packageTypeOut"
+                                    (input)="updateNotesSummary()" placeholder="Ej: Caja, Bolsa...">
                             </div>
                             <div class="col-sm-6">
                                 <label for="cleanPackageOut" class="form-label small fw-semibold">
@@ -386,7 +428,8 @@
                                 <label for="observationsOut" class="form-label small fw-semibold">
                                     <i class="bi bi-chat-left-text text-muted me-1"></i>Observaciones
                                 </label>
-                                <textarea class="form-control" rows="2" id="observationsOut" (input)="updateNotesSummary()" placeholder="Comentarios adicionales..."></textarea>
+                                <textarea class="form-control" rows="2" id="observationsOut"
+                                    (input)="updateNotesSummary()" placeholder="Comentarios adicionales..."></textarea>
                             </div>
                         </div>
                     </div>
@@ -420,8 +463,7 @@
                 <h5 class="modal-title mb-0 fw-bold text-primary">
                     <i class="bi bi-filter-circle me-2"></i>Buscar lote de entrada
                 </h5>
-                <button type="button" class="btn-close" aria-label="Close"
-                    (click)="closeBatchSearchModal()"></button>
+                <button type="button" class="btn-close" aria-label="Close" (click)="closeBatchSearchModal()"></button>
             </div>
             <div class="modal-body">
                 <div class="row g-3 mb-3">
@@ -475,19 +517,16 @@
                     <div class="d-flex align-items-center gap-2">
                         <span class="text-muted small">Ordenar por fecha:</span>
                         <button type="button" class="btn btn-sm btn-outline-primary" (click)="toggleBatchSort()">
-                            <i class="bi"
-                                [ngClass]="batchSearchSort === 'desc' ? 'bi-arrow-down' : 'bi-arrow-up'"></i>
+                            <i class="bi" [ngClass]="batchSearchSort === 'desc' ? 'bi-arrow-down' : 'bi-arrow-up'"></i>
                             {{ batchSearchSort === 'desc' ? 'Más recientes' : 'Más antiguos' }}
                         </button>
                     </div>
                     <div class="btn-group">
-                        <button type="button" class="btn btn-sm btn-outline-secondary"
-                            (click)="batchSearchPrevPage()"
+                        <button type="button" class="btn btn-sm btn-outline-secondary" (click)="batchSearchPrevPage()"
                             [disabled]="batchSearchPage === 1 || batchSearchLoading">
                             <i class="bi bi-chevron-left"></i>
                         </button>
-                        <button type="button" class="btn btn-sm btn-outline-secondary"
-                            (click)="batchSearchNextPage()"
+                        <button type="button" class="btn btn-sm btn-outline-secondary" (click)="batchSearchNextPage()"
                             [disabled]="batchSearchLoading || (batchSearchMeta?.last_page && batchSearchPage >= batchSearchMeta?.last_page)">
                             <i class="bi bi-chevron-right"></i>
                         </button>

@@ -11,7 +11,7 @@ import { Product, PaginationMeta } from '../models/product.model';
 export class ProductsService {
 	private baseUrl = `${GlobalComponent.API_URL}products`;
 
-	constructor(private http: HttpClient) {}
+	constructor(private http: HttpClient) { }
 
 	private getHeaders(): HttpHeaders {
 		// GlobalComponent.headerToken contains the Authorization header and content-type
@@ -72,8 +72,9 @@ export class ProductsService {
 	}
 
 	private handleError(error: any) {
-		const err = error.error ?? error.message ?? error;
-		// Aquí se podría integrar un logger o notificaciones de UI
+		// Preserva la estructura completa del error del backend
+		const err = error?.error ?? { message: error?.message ?? 'Error desconocido' };
 		return throwError(() => err);
 	}
+
 }

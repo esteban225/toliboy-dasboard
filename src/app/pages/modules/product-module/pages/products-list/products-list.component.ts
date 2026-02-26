@@ -1,11 +1,10 @@
-import { Component, effect, signal, Signal, OnInit, OnDestroy } from '@angular/core';
+import { Component, effect, signal, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ProductsService } from '../../services/products.service';
 import { AlertService } from 'src/app/core/services/alert.service';
 import { AuthenticationService } from 'src/app/core/services/auth.service';
-import { Subject } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
+import { Subject, takeUntil } from 'rxjs';
 import { Product, PaginationMeta } from '../../models/product.model';
 
 @Component({
@@ -15,7 +14,11 @@ import { Product, PaginationMeta } from '../../models/product.model';
   templateUrl: './products-list.component.html'
 })
 export class ProductsListComponent implements OnInit, OnDestroy {
-  // Estados con Signals (Angular 17)
+
+  // ✅ Exponer Math.min al template (necesario para la paginación)
+  readonly min = Math.min;
+
+  // Signals
   products = signal<Product[]>([]);
   selected = signal<Product | null>(null);
   loading = signal(false);
@@ -26,51 +29,53 @@ export class ProductsListComponent implements OnInit, OnDestroy {
   meta = signal<PaginationMeta>({ current_page: 1, last_page: 1, per_page: 10, total: 0 });
   showForm = signal(false);
 
-  // Formulario reactivo para crear/editar
   form: FormGroup;
-  // Formulario de filtros
   filterForm: FormGroup;
 
-  private service: ProductsService;
-  private alert: AlertService;
-  private authService: AuthenticationService;
   private destroy$ = new Subject<void>();
 
-  constructor(private fb: FormBuilder, productsService: ProductsService, alertService: AlertService, authService: AuthenticationService) {
-    this.service = productsService;
-    this.alert = alertService;
-    this.authService = authService;
+  constructor(
+    private fb: FormBuilder,
+    private service: ProductsService,
+    private alert: AlertService,
+    private auth: AuthenticationService
+  ) {
     this.form = this.buildForm();
     this.filterForm = this.buildFilterForm();
-    
-    // Cargar lista cada vez que cambie la página, el tamaño de página o los filtros.
+
+    // Auto-cargar cuando cambian page, perPage o filters
     effect(() => {
-      const p = this.page();
-      const pp = this.perPage();
-      const f = this.filters();
-      this.loadList(f, p, pp);
+      this.loadList(this.filters(), this.page(), this.perPage());
     }, { allowSignalWrites: true });
   }
 
-  ngOnInit(): void {
-    // La carga inicial es manejada por el effect.
+  ngOnInit(): void { }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
-  // trackBy para ngFor
-  trackById(index: number, item: Product) {
-    return item?.id ?? index;
-  }
+  // -----------------------------
+  // BUILD FORMS
+  // -----------------------------
+  private buildForm(): FormGroup {
+    const user = this.auth.currentUserValue;
+    const createdBy = user?.id?.toString() ?? user?.name ?? 'system';
 
-  openCreate() {
-    const currentUser = this.authService.currentUserValue;
-    const createdBy = currentUser?.id?.toString() || currentUser?.name || 'system';
-    this.form.reset({ is_active: true, unit_price: 0, created_by: createdBy });
-    this.selected.set(null);
-    this.showForm.set(true);
-  }
-
-  forceReload() {
-    this.loadList(this.filters(), this.page(), this.perPage());
+    return this.fb.group({
+      id: [null],
+      name: ['', Validators.required],
+      code: [''],
+      description: [''],
+      category: [''],
+      specifications: [''],
+      // ✅ FIX: unit_price inicia en null para no bloquear validación min(0.01)
+      //    cuando el backend devuelve 0 en productos existentes
+      unit_price: [null, [Validators.required, Validators.min(0)]],
+      is_active: [true],
+      created_by: [createdBy]
+    });
   }
 
   private buildFilterForm(): FormGroup {
@@ -78,116 +83,161 @@ export class ProductsListComponent implements OnInit, OnDestroy {
       name: [''],
       code: [''],
       category: [''],
-      low_stock: [false],
+      low_stock: [false]
     });
   }
 
-  applyFilters() {
-    const raw = this.filterForm.value as any;
-    const filters: Record<string, any> = {};
-    if (raw.name) filters['name'] = raw.name;
-    if (raw.code) filters['code'] = raw.code;
-    if (raw.category) filters['category'] = raw.category;
-    if (raw.low_stock) filters['low_stock'] = true;
-    
-    this.page.set(1); // Reset to first page when applying filters
-    this.filters.set(filters);
-  }
-
-  clearFilters() {
-    this.filterForm.reset();
-    this.page.set(1);
-    this.filters.set({});
-  }
-
-  private buildForm(): FormGroup {
-    // Obtener el usuario actual para created_by
-    const currentUser = this.authService.currentUserValue;
-    const createdBy = currentUser?.id?.toString() || currentUser?.name || 'system';
-    
-    return this.fb.group({
-      id: [null],
-      name: ['', [Validators.required]],
-      code: [''],
-      description: [''],
-      category: [''],
-      specifications: [''], // String que será convertido a array al guardar
-      unit_price: [0, [Validators.required, Validators.min(0)]],
-      is_active: [true],
-      created_by: [createdBy, [Validators.required]]
-    });
-  }
-
-  loadList(filters: Record<string, any> = {}, page: number, perPage: number) {
+  // -----------------------------
+  // LISTA
+  // -----------------------------
+  loadList(filters: any, page: number, perPage: number): void {
     this.loading.set(true);
     this.error.set(null);
 
-    this.service
-      .list(filters, page, perPage)
+    this.service.list(filters, page, perPage)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (res) => {
-          this.products.set(res.data || []);
-          this.meta.set(res.meta || { current_page: 1, last_page: 1, per_page: perPage, total: 0 });
+          this.products.set(res.data ?? []);
+          this.meta.set(res.meta ?? { current_page: 1, last_page: 1, per_page: perPage, total: 0 });
           this.loading.set(false);
         },
         error: (err) => {
-          const message = err?.message || 'Ocurrió un error desconocido.';
+          const message = err?.message ?? 'Ocurrió un error inesperado.';
           this.error.set(message);
-          this.alert.error('Error cargando productos', message);
+          this.alert.error('Error', message);
           this.loading.set(false);
         }
       });
   }
 
-  select(product: Product | null) {
+  forceReload(): void {
+    this.loadList(this.filters(), this.page(), this.perPage());
+  }
+
+  // -----------------------------
+  // FILTROS
+  // -----------------------------
+  applyFilters(): void {
+    const raw = this.filterForm.value;
+    const f: Record<string, any> = {};
+
+    if (raw.name?.trim()) f['name'] = raw.name.trim();
+    if (raw.code?.trim()) f['code'] = raw.code.trim();
+    if (raw.category?.trim()) f['category'] = raw.category.trim();
+    if (raw.low_stock) f['low_stock'] = true;
+
+    this.page.set(1);
+    this.filters.set(f);
+  }
+
+  clearFilters(): void {
+    this.filterForm.reset({ name: '', code: '', category: '', low_stock: false });
+    this.page.set(1);
+    this.filters.set({});
+  }
+
+  // -----------------------------
+  // CRUD
+  // -----------------------------
+  select(product: Product | null): void {
     this.selected.set(product);
+
     if (product) {
-      this.form.patchValue(product);
+      // ✅ FIX PRINCIPAL: convertir specifications[] → string CSV para el textarea
+      const specsAsString = Array.isArray(product.specifications)
+        ? product.specifications.join(', ')
+        : (product.specifications ?? '');
+
+      // ✅ patchValue con spread + specifications convertida
+      this.form.patchValue({
+        ...product,
+        specifications: specsAsString
+      });
+
       this.showForm.set(true);
     } else {
-      this.form.reset({ is_active: true, unit_price: 0 });
+      const user = this.auth.currentUserValue;
+      const createdBy = user?.id?.toString() ?? user?.name ?? 'system';
+
+      this.form.reset({
+        id: null,
+        name: '',
+        code: '',
+        description: '',
+        category: '',
+        specifications: '',
+        unit_price: null,
+        is_active: true,
+        created_by: createdBy
+      });
+
       this.showForm.set(false);
     }
   }
 
-  save() {
+  openCreate(): void {
+    // ✅ FIX: no llamar select(null) primero (ya cierra el form),
+    //    limpiar el form y abrir directamente
+    const user = this.auth.currentUserValue;
+    const createdBy = user?.id?.toString() ?? user?.name ?? 'system';
+
+    this.selected.set(null);
+    this.form.reset({
+      id: null,
+      name: '',
+      code: '',
+      description: '',
+      category: '',
+      specifications: '',
+      unit_price: null,
+      is_active: true,
+      created_by: createdBy
+    });
+
+    this.showForm.set(true);
+  }
+
+  save(): void {
+    if (this.loading()) return;
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
     }
 
-    const payload = this.form.value as Partial<Product>;
-    
-    // Procesar especificaciones: convertir string a array
+    const payload = { ...this.form.value } as Partial<Product>;
+
+    // ✅ Convertir specifications string CSV → array antes de enviar
     if (typeof payload.specifications === 'string') {
-      const specs = (payload.specifications as any as string).trim();
-      payload.specifications = specs ? specs.split(',').map(s => s.trim()).filter(s => s.length > 0) : [];
-    } else if (!Array.isArray(payload.specifications)) {
-      payload.specifications = [];
+      const raw = (payload.specifications as string).trim();
+      payload.specifications = raw
+        ? raw.split(',').map((s: string) => s.trim()).filter(Boolean)
+        : [];
     }
-    
-    // Asegurar que created_by nunca sea null
-    if (!payload.created_by) {
-      const currentUser = this.authService.currentUserValue;
-      (payload as any).created_by = currentUser?.id?.toString() || currentUser?.name || 'system';
-    }
+
+    // Asegurar created_by
+    const user = this.auth.currentUserValue;
+    payload.created_by = user?.id?.toString() ?? user?.name ?? 'system';
+
+    // ✅ Asegurar que unit_price sea número
+    payload.unit_price = Number(payload.unit_price) || 0;
 
     this.loading.set(true);
-    this.error.set(null);
 
-    const operation$ = payload.id 
-      ? this.service.update(payload.id, payload)
+    const isEdit = !!payload.id;
+    const op$ = isEdit
+      ? this.service.update(Number(payload.id), payload)
       : this.service.create(payload);
 
-    operation$.pipe(takeUntil(this.destroy$)).subscribe({
-      next: (result) => {
-        this.alert.success(payload.id ? 'Actualizado' : 'Creado', `El producto se ${payload.id ? 'actualizó' : 'creó'} correctamente.`);
-        this.select(null); // Cierra el modal y resetea el form
-        this.loading.set(false);
-        // El effect se encargará de recargar la lista si es necesario,
-        // pero forzamos una recarga en la página actual para ver el cambio.
+    op$.pipe(takeUntil(this.destroy$)).subscribe({
+      next: () => {
+        this.alert.success(
+          isEdit ? 'Actualizado' : 'Creado',
+          `El producto se ${isEdit ? 'actualizó' : 'creó'} correctamente.`
+        );
+        this.select(null);
         this.loadList(this.filters(), this.page(), this.perPage());
+        this.loading.set(false);
       },
       error: (err) => {
         this.handleServerValidation(err);
@@ -196,95 +246,78 @@ export class ProductsListComponent implements OnInit, OnDestroy {
     });
   }
 
-  private handleServerValidation(err: any) {
+  remove(id?: number): void {
+    if (!id) return;
+
+    this.alert.confirm('¿Estás seguro?', 'Esta acción no se puede deshacer.')
+      .then(result => {
+        if (!result.isConfirmed) return;
+
+        this.loading.set(true);
+
+        this.service.delete(id)
+          .pipe(takeUntil(this.destroy$))
+          .subscribe({
+            next: () => {
+              this.alert.success('Producto eliminado');
+              // ✅ Si era el último de la página, retroceder una página
+              if (this.products().length === 1 && this.page() > 1) {
+                this.page.update(p => p - 1);
+              } else {
+                this.loadList(this.filters(), this.page(), this.perPage());
+              }
+              this.loading.set(false);
+            },
+            error: (err) => {
+              const msg = err?.message ?? 'Ocurrió un error al eliminar.';
+              this.alert.error('Error', msg);
+              this.loading.set(false);
+            }
+          });
+      });
+  }
+
+  // ✅ trackBy para optimizar el ngFor
+  trackById(index: number, item: Product): number {
+    return item.id!;
+  }
+
+  // -----------------------------
+  // SERVER VALIDATION
+  // -----------------------------
+  private handleServerValidation(err: any): void {
     if (err?.errors && typeof err.errors === 'object') {
-      Object.keys(err.errors).forEach((field) => {
+      Object.keys(err.errors).forEach(field => {
         const control = this.form.get(field);
-        const messages = Array.isArray(err.errors[field]) ? err.errors[field].join(' ') : String(err.errors[field]);
         if (control) {
+          const messages = Array.isArray(err.errors[field])
+            ? err.errors[field].join(' ')
+            : err.errors[field];
           control.setErrors({ server: messages });
         }
       });
-      this.alert.error('Error de validación', 'Por favor, corrige los campos marcados.');
+      this.alert.error('Error de validación', 'Revisa los campos marcados.');
     } else {
-      const message = err?.message || 'Ocurrió un error al guardar.';
-      this.error.set(message);
-      this.alert.error('Error', message);
+      const msg = err?.message ?? 'Error al guardar';
+      this.error.set(msg);
+      this.alert.error('Error', msg);
     }
   }
 
-  remove(id?: number) {
-    if (!id) return;
-
-    this.alert.confirm('¿Estás seguro?', 'Esta acción no se puede deshacer.').then(result => {
-      if (result.isConfirmed) {
-        this.loading.set(true);
-        this.service.delete(id).pipe(takeUntil(this.destroy$)).subscribe({
-          next: (res: any) => {
-            this.alert.success('Eliminado', res?.message || 'Producto eliminado correctamente');
-            // Si la página queda vacía, retrocedemos una.
-            if (this.products().length === 1 && this.page() > 1) {
-              this.page.update(p => p - 1);
-            } else {
-              this.loadList(this.filters(), this.page(), this.perPage());
-            }
-            this.loading.set(false);
-          },
-          error: (err) => {
-            const message = err?.message || 'Ocurrió un error al eliminar.';
-            this.error.set(message);
-            this.alert.error('Error eliminando', message);
-            this.loading.set(false);
-          }
-        });
-      }
-    });
-  }
-
-  // Paginación
-  goToPage(p: number, event?: Event) {
+  // -----------------------------
+  // PAGINACIÓN
+  // -----------------------------
+  goToPage(p: number, event?: Event): void {
     event?.preventDefault();
-    const last = this.meta()?.last_page ?? 1;
+    const last = this.meta().last_page ?? 1;
     const target = Math.max(1, Math.min(last, p));
-    if (this.page() !== target) {
-      this.page.set(target);
-    }
+    if (this.page() !== target) this.page.set(target);
   }
 
-  setPerPage(n: number) {
+  setPerPage(n: number): void {
     if (this.perPage() !== n) {
       this.page.set(1);
       this.perPage.set(n);
     }
-  }
-
-  // Helper: obtener snapshot de signals para el template
-  get products$(): Product[] {
-    return this.products();
-  }
-
-  get loading$(): boolean {
-    return this.loading();
-  }
-
-  get error$(): string | null {
-    return this.error();
-  }
-
-  get showForm$(): boolean {
-    return this.showForm();
-  }
-
-  get meta$(): PaginationMeta {
-    return this.meta();
-  }
-
-  min(a: number, b: number): number {
-    return Math.min(a ?? 0, b ?? 0);
-  }
-
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
   }
 }

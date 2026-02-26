@@ -2,8 +2,13 @@
 
 /* Spin animation for loading icons */
 @keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .spin-animation {
@@ -11,37 +16,74 @@
 }
 
 .inventory-movements-page {
-  .table-responsive { overflow: auto; -webkit-overflow-scrolling: touch; }
+  .table-responsive {
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+  }
 
   /* Hide less important columns on small screens to keep the rows readable */
-  .col-hide-sm { @media (max-width: 767.98px) { display: none !important; } }
+  .col-hide-sm {
+    @media (max-width: 767.98px) {
+      display: none !important;
+    }
+  }
 
   /* Tighter table spacing on mobile */
   @media (max-width: 767.98px) {
-    .table th, .table td { padding: 0.45rem 0.5rem; font-size: 0.86rem; }
-    .btn-group.btn-group-sm .btn { padding: 0.35rem 0.5rem; font-size: 0.82rem; }
+
+    .table th,
+    .table td {
+      padding: 0.45rem 0.5rem;
+      font-size: 0.86rem;
+    }
+
+    .btn-group.btn-group-sm .btn {
+      padding: 0.35rem 0.5rem;
+      font-size: 0.82rem;
+    }
   }
 
   /* Modal full-screen on small devices for better editing */
   @media (max-width: 575.98px) {
-    .modal-dialog { max-width: 100%; margin: 0.5rem; }
-    .modal-content { height: 92vh; border-radius: 0.5rem; }
-    .modal-body { overflow:auto; }
+    .modal-dialog {
+      max-width: 100%;
+      margin: 0.5rem;
+    }
+
+    .modal-content {
+      height: 92vh;
+      border-radius: 0.5rem;
+    }
+
+    .modal-body {
+      overflow: auto;
+    }
   }
 
   /* Ensure the product suggestion dropdown is usable on small screens */
   .list-group.position-absolute {
-    left: 0; right: 0; max-height: 50vh; overflow: auto; z-index: 2000;
+    left: 0;
+    right: 0;
+    max-height: 50vh;
+    overflow: auto;
+    z-index: 2000;
   }
 
   /* Timeline compact mode */
-  .timeline { gap: .75rem; }
-  .timeline-item { grid-template-columns: auto 1fr; }
+  .timeline {
+    gap: .75rem;
+  }
+
+  .timeline-item {
+    grid-template-columns: auto 1fr;
+  }
 
 }
 
 /* Small helper to make badges wrap nicely */
-.wrap-badge { white-space: normal; }
+.wrap-badge {
+  white-space: normal;
+}
 
 /* ==================== FILTER CARD PROFESSIONAL STYLES ==================== */
 
@@ -334,6 +376,7 @@
     opacity: 0;
     transform: translateY(-8px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -345,6 +388,7 @@
     opacity: 0;
     transform: translateX(-8px);
   }
+
   to {
     opacity: 1;
     transform: translateX(0);
@@ -485,3 +529,89 @@
   }
 }
 
+.sortable-header:hover {
+  background-color: #f8f9fa !important;
+}
+
+.tiny-sort-icon {
+  font-size: 0.65rem;
+  opacity: 0.3;
+  transition: opacity 0.2s;
+}
+
+.sortable-header:hover .tiny-sort-icon {
+  opacity: 1;
+}
+
+.btn-white {
+  background: white;
+}
+
+.btn-white:hover {
+  background: #f8f9fa;
+}
+
+.table-hover tbody tr:hover {
+  background-color: rgba(0, 0, 0, .02);
+}
+
+/* Estilos UX Pro */
+.animate-fade-in {
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.ls-wide {
+  letter-spacing: 0.05em;
+}
+
+.detail-item {
+  border-color: #f1f5f9 !important;
+  /* Slate-100 */
+}
+
+.detail-icon {
+  display: flex;
+  align-items: center;
+  padding-top: 4px;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #cbd5e1;
+  /* Default */
+}
+
+/* Helper classes para lógica visual */
+.dot-info {
+  background-color: #0dcaf0;
+}
+
+.dot-success {
+  background-color: #198754;
+}
+
+.detail-value {
+  font-size: 0.95rem;
+  word-break: break-word;
+  color: #334155;
+  /* Slate-700 */
+}
+
+.badge {
+  padding: 0.5em 0.8em;
+  font-size: 0.75rem;
+}

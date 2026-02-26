@@ -110,7 +110,8 @@
                                 <i class="bi bi-gear me-2 text-success"></i>
                                 Línea de Producción
                             </label>
-                            <select class="form-select form-select-sm" [(ngModel)]="filters.production_line" name="production_line">
+                            <select class="form-select form-select-sm" [(ngModel)]="filters.production_line"
+                                name="production_line">
                                 <option value="">Todas</option>
                                 <option value="richard">Richard</option>
                                 <option value="panaderia">Panadería</option>
@@ -126,7 +127,8 @@
                                 <i class="bi bi-calendar-date me-2 text-info"></i>
                                 Fecha
                             </label>
-                            <input type="date" class="form-control form-control-sm" [(ngModel)]="filters.date" name="date">
+                            <input type="date" class="form-control form-control-sm" [(ngModel)]="filters.date"
+                                name="date">
                         </div>
                     </div>
 
@@ -137,12 +139,8 @@
                                 <i class="bi bi-search me-2 text-warning"></i>
                                 Búsqueda Rápida
                             </label>
-                            <input type="text" 
-                                class="form-control form-control-sm" 
-                                placeholder="Nombre, código..." 
-                                [(ngModel)]="filters.general"
-                                name="general"
-                                (keyup.enter)="applyFilters()">
+                            <input type="text" class="form-control form-control-sm" placeholder="Nombre, código..."
+                                [(ngModel)]="filters.general" name="general" (keyup.enter)="applyFilters()">
                         </div>
                     </div>
 
@@ -154,28 +152,20 @@
                                 Producto
                             </label>
                             <div class="input-group input-group-sm product-search-wrapper">
-                                <input type="text" 
-                                    class="form-control" 
-                                    placeholder="Código o nombre..." 
-                                    [(ngModel)]="filterProductSearch" 
-                                    (keyup)="searchFilterProducts($event)"
+                                <input type="text" class="form-control" placeholder="Código o nombre..."
+                                    [(ngModel)]="filterProductSearch" (keyup)="searchFilterProducts($event)"
                                     (focus)="filterProductSearch && filterProductSuggestions.length ? null : null"
-                                    name="filterProductSearch"
-                                    autocomplete="off">
-                                <button class="btn btn-light border-start-0 px-2" 
-                                    type="button" 
-                                    *ngIf="filterProductSearch" 
-                                    (click)="clearFilterProduct()" 
-                                    title="Limpiar búsqueda"
+                                    name="filterProductSearch" autocomplete="off">
+                                <button class="btn btn-light border-start-0 px-2" type="button"
+                                    *ngIf="filterProductSearch" (click)="clearFilterProduct()" title="Limpiar búsqueda"
                                     class="clear-btn">
                                     <i class="bi bi-x-circle-fill text-muted"></i>
                                 </button>
                             </div>
                             <!-- Suggestions Dropdown -->
-                            <div *ngIf="filterProductSuggestions?.length" 
-                                class="product-suggestions-dropdown">
+                            <div *ngIf="filterProductSuggestions?.length" class="product-suggestions-dropdown">
                                 <ul class="list-group">
-                                    <li *ngFor="let p of filterProductSuggestions" 
+                                    <li *ngFor="let p of filterProductSuggestions"
                                         class="list-group-item list-group-item-action suggestion-item"
                                         (click)="selectFilterProduct(p)">
                                         <div class="d-flex justify-content-between align-items-center gap-2">
@@ -198,16 +188,12 @@
                     <!-- Action Buttons -->
                     <div class="col-12 col-lg-2">
                         <div class="filter-group d-flex gap-2 align-items-end h-100">
-                            <button type="button" 
-                                class="btn btn-sm btn-outline-secondary flex-grow-1" 
-                                (click)="resetFilters()"
-                                title="Limpiar todos los filtros">
+                            <button type="button" class="btn btn-sm btn-outline-secondary flex-grow-1"
+                                (click)="resetFilters()" title="Limpiar todos los filtros">
                                 <i class="bi bi-eraser me-1"></i>
                                 <span class="d-none d-sm-inline">Limpiar</span>
                             </button>
-                            <button type="submit" 
-                                class="btn btn-sm btn-primary flex-grow-1"
-                                title="Aplicar filtros">
+                            <button type="submit" class="btn btn-sm btn-primary flex-grow-1" title="Aplicar filtros">
                                 <i class="bi bi-search me-1"></i>
                                 <span class="d-none d-sm-inline">Buscar</span>
                             </button>
@@ -221,27 +207,32 @@
                     <span *ngIf="filters.type" class="badge badge-filter me-2 mb-2">
                         <i class="bi bi-arrow-left-right me-1"></i>
                         {{ filters.type === 'in' ? 'Entrada' : filters.type === 'out' ? 'Salida' : 'Ajuste' }}
-                        <button type="button" class="btn-close btn-close-sm ms-1" aria-label="Remove" (click)="filters.type = ''; applyFilters()"></button>
+                        <button type="button" class="btn-close btn-close-sm ms-1" aria-label="Remove"
+                            (click)="filters.type = ''; applyFilters()"></button>
                     </span>
                     <span *ngIf="filters.production_line" class="badge badge-filter me-2 mb-2">
                         <i class="bi bi-gear me-1"></i>
                         {{ filters.production_line }}
-                        <button type="button" class="btn-close btn-close-sm ms-1" aria-label="Remove" (click)="filters.production_line = ''; applyFilters()"></button>
+                        <button type="button" class="btn-close btn-close-sm ms-1" aria-label="Remove"
+                            (click)="filters.production_line = ''; applyFilters()"></button>
                     </span>
                     <span *ngIf="filters.date" class="badge badge-filter me-2 mb-2">
                         <i class="bi bi-calendar-date me-1"></i>
                         {{ filters.date }}
-                        <button type="button" class="btn-close btn-close-sm ms-1" aria-label="Remove" (click)="filters.date = ''; applyFilters()"></button>
+                        <button type="button" class="btn-close btn-close-sm ms-1" aria-label="Remove"
+                            (click)="filters.date = ''; applyFilters()"></button>
                     </span>
                     <span *ngIf="filters.general" class="badge badge-filter me-2 mb-2">
                         <i class="bi bi-search me-1"></i>
                         {{ filters.general }}
-                        <button type="button" class="btn-close btn-close-sm ms-1" aria-label="Remove" (click)="filters.general = ''; applyFilters()"></button>
+                        <button type="button" class="btn-close btn-close-sm ms-1" aria-label="Remove"
+                            (click)="filters.general = ''; applyFilters()"></button>
                     </span>
                     <span *ngIf="filters.product" class="badge badge-filter me-2 mb-2">
                         <i class="bi bi-box-seam me-1"></i>
                         {{ filterProductSearch }}
-                        <button type="button" class="btn-close btn-close-sm ms-1" aria-label="Remove" (click)="clearFilterProduct(); applyFilters()"></button>
+                        <button type="button" class="btn-close btn-close-sm ms-1" aria-label="Remove"
+                            (click)="clearFilterProduct(); applyFilters()"></button>
                     </span>
                 </div>
 
@@ -298,101 +289,123 @@
                 <table class="table table-hover align-middle mb-0">
                     <thead class="table-light border-bottom">
                         <tr>
-                            <th class="px-4 py-3 text-center" style="width: 80px">
-                                <small class="text-uppercase fw-bold text-muted">ID</small>
+                            <th class="px-4 py-3 text-center sortable-header" style="width: 80px; cursor: pointer;"
+                                    (click)="sort('id')">
+                                <div class="d-flex align-items-center justify-content-center">
+                                    <small class="text-uppercase fw-bold text-muted">ID</small>
+                                        <i class="bi ms-1 tiny-sort-icon"
+                                           [ngClass]="sortColumn === 'id' ? (sortDirection === 'asc' ? 'bi-arrow-up' : 'bi-arrow-down') : 'bi-arrow-down-up'"></i>
+                                </div>
                             </th>
-                            <th class="px-4 py-3" style="width: 120px">
-                                <small class="text-uppercase fw-bold text-muted">
-                                    <i class="bi bi-arrow-left-right me-1"></i>Tipo
-                                </small>
+
+                            <th class="px-4 py-3 sortable-header" style="width: 130px; cursor: pointer;"
+                                    (click)="sort('type')">
+                                <div class="d-flex align-items-center">
+                                    <small class="text-uppercase fw-bold text-muted">
+                                        <i class="bi bi-arrow-left-right me-1"></i>Tipo
+                                    </small>
+                                        <i class="bi ms-auto tiny-sort-icon"
+                                           [ngClass]="sortColumn === 'type' ? (sortDirection === 'asc' ? 'bi-arrow-up' : 'bi-arrow-down') : 'bi-arrow-down-up'"></i>
+                                </div>
                             </th>
-                            <th class="px-4 py-3" style="min-width: 200px">
-                                <small class="text-uppercase fw-bold text-muted">
-                                    <i class="bi bi-box-seam me-1"></i>Producto
-                                </small>
+
+                            <th class="px-4 py-3 sortable-header" style="min-width: 200px; cursor: pointer;"
+                                    (click)="sort('product_name')">
+                                <div class="d-flex align-items-center">
+                                    <small class="text-uppercase fw-bold text-muted">
+                                        <i class="bi bi-box-seam me-1"></i>Producto
+                                    </small>
+                                        <i class="bi ms-auto tiny-sort-icon"
+                                           [ngClass]="sortColumn === 'product_name' ? (sortDirection === 'asc' ? 'bi-arrow-up' : 'bi-arrow-down') : 'bi-arrow-down-up'"></i>
+                                </div>
                             </th>
-                            <th class="px-4 py-3 text-end" style="width: 100px">
-                                <small class="text-uppercase fw-bold text-muted">
-                                    <i class="bi bi-hash me-1"></i>Cantidad
-                                </small>
+
+                            <th class="px-4 py-3 text-end sortable-header" style="width: 110px; cursor: pointer;"
+                                    (click)="sort('quantity')">
+                                <div class="d-flex align-items-center justify-content-end">
+                                    <small class="text-uppercase fw-bold text-muted">
+                                        <i class="bi bi-hash me-1"></i>Cant.
+                                    </small>
+                                        <i class="bi ms-1 tiny-sort-icon"
+                                           [ngClass]="sortColumn === 'quantity' ? (sortDirection === 'asc' ? 'bi-arrow-up' : 'bi-arrow-down') : 'bi-arrow-down-up'"></i>
+                                </div>
                             </th>
-                            <th class="px-4 py-3" style="width: 140px">
-                                <small class="text-uppercase fw-bold text-muted">
-                                    <i class="bi bi-gear me-1"></i>Línea
-                                </small>
+
+                            <th class="px-4 py-3 sortable-header" style="width: 140px; cursor: pointer;"
+                                    (click)="sort('production_line')">
+                                <div class="d-flex align-items-center">
+                                    <small class="text-uppercase fw-bold text-muted">
+                                        <i class="bi bi-gear me-1"></i>Línea
+                                    </small>
+                                        <i class="bi ms-auto tiny-sort-icon"
+                                           [ngClass]="sortColumn === 'production_line' ? (sortDirection === 'asc' ? 'bi-arrow-up' : 'bi-arrow-down') : 'bi-arrow-down-up'"></i>
+                                </div>
                             </th>
-                            <th class="px-4 py-3" style="width: 120px">
-                                <small class="text-uppercase fw-bold text-muted">
-                                    <i class="bi bi-calendar-x me-1"></i>Vencimiento
-                                </small>
+
+                            <th class="px-4 py-3" style="width: 120px;">
+                                <small class="text-uppercase fw-bold text-muted"><i
+                                        class="bi bi-calendar-x me-1"></i>Venc.</small>
                             </th>
-                            <th class="px-4 py-3" style="width: 120px">
-                                <small class="text-uppercase fw-bold text-muted">
-                                    <i class="bi bi-truck me-1"></i>Proveedor
-                                </small>
+                            <th class="px-4 py-3" style="width: 120px;">
+                                <small class="text-uppercase fw-bold text-muted"><i
+                                        class="bi bi-truck me-1"></i>Prov.</small>
                             </th>
-                            <th class="px-4 py-3" style="width: 120px">
-                                <small class="text-uppercase fw-bold text-muted">
-                                    <i class="bi bi-barcode me-1"></i>Lote
-                                </small>
+                            <th class="px-4 py-3" style="width: 110px;">
+                                <small class="text-uppercase fw-bold text-muted"><i
+                                        class="bi bi-barcode me-1"></i>Lote</small>
                             </th>
-                            <th class="px-4 py-3" style="width: 140px">
-                                <small class="text-uppercase fw-bold text-muted">
-                                    <i class="bi bi-info-circle me-1"></i>Detalles
-                                </small>
+                            <th class="px-4 py-3 text-center" style="width: 100px;">
+                                <small class="text-uppercase fw-bold text-muted">Info</small>
                             </th>
-                            <th class="px-4 py-3 text-center" style="width: 140px">
+                            <th class="px-4 py-3 text-center" style="width: 120px;">
                                 <small class="text-uppercase fw-bold text-muted">Acciones</small>
                             </th>
                         </tr>
                     </thead>
+
                     <tbody>
-                        <!-- Una fila por cada movimiento con todas las columnas -->
                         <ng-container *ngFor="let m of movements; let idx = index">
                             <tr class="border-bottom" [id]="'movement-' + m?.id">
                                 <td class="px-4 py-3 text-center">
-                                    <span class="badge bg-light text-muted border">{{ m?.id ?? '-' }}</span>
+                                    <span class="badge bg-light text-muted border font-monospace">{{ m?.id ?? '-'
+                                        }}</span>
                                 </td>
                                 <td class="px-4 py-3">
                                     <span class="badge px-2 py-1 fw-bold d-inline-flex align-items-center" [ngClass]="{
-                                            'bg-success text-white': (m?.type || m?.movement_type)?.toLowerCase() === 'in',
-                                            'bg-danger text-white': (m?.type || m?.movement_type)?.toLowerCase() === 'out',
-                                            'bg-warning text-dark': (m?.type || m?.movement_type)?.toLowerCase() === 'adjustment',
-                                            'bg-secondary text-white': !(m?.type || m?.movement_type) || !['in', 'out', 'adjustment'].includes((m?.type || m?.movement_type)?.toLowerCase())
-                                        }" style="min-width: 80px; font-size: 0.8rem;">
+                                        'bg-success-subtle text-success border border-success-subtle': (m?.type || m?.movement_type)?.toLowerCase() === 'in',
+                                        'bg-danger-subtle text-danger border border-danger-subtle': (m?.type || m?.movement_type)?.toLowerCase() === 'out',
+                                        'bg-warning-subtle text-warning-emphasis border border-warning-subtle': (m?.type || m?.movement_type)?.toLowerCase() === 'adjustment',
+                                        'bg-secondary-subtle text-secondary border border-secondary-subtle': !(m?.type || m?.movement_type) || !['in', 'out', 'adjustment'].includes((m?.type || m?.movement_type)?.toLowerCase())
+                                    }" style="min-width: 75px; font-size: 0.75rem; text-transform: uppercase;">
                                         <i class="bi me-1" [ngClass]="{
-                                            'bi-arrow-down-circle-fill': (m?.type || m?.movement_type)?.toLowerCase() === 'in',
-                                            'bi-arrow-up-circle-fill': (m?.type || m?.movement_type)?.toLowerCase() === 'out',
-                                            'bi-gear-fill': (m?.type || m?.movement_type)?.toLowerCase() === 'adjustment',
-                                            'bi-question-circle-fill': !(m?.type || m?.movement_type) || !['in', 'out', 'adjustment'].includes((m?.type || m?.movement_type)?.toLowerCase())
-                                        }"></i>
-                                        <span>
-                                            {{
-                                            (m?.type || m?.movement_type)?.toLowerCase() === 'in' ? 'Ent.' :
-                                            (m?.type || m?.movement_type)?.toLowerCase() === 'out' ? 'Sal.' :
-                                            (m?.type || m?.movement_type)?.toLowerCase() === 'adjustment' ? 'Aju.' :
-                                            'N/D'
-                                            }}
-                                        </span>
+                                        'bi-arrow-down-circle-fill': (m?.type || m?.movement_type)?.toLowerCase() === 'in',
+                                        'bi-arrow-up-circle-fill': (m?.type || m?.movement_type)?.toLowerCase() === 'out',
+                                        'bi-gear-fill': (m?.type || m?.movement_type)?.toLowerCase() === 'adjustment',
+                                        'bi-question-circle-fill': !(m?.type || m?.movement_type) || !['in', 'out', 'adjustment'].includes((m?.type || m?.movement_type)?.toLowerCase())
+                                    }"></i>
+                                        {{
+                                        (m?.type || m?.movement_type)?.toLowerCase() === 'in' ? 'Entrada' :
+                                        (m?.type || m?.movement_type)?.toLowerCase() === 'out' ? 'Salida' :
+                                        (m?.type || m?.movement_type)?.toLowerCase() === 'adjustment' ? 'Ajuste' : 'N/D'
+                                        }}
                                     </span>
                                 </td>
                                 <td class="px-4 py-3">
-                                    <small class="text-muted">
-                                        <div class="fw-semibold" style="font-size: 0.9rem;">
+                                    <div>
+                                        <div class="fw-bold text-dark" style="font-size: 0.9rem;">
                                             {{ m?.product_name ?? m?.raw_material_name ?? 'N/A' }}
                                         </div>
-                                        <span *ngIf="m?.product_code ?? m?.raw_material_code" class="text-muted"
-                                            style="font-size: 0.8rem;">
-                                            {{ m?.product_code ?? m?.raw_material_code }}
-                                        </span>
-                                    </small>
+                                        <div *ngIf="m?.product_code ?? m?.raw_material_code" class="text-muted small">
+                                            <i class="bi bi-tag me-1"></i>{{ m?.product_code ?? m?.raw_material_code }}
+                                        </div>
+                                    </div>
                                 </td>
                                 <td class="px-4 py-3 text-end">
-                                    <span class="fw-bold" [ngClass]="{
-                                        'text-success': (m?.type || m?.movement_type)?.toLowerCase() === 'in',
-                                        'text-danger': (m?.type || m?.movement_type)?.toLowerCase() === 'out',
-                                        'text-warning': (m?.type || m?.movement_type)?.toLowerCase() === 'adjustment'
-                                    }">
+                                    <span class="fw-bold font-monospace" [ngClass]="{
+                                    'text-success': (m?.type || m?.movement_type)?.toLowerCase() === 'in',
+                                    'text-danger': (m?.type || m?.movement_type)?.toLowerCase() === 'out',
+                                    'text-warning': (m?.type || m?.movement_type)?.toLowerCase() === 'adjustment'
+                                }">
                                         {{
                                         (m?.type || m?.movement_type)?.toLowerCase() === 'in' ? '+' :
                                         (m?.type || m?.movement_type)?.toLowerCase() === 'out' ? '-' :
@@ -401,63 +414,51 @@
                                     </span>
                                 </td>
                                 <td class="px-4 py-3">
-                                    <span *ngIf="m?.production_line" class="badge" [ngClass]="{
-                                        'bg-primary': m?.production_line?.toLowerCase() === 'richard',
-                                        'bg-success': m?.production_line?.toLowerCase() === 'panaderia',
-                                        'bg-warning text-dark': m?.production_line?.toLowerCase() === 'pasteleria',
-                                        'bg-secondary': !['richard', 'panaderia', 'pasteleria'].includes(m?.production_line?.toLowerCase())
-                                    }" style="font-size: 0.8rem;">
-                                        {{
-                                        m?.production_line?.toLowerCase() === 'richard' ? 'Richard' :
-                                        m?.production_line?.toLowerCase() === 'panaderia' ? 'Panadería' :
-                                        m?.production_line?.toLowerCase() === 'pasteleria' ? 'Pastelería' :
-                                        m?.production_line
-                                        }}
+                                    <span *ngIf="m?.production_line" class="badge rounded-pill border" [ngClass]="{
+                                    'bg-primary-subtle text-primary border-primary-subtle': m?.production_line?.toLowerCase() === 'richard',
+                                    'bg-success-subtle text-success border-success-subtle': m?.production_line?.toLowerCase() === 'panaderia',
+                                    'bg-warning-subtle text-warning-emphasis border-warning-subtle': m?.production_line?.toLowerCase() === 'pasteleria',
+                                    'bg-light text-dark border-secondary-subtle': !['richard', 'panaderia', 'pasteleria'].includes(m?.production_line?.toLowerCase())
+                                }" style="font-size: 0.75rem;">
+                                        {{ m?.production_line }}
                                     </span>
                                     <span *ngIf="!m?.production_line" class="text-muted small">—</span>
                                 </td>
-                                <!-- Vencimiento -->
-                                <td class="px-4 py-3">
-                                    <small class="text-muted">
-                                        {{ parseNotesField(m.notes, 'Vencimiento') || '—' }}
-                                    </small>
+                                <td class="px-4 py-3 text-muted small">
+                                    {{ parseNotesField(m.notes, 'Vencimiento') || '—' }}
                                 </td>
-                                <!-- Proveedor -->
-                                <td class="px-4 py-3">
-                                    <small class="text-muted">
-                                        {{ parseNotesField(m.notes, 'Proveedor') || '—' }}
-                                    </small>
+                                <td class="px-4 py-3 text-muted small">
+                                    {{ parseNotesField(m.notes, 'Proveedor') || '—' }}
                                 </td>
-                                <!-- Lote -->
-                                <td class="px-4 py-3">
-                                    <small class="text-muted">
+                                <td class="px-4 py-3 text-muted small">
+                                    <span class="text-truncate d-inline-block" style="max-width: 100px;">
                                         {{ parseNotesField(m.notes, 'Lote') || '—' }}
-                                    </small>
+                                    </span>
                                 </td>
-                                <!-- Detalles -->
-                                <td class="px-4 py-3">
+                                <td class="px-4 py-3 text-center">
                                     <ng-container *ngIf="getDetailsList(m.notes) as detalles">
-                                        <div *ngIf="detalles.length > 0">
-                                            <button class="btn btn-sm btn-outline-info" type="button"
-                                                (click)="openDetailsModal(detalles)"
-                                                title="Ver lista de detalles ordenada">
-                                                <i class="bi bi-list-check me-1"></i>
-                                                <span class="badge bg-info text-white">{{ detalles.length }}</span>
-                                            </button>
-                                        </div>
+                                        <button *ngIf="detalles.length > 0"
+                                            class="btn btn-sm btn-light border position-relative"
+                                            (click)="openDetailsModal(detalles)" title="Ver detalles">
+                                            <i class="bi bi-info-circle text-info"></i>
+                                            <span
+                                                class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-info border border-light"
+                                                style="font-size: 0.6rem;">
+                                                {{ detalles.length }}
+                                            </span>
+                                        </button>
                                         <small *ngIf="detalles.length === 0" class="text-muted">—</small>
                                     </ng-container>
                                 </td>
-                                <!-- Acciones -->
                                 <td class="px-4 py-3 text-center">
-                                    <div class="btn-group btn-group-sm" role="group">
-                                        <button class="btn btn-outline-primary btn-sm" (click)="openEdit(m)"
-                                            title="Editar movimiento">
-                                            <i class="bi bi-pencil-fill"></i>
+                                    <div class="btn-group shadow-sm" style="border-radius: 8px; overflow: hidden;">
+                                        <button class="btn btn-white btn-sm border" (click)="openEdit(m)"
+                                            title="Editar">
+                                            <i class="bi bi-pencil text-primary"></i>
                                         </button>
-                                        <button class="btn btn-outline-danger btn-sm" (click)="deleteMovement(m.id)"
-                                            title="Eliminar movimiento">
-                                            <i class="bi bi-trash-fill"></i>
+                                        <button class="btn btn-white btn-sm border" (click)="deleteMovement(m.id)"
+                                            title="Eliminar">
+                                            <i class="bi bi-trash text-danger"></i>
                                         </button>
                                     </div>
                                 </td>
@@ -465,13 +466,12 @@
                         </ng-container>
 
                         <tr *ngIf="!movements || movements.length === 0">
-                            <td colspan="10" class="text-center py-5">
+                            <td colspan="10" class="text-center py-5 bg-light-subtle">
                                 <div class="py-4">
-                                    <i class="bi bi-inbox display-1 text-muted d-block mb-3"></i>
-                                    <h5 class="text-muted mb-2">No hay movimientos registrados</h5>
-                                    <p class="text-muted mb-3">Comienza creando tu primer movimiento de inventario</p>
-                                    <button class="btn btn-primary" (click)="createQuick()">
-                                        <i class="bi bi-plus-circle-fill me-2"></i>Crear primer movimiento
+                                    <i class="bi bi-inbox display-4 text-muted opacity-25"></i>
+                                    <h5 class="text-muted mt-3">Sin movimientos</h5>
+                                    <button class="btn btn-primary btn-sm mt-3 px-4 shadow-sm" (click)="createQuick()">
+                                        <i class="bi bi-plus-lg me-2"></i>Crear movimiento
                                     </button>
                                 </div>
                             </td>
@@ -481,46 +481,33 @@
             </div>
         </div>
 
-        <!-- Pagination Footer -->
-        <div class="card-footer border-top">
-            <div class="row align-items-center g-3">
-                <div class="col-md-6">
-                    <div class="d-flex align-items-center text-muted">
-                        <i class="bi bi-list-check me-2"></i>
-                        <span>Mostrando <strong class="text-dark">{{ movements.length }}</strong>
-                            registro(s)</span>
-                        <span *ngIf="meta?.total" class="ms-2">de <strong class="text-dark">{{ meta.total }}</strong>
-                            totales</span>
-                    </div>
+        <div class="card-footer bg-white border-top py-3">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+                <div class="text-muted small">
+                    Mostrando <span class="fw-bold text-dark">{{ movements.length }}</span> de
+                    <span class="fw-bold text-dark">{{ meta?.total || movements.length }}</span> registros
                 </div>
-                <div class="col-md-6">
-                    <nav class="d-flex justify-content-md-end">
-                        <ul class="pagination pagination-sm mb-0">
-                            <li class="page-item" [class.disabled]="page <= 1">
-                                <button class="page-link" (click)="prevPage()" [attr.tabindex]="page <= 1 ? -1 : null">
-                                    <i class="bi bi-chevron-double-left"></i>
-                                    <span class="d-none d-sm-inline ms-1">Anterior</span>
-                                </button>
-                            </li>
-                            <li class="page-item active">
-                                <span class="page-link">
-                                    Página <strong>{{ page }}</strong>
-                                    <span *ngIf="meta?.last_page"> de {{ meta.last_page }}</span>
-                                </span>
-                            </li>
-                            <li class="page-item" [class.disabled]="meta?.last_page && page >= meta.last_page">
-                                <button class="page-link" (click)="nextPage()"
-                                    [attr.tabindex]="meta?.last_page && page >= meta.last_page ? -1 : null">
-                                    <span class="d-none d-sm-inline me-1">Siguiente</span>
-                                    <i class="bi bi-chevron-double-right"></i>
-                                </button>
-                            </li>
-                        </ul>
-                    </nav>
-                </div>
+                <nav>
+                    <ul class="pagination pagination-sm mb-0">
+                        <li class="page-item" [class.disabled]="page <= 1">
+                            <button class="page-link shadow-none" (click)="prevPage()">
+                                <i class="bi bi-chevron-left"></i>
+                            </button>
+                        </li>
+                        <li class="page-item active">
+                            <span class="page-link px-3">Página {{ page }}</span>
+                        </li>
+                        <li class="page-item" [class.disabled]="meta?.last_page && page >= meta.last_page">
+                            <button class="page-link shadow-none" (click)="nextPage()">
+                                <i class="bi bi-chevron-right"></i>
+                            </button>
+                        </li>
+                    </ul>
+                </nav>
             </div>
         </div>
     </div>
+
 
     <!-- Modal -->
     <div *ngIf="showModal" class="modal fade show d-block" tabindex="-1" role="dialog"
@@ -1197,76 +1184,79 @@
         </div>
     </div>
 
-    <!-- Modal de Detalles de Movimiento -->
-    <div *ngIf="showDetailsModalFlag" class="modal fade show d-block" tabindex="-1" role="dialog"
-        style="background-color: rgba(0,0,0,0.5);">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content border-0 shadow-lg">
-                <div class="modal-header border-0 bg-info bg-opacity-10">
+<div *ngIf="showDetailsModalFlag" class="modal fade show d-block" tabindex="-1" role="dialog"
+    style="background-color: rgba(15, 23, 42, 0.7); backdrop-filter: blur(4px);">
+    
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 1rem;">
+            
+            <div class="modal-header border-0 bg-light-subtle py-3 px-4" style="border-radius: 1rem 1rem 0 0;">
+                <div class="d-flex align-items-center">
+                    <div class="bg-info bg-opacity-10 p-2 rounded-3 me-3">
+                        <i class="bi bi-card-list text-info fs-5"></i>
+                    </div>
                     <div>
-                        <h5 class="modal-title fw-bold text-info mb-0">
-                            <i class="bi bi-list-check me-2"></i>Detalles del Movimiento
-                        </h5>
+                        <h6 class="modal-title fw-bold text-dark mb-0">Detalles Técnicos</h6>
+                        <small class="text-muted">Información adicional del registro</small>
                     </div>
-                    <button type="button" class="btn-close" aria-label="Close" (click)="closeDetailsModal()"></button>
                 </div>
-                <div class="modal-body px-4 py-4">
-                    <!-- Lista Ordenada de Detalles -->
-                    <ol class="list-group list-group-numbered"
-                        *ngIf="currentDetailsModal && currentDetailsModal.length > 0">
-                        <li *ngFor="let detail of currentDetailsModal"
-                            class="list-group-item d-flex justify-content-between align-items-start py-3 border-info border-opacity-25">
-                            <div class="ms-2 me-auto flex-grow-1">
-                                <div class="fw-semibold text-dark">
-                                    {{ detail.label }}
-                                </div>
-                                <div class="text-muted small mt-1" [title]="detail.value">
-                                    <span *ngIf="detail.value.length > 50" class="d-block">
-                                        {{ detail.value | slice:0:50 }}...
-                                    </span>
-                                    <span *ngIf="detail.value.length <= 50">
-                                        {{ detail.value }}
-                                    </span>
-                                </div>
-                            </div>
-                            <!-- Indicadores visuales para validaciones Si/No -->
-                            <span *ngIf="detail.label === 'Empaque Limpio' || detail.label === 'Aceptado'"
-                                class="badge ms-2" [ngClass]="{
-                                    'bg-success': detail.value.toLowerCase() === 'sí' || detail.value.toLowerCase() === 'si',
-                                    'bg-danger': detail.value.toLowerCase() === 'no'
-                                }" style="white-space: nowrap;">
-                                <i class="bi me-1" [ngClass]="{
-                                    'bi-check-circle-fill': detail.value.toLowerCase() === 'sí' || detail.value.toLowerCase() === 'si',
-                                    'bi-x-circle-fill': detail.value.toLowerCase() === 'no'
-                                }"></i>
-                                {{ detail.value }}
-                            </span>
+                <button type="button" class="btn-close shadow-none" (click)="closeDetailsModal()"></button>
+            </div>
 
-                            <!-- Indicadores para condiciones de transporte -->
-                            <span *ngIf="detail.label === 'Condiciones de Transporte'" class="badge ms-2" [ngClass]="{
-                                    'bg-success': detail.value.toLowerCase() === 'buenas',
-                                    'bg-warning text-dark': detail.value.toLowerCase() === 'regulares',
-                                    'bg-danger': detail.value.toLowerCase() === 'malas' || detail.value.toLowerCase() === 'danado'
-                                }" style="white-space: nowrap;">
-                                <i class="bi me-1" [ngClass]="{
-                                    'bi-check-circle-fill': detail.value.toLowerCase() === 'buenas',
-                                    'bi-exclamation-circle-fill': detail.value.toLowerCase() === 'regulares',
-                                    'bi-x-circle-fill': detail.value.toLowerCase() === 'malas' || detail.value.toLowerCase() === 'danado'
-                                }"></i>
+            <div class="modal-body p-0">
+                <div class="list-group list-group-flush" *ngIf="currentDetailsModal && currentDetailsModal.length > 0">
+                    
+                    <div *ngFor="let detail of currentDetailsModal" 
+                         class="list-group-item border-light px-4 py-3 bg-transparent">
+                        
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="text-uppercase fw-bold text-muted small" style="letter-spacing: 0.5px;">
+                                {{ detail.label }}
+                            </span>
+                            
+                            <div class="d-flex gap-2">
+                                <span *ngIf="detail.label === 'Empaque Limpio' || detail.label === 'Aceptado'"
+                                    class="badge rounded-pill d-flex align-items-center px-2 py-1" 
+                                    [ngClass]="{
+                                        'bg-success-subtle text-success border border-success-subtle': detail.value.toLowerCase().includes('si'),
+                                        'bg-danger-subtle text-danger border border-danger-subtle': detail.value.toLowerCase() === 'no'
+                                    }">
+                                    <i class="bi me-1" [ngClass]="detail.value.toLowerCase().includes('si') ? 'bi-check-circle-fill' : 'bi-x-circle-fill'"></i>
+                                    {{ detail.value }}
+                                </span>
+
+                                <span *ngIf="detail.label === 'Condiciones de Transporte'" 
+                                    class="badge rounded-pill px-2 py-1" 
+                                    [ngClass]="{
+                                        'bg-success-subtle text-success border border-success-subtle': detail.value.toLowerCase() === 'buenas',
+                                        'bg-warning-subtle text-warning-emphasis border border-warning-subtle': detail.value.toLowerCase() === 'regulares',
+                                        'bg-danger-subtle text-danger border border-danger-subtle': detail.value.toLowerCase() === 'malas' || detail.value.toLowerCase() === 'danado'
+                                    }">
+                                    {{ detail.value }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="text-dark fw-medium" *ngIf="detail.label !== 'Empaque Limpio' && detail.label !== 'Aceptado' && detail.label !== 'Condiciones de Transporte'">
+                            <span class="d-inline-block text-truncate w-100" [title]="detail.value" style="max-width: 100%;">
                                 {{ detail.value }}
                             </span>
-                        </li>
-                    </ol>
-                    <div *ngIf="!currentDetailsModal || currentDetailsModal.length === 0" class="alert alert-info mb-0">
-                        <i class="bi bi-info-circle me-2"></i>No hay detalles disponibles
+                        </div>
                     </div>
                 </div>
-                <div class="modal-footer border-top bg-light">
-                    <button class="btn btn-secondary" (click)="closeDetailsModal()">
-                        <i class="bi bi-x-circle me-2"></i>Cerrar
-                    </button>
+
+                <div *ngIf="!currentDetailsModal || currentDetailsModal.length === 0" class="text-center py-5">
+                    <i class="bi bi-patch-question display-4 text-secondary opacity-25"></i>
+                    <p class="text-muted mt-2">No hay información detallada.</p>
                 </div>
+            </div>
+
+            <div class="modal-footer border-0 p-4 pt-2">
+                <button class="btn btn-secondary w-100 py-2 fw-bold shadow-sm rounded-3" (click)="closeDetailsModal()">
+                    Cerrar Detalles
+                </button>
             </div>
         </div>
     </div>
+</div>
 </div>

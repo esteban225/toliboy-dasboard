@@ -71,6 +71,38 @@ export class InventoryMovementComponent implements OnInit, OnDestroy {
   availableBatches: any[] = [];
   loadingBatches = false;
 
+  // Sorting
+  sortColumn: string = '';
+  sortDirection: 'asc' | 'desc' = 'asc';
+
+  sort(column: string): void {
+    if (this.sortColumn === column) {
+      // Si es la misma columna, alternar dirección
+      this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
+    } else {
+      this.sortColumn = column;
+      this.sortDirection = 'asc';
+    }
+    this.movements.sort((a, b) => {
+      let aValue = a[column];
+      let bValue = b[column];
+      // Normalizar valores nulos
+      if (aValue === undefined || aValue === null) aValue = '';
+      if (bValue === undefined || bValue === null) bValue = '';
+      // Si es número
+      if (!isNaN(Number(aValue)) && !isNaN(Number(bValue))) {
+        aValue = Number(aValue);
+        bValue = Number(bValue);
+      } else {
+        aValue = aValue.toString().toLowerCase();
+        bValue = bValue.toString().toLowerCase();
+      }
+      if (aValue < bValue) return this.sortDirection === 'asc' ? -1 : 1;
+      if (aValue > bValue) return this.sortDirection === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }
+
   // Batch search modal (entrada -> salida)
   showBatchSearchModal = false;
   batchSearchLoading = false;
@@ -281,7 +313,7 @@ export class InventoryMovementComponent implements OnInit, OnDestroy {
           this.cachedProducts = data;
           this.productsCached = true;
           this.rawMaterialsLoaded = true;
-          
+
           // Construir mapa id -> detalle
           this.rawMaterialsMap.clear();
           data.forEach((item: any) => {
