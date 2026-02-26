@@ -91,8 +91,8 @@
 
                                     <td class="ps-4" *ngIf="isFirst" [attr.rowspan]="batch.requiredMaterials.length">
                                         <div class="d-flex flex-column">
-                                            <span class="fw-bold text-primary mb-1">#{{ batch.batch?.id }}</span>
-                                            <span *ngIf="isBatchFullyReleased(batch.batch?.id || 0)"
+                                            <span class="fw-bold text-primary mb-1">#{{ batch.batch.id }}</span>
+                                            <span *ngIf="isBatchFullyReleased(batch.batch.id || 0)"
                                                 class="badge bg-success-subtle text-success border border-success-subtle small-badge w-fit">
                                                 En Proceso
                                             </span>
@@ -100,11 +100,11 @@
                                     </td>
 
                                     <td *ngIf="isFirst" [attr.rowspan]="batch.requiredMaterials.length">
-                                        <div class="fw-bold text-dark">{{ batch.product?.name }}</div>
+                                        <div class="fw-bold text-dark">{{ batch.product.name }}</div>
                                         <div class="d-flex align-items-center text-muted small">
-                                            <i class="bi bi-hash me-1"></i>{{ batch.product?.code }}
+                                            <i class="bi bi-hash me-1"></i>{{ batch.product.code }}
                                             <span class="mx-2">|</span>
-                                            <span class="fw-medium text-dark">{{ batch.batch?.quantity }} und.</span>
+                                            <span class="fw-medium text-dark">{{ batch.batch.quantity }} und.</span>
                                         </div>
                                     </td>
 
@@ -141,20 +141,20 @@
 
                                     <td class="pe-4 text-end">
                                         <button class="btn btn-sm px-3 rounded-3 transition-all" [ngClass]="{
-                                            'btn-light text-muted border-0': isMaterialReleased(batch.batch?.id || 0, material.rawMaterialId) || isBatchFullyReleased(batch.batch?.id || 0),
-                                            'btn-primary shadow-sm': material.hasSufficientStock && !isMaterialReleased(batch.batch?.id || 0, material.rawMaterialId) && !isBatchFullyReleased(batch.batch?.id || 0),
-                                            'btn-outline-danger': !material.hasSufficientStock && !isMaterialReleased(batch.batch?.id || 0, material.rawMaterialId) && !isBatchFullyReleased(batch.batch?.id || 0)
-                                        }" [disabled]="!material.hasSufficientStock || isReleasingMaterial(batch.batch?.id || 0, material.rawMaterialId) || isMaterialReleased(batch.batch?.id || 0, material.rawMaterialId) || isBatchFullyReleased(batch.batch?.id || 0)"
+                                            'btn-light text-muted border-0': isMaterialReleased(batch.batch.id || 0, material.rawMaterialId) || isBatchFullyReleased(batch.batch.id || 0),
+                                            'btn-primary shadow-sm': material.hasSufficientStock && !isMaterialReleased(batch.batch.id || 0, material.rawMaterialId) && !isBatchFullyReleased(batch.batch.id || 0),
+                                            'btn-outline-danger': !material.hasSufficientStock && !isMaterialReleased(batch.batch.id || 0, material.rawMaterialId) && !isBatchFullyReleased(batch.batch.id || 0)
+                                        }" [disabled]="!material.hasSufficientStock || isReleasingMaterial(batch.batch.id || 0, material.rawMaterialId) || isMaterialReleased(batch.batch.id || 0, material.rawMaterialId) || isBatchFullyReleased(batch.batch.id || 0)"
                                             (click)="openReleaseForMaterial(batch, material)">
 
                                             <i class="bi" [ngClass]="{
-                                            'bi-check-all fs-5': isMaterialReleased(batch.batch?.id || 0, material.rawMaterialId),
-                                            'bi-arrow-right-short fs-5': material.hasSufficientStock && !isReleasingMaterial(batch.batch?.id || 0, material.rawMaterialId) && !isMaterialReleased(batch.batch?.id || 0, material.rawMaterialId),
-                                            'bi-arrow-repeat spin-animation': isReleasingMaterial(batch.batch?.id || 0, material.rawMaterialId),
-                                            'bi-slash-circle': !material.hasSufficientStock && !isMaterialReleased(batch.batch?.id || 0, material.rawMaterialId)
+                                            'bi-check-all fs-5': isMaterialReleased(batch.batch.id || 0, material.rawMaterialId),
+                                            'bi-arrow-right-short fs-5': material.hasSufficientStock && !isReleasingMaterial(batch.batch.id || 0, material.rawMaterialId) && !isMaterialReleased(batch.batch.id || 0, material.rawMaterialId),
+                                            'bi-arrow-repeat spin-animation': isReleasingMaterial(batch.batch.id || 0, material.rawMaterialId),
+                                            'bi-slash-circle': !material.hasSufficientStock && !isMaterialReleased(batch.batch.id || 0, material.rawMaterialId)
                                         }"></i>
                                             <span class="ms-1 fw-bold">
-                                                {{ isMaterialReleased(batch.batch?.id || 0, material.rawMaterialId) ?
+                                                {{ isMaterialReleased(batch.batch.id || 0, material.rawMaterialId) ?
                                                 'Listo' : (material.hasSufficientStock ? 'Liberar' : 'Bloqueado') }}
                                             </span>
                                         </button>

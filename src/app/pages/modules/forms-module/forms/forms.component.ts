@@ -1,3 +1,4 @@
+
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { trigger, style, transition, animate } from '@angular/animations';
 import { Observable, Subject } from 'rxjs';
@@ -59,20 +60,20 @@ export interface Batch {
 // ─── Constantes de configuración (fuera de la clase, sin recrearse) ───────────
 
 const FIELD_ICON_MAP: Record<string, string> = {
-  text: 'fas fa-font',            string: 'fas fa-font',
-  email: 'fas fa-envelope',       password: 'fas fa-lock',
-  number: 'fas fa-hashtag',       integer: 'fas fa-hashtag',
-  decimal: 'fas fa-calculator',   float: 'fas fa-calculator',
-  tel: 'fas fa-phone',            phone: 'fas fa-phone',
-  url: 'fas fa-link',             search: 'fas fa-search',
-  date: 'fas fa-calendar',        time: 'fas fa-clock',
+  text: 'fas fa-font', string: 'fas fa-font',
+  email: 'fas fa-envelope', password: 'fas fa-lock',
+  number: 'fas fa-hashtag', integer: 'fas fa-hashtag',
+  decimal: 'fas fa-calculator', float: 'fas fa-calculator',
+  tel: 'fas fa-phone', phone: 'fas fa-phone',
+  url: 'fas fa-link', search: 'fas fa-search',
+  date: 'fas fa-calendar', time: 'fas fa-clock',
   'datetime-local': 'fas fa-calendar-alt', datetime: 'fas fa-calendar-alt',
   month: 'fas fa-calendar-check', week: 'fas fa-calendar-week',
-  textarea: 'fas fa-align-left',  text_area: 'fas fa-align-left',
-  select: 'fas fa-list',          dropdown: 'fas fa-list',
+  textarea: 'fas fa-align-left', text_area: 'fas fa-align-left',
+  select: 'fas fa-list', dropdown: 'fas fa-list',
   checkbox: 'fas fa-check-square', radio: 'fas fa-dot-circle',
-  file: 'fas fa-file-upload',     image: 'fas fa-image',
-  range: 'fas fa-sliders-h',      color: 'fas fa-palette',
+  file: 'fas fa-file-upload', image: 'fas fa-image',
+  range: 'fas fa-sliders-h', color: 'fas fa-palette',
 };
 
 // BUG FIX #1: 'number', 'integer', 'decimal', 'float' ahora están en TEXT_INPUT_TYPES
@@ -82,8 +83,8 @@ const TEXT_INPUT_TYPES = new Set([
   'number', 'integer', 'decimal', 'float',   // ← estos faltaban → campos no se renderizaban
 ]);
 
-const DATETIME_TYPES  = new Set(['date', 'time', 'datetime-local', 'datetime', 'month', 'week']);
-const NUMERIC_TYPES   = new Set(['number', 'integer', 'decimal', 'float']);
+const DATETIME_TYPES = new Set(['date', 'time', 'datetime-local', 'datetime', 'month', 'week']);
+const NUMERIC_TYPES = new Set(['number', 'integer', 'decimal', 'float']);
 const FULL_WIDTH_TYPES = new Set(['textarea', 'text_area', 'file', 'image', 'range', 'color']);
 
 // Mapeo de tipo lógico → tipo HTML de input
@@ -115,16 +116,16 @@ export class FormsComponent implements OnInit, OnDestroy {
   forms$: Observable<AppForm[]> = this.store.select(FormResponseSelectors.selectForms);
 
   // Estado UI
-  modalVisible   = false;
-  loadingFields  = false;
+  modalVisible = false;
+  loadingFields = false;
   loadingBatches = false;
-  submitting     = false;
+  submitting = false;
 
   selectedForm: AppForm | null = null;
   dynamicForm!: FormGroup;
 
   // Lotes
-  batches: Batch[]         = [];
+  batches: Batch[] = [];
   filteredBatches: Batch[] = [];
   selectedBatchId: number | null = null;
   batchSearchText = '';
@@ -133,15 +134,15 @@ export class FormsComponent implements OnInit, OnDestroy {
     return this.selectedForm?.title ?? this.selectedForm?.name ?? 'Formulario';
   }
 
-  private destroy$     = new Subject<void>(); // ciclo de vida del componente
-  private modalClose$  = new Subject<void>(); // BUG FIX #2: cancela suscripciones del modal actual
+  private destroy$ = new Subject<void>(); // ciclo de vida del componente
+  private modalClose$ = new Subject<void>(); // BUG FIX #2: cancela suscripciones del modal actual
 
   constructor(
     private store: Store,
     private fb: FormBuilder,
     private alertService: AlertService,
     private batchesService: BatchesService,
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.store.dispatch(FormResponseActions.fetchAllForms());
@@ -160,10 +161,10 @@ export class FormsComponent implements OnInit, OnDestroy {
     // BUG FIX #2: cancelar cualquier suscripción de carga activa del modal anterior
     this.modalClose$.next();
 
-    this.selectedForm  = { ...form };
-    this.modalVisible  = true;
+    this.selectedForm = { ...form };
+    this.modalVisible = true;
     this.loadingFields = false;
-    this.dynamicForm   = this.fb.group({});
+    this.dynamicForm = this.fb.group({});
 
     this.loadBatches();
     if (form.id) this.loadFormFields(form.id);
@@ -173,16 +174,16 @@ export class FormsComponent implements OnInit, OnDestroy {
     // BUG FIX #2: cancelar suscripciones activas del modal
     this.modalClose$.next();
 
-    this.modalVisible    = false;
-    this.selectedForm    = null;
-    this.dynamicForm     = this.fb.group({});
+    this.modalVisible = false;
+    this.selectedForm = null;
+    this.dynamicForm = this.fb.group({});
     this.selectedBatchId = null;
     this.batchSearchText = '';
-    this.batches         = [];
+    this.batches = [];
     this.filteredBatches = [];
-    this.submitting      = false;
-    this.loadingFields   = false;
-    this.loadingBatches  = false;
+    this.submitting = false;
+    this.loadingFields = false;
+    this.loadingBatches = false;
   }
 
   // ── Carga de datos ────────────────────────────────────────────────────────
@@ -193,14 +194,14 @@ export class FormsComponent implements OnInit, OnDestroy {
       .pipe(take(1))
       .subscribe({
         next: (response: any) => {
-          this.batches         = response?.data ?? response ?? [];
+          this.batches = response?.data ?? response ?? [];
           this.filteredBatches = [...this.batches];
-          this.loadingBatches  = false;
+          this.loadingBatches = false;
         },
         error: (err) => {
-          this.batches         = [];
+          this.batches = [];
           this.filteredBatches = [];
-          this.loadingBatches  = false;
+          this.loadingBatches = false;
           this.alertService.error('Error cargando lotes', err?.message ?? 'Error desconocido');
         },
       });
@@ -223,7 +224,7 @@ export class FormsComponent implements OnInit, OnDestroy {
       .subscribe(fields => {
         if (this.selectedForm?.id !== formId) return; // el usuario cambió de form
         this.loadingFields = false;
-        this.selectedForm  = { ...this.selectedForm!, form_fields: [...(fields ?? [])] };
+        this.selectedForm = { ...this.selectedForm!, form_fields: [...(fields ?? [])] };
         this.buildDynamicForm(fields ?? []);
       });
   }
@@ -232,9 +233,9 @@ export class FormsComponent implements OnInit, OnDestroy {
 
   private buildDynamicForm(fields: FormField[]): void {
     const controls = fields.reduce((acc, field) => {
-      const code         = this.getFieldCode(field);
+      const code = this.getFieldCode(field);
       const defaultValue = this.getDefaultValue(field);
-      acc[code]          = [defaultValue, this.buildValidators(field)];
+      acc[code] = [defaultValue, this.buildValidators(field)];
       return acc;
     }, {} as Record<string, any>);
 
@@ -245,9 +246,9 @@ export class FormsComponent implements OnInit, OnDestroy {
   private getDefaultValue(field: FormField): any {
     const type = this.getFieldType(field);
     if (type === 'checkbox' && !field.options) return false;
-    if (type === 'checkbox' && field.options)  return [];
-    if (NUMERIC_TYPES.has(type))              return null;
-    if (type === 'range')                     return field.min ?? 0;
+    if (type === 'checkbox' && field.options) return [];
+    if (NUMERIC_TYPES.has(type)) return null;
+    if (type === 'range') return field.min ?? 0;
     return '';
   }
 
@@ -325,10 +326,10 @@ export class FormsComponent implements OnInit, OnDestroy {
     const search = this.batchSearchText.trim().toLowerCase();
     this.filteredBatches = search
       ? this.batches.filter(b =>
-          b.name?.toLowerCase().includes(search) ||
-          b.code?.toLowerCase().includes(search) ||
-          b.id?.toString().includes(search),
-        )
+        b.name?.toLowerCase().includes(search) ||
+        b.code?.toLowerCase().includes(search) ||
+        b.id?.toString().includes(search),
+      )
       : [...this.batches];
   }
 
@@ -420,7 +421,7 @@ export class FormsComponent implements OnInit, OnDestroy {
     return this.selectedForm.form_fields.reduce((count, field) => {
       const value = this.dynamicForm.get(this.getFieldCode(field))?.value;
       const filled = value !== null && value !== undefined && value !== '' &&
-                     !(Array.isArray(value) && value.length === 0);
+        !(Array.isArray(value) && value.length === 0);
       return filled ? count + 1 : count;
     }, 0);
   }
@@ -453,4 +454,15 @@ export class FormsComponent implements OnInit, OnDestroy {
     const current = this.dynamicForm?.get(fieldCode)?.value;
     return Array.isArray(current) ? current.includes(value) : current === value;
   }
+
+
+  // ...dentro de la clase FormsComponent...
+  getOptionValue(opt: any): string {
+    return (opt && typeof opt === 'object' && 'value' in opt) ? opt.value : opt;
+  }
+
+  getOptionLabel(opt: any): string {
+    return (opt && typeof opt === 'object' && 'label' in opt) ? opt.label : opt;
+  }
+  // ...existing code...
 }

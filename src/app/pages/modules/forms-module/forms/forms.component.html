@@ -240,8 +240,8 @@
                             [formControlName]="f.code"
                             class="form-select-custom">
                       <option value="" disabled>Selecciona una opción</option>
-                      <option *ngFor="let opt of field.options" [value]="opt.value || opt">
-                        {{ opt.label || opt }}
+                      <option *ngFor="let opt of field.options" [value]="getOptionValue(opt)">
+                        {{ getOptionLabel(opt) }}
                       </option>
                     </select>
                     <i class="ti ti-chevron-down select-icon"></i>
@@ -261,24 +261,24 @@
                   <div class="checkbox-group"
                        *ngIf="getFieldType(field) === 'checkbox' && field.options">
                     <label class="checkbox-wrapper" *ngFor="let opt of field.options">
-                      <input type="checkbox"
-                             [checked]="isChecked(f.code, opt.value || opt)"
-                             [value]="opt.value || opt"
-                             (change)="onCheckboxChange($event, f.code, opt.value || opt)" />
-                      <span class="checkbox-custom"></span>
-                      <span class="checkbox-label">{{ opt.label || opt }}</span>
+                       <input type="checkbox"
+                         [checked]="isChecked(f.code, getOptionValue(opt))"
+                         [value]="getOptionValue(opt)"
+                         (change)="onCheckboxChange($event, f.code, getOptionValue(opt))" />
+                       <span class="checkbox-custom"></span>
+                       <span class="checkbox-label">{{ getOptionLabel(opt) }}</span>
                     </label>
                   </div>
 
                   <!-- ── Radio ── -->
                   <div class="radio-group" *ngIf="getFieldType(field) === 'radio'">
                     <label class="radio-wrapper" *ngFor="let opt of field.options">
-                      <input type="radio"
-                             [name]="f.code"
-                             [formControlName]="f.code"
-                             [value]="opt.value || opt" />
+                       <input type="radio"
+                         [name]="f.code"
+                         [formControlName]="f.code"
+                         [value]="getOptionValue(opt)" />
                       <span class="radio-custom"></span>
-                      <span class="radio-label">{{ opt.label || opt }}</span>
+                      <span class="radio-label">{{ getOptionLabel(opt) }}</span>
                     </label>
                   </div>
 
