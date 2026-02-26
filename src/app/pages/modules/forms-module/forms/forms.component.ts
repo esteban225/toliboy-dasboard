@@ -1,15 +1,17 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { trigger, style, transition, animate } from '@angular/animations';
 import { Observable, Subject } from 'rxjs';
-import { takeUntil, take } from 'rxjs/operators';
+import { takeUntil, take, filter, distinctUntilChanged } from 'rxjs/operators';
 import { Store } from '@ngrx/store';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, AbstractControl } from '@angular/forms';
 import * as FormResponseActions from '../store/actions/formResponse.actions';
 import * as FormResponseSelectors from '../store/selectors/formResponse.selectors';
 import { AlertService } from 'src/app/core/services/alert.service';
 import { BatchesService } from 'src/app/pages/modules/batches-module/services/batches.service';
 
-interface FormField {
+// ─── Interfaces ───────────────────────────────────────────────────────────────
+
+export interface FormField {
   field_code?: string;
   name?: string;
   code?: string;
@@ -37,7 +39,7 @@ interface FormField {
   [key: string]: any;
 }
 
-interface AppForm {
+export interface AppForm {
   id: number;
   name?: string;
   title?: string;
@@ -47,35 +49,50 @@ interface AppForm {
   form_fields?: FormField[];
 }
 
-interface Batch {
+export interface Batch {
   id: number;
   name?: string;
   code?: string;
   status?: string;
 }
 
+// ─── Constantes de configuración (fuera de la clase, sin recrearse) ───────────
+
 const FIELD_ICON_MAP: Record<string, string> = {
-  text: 'fas fa-font', string: 'fas fa-font', email: 'fas fa-envelope',
-  password: 'fas fa-lock', number: 'fas fa-hashtag', integer: 'fas fa-hashtag',
-  decimal: 'fas fa-calculator', float: 'fas fa-calculator', tel: 'fas fa-phone',
-  phone: 'fas fa-phone', url: 'fas fa-link', search: 'fas fa-search',
-  date: 'fas fa-calendar', time: 'fas fa-clock', 'datetime-local': 'fas fa-calendar-alt',
-  datetime: 'fas fa-calendar-alt', month: 'fas fa-calendar-check',
-  week: 'fas fa-calendar-week', textarea: 'fas fa-align-left',
-  text_area: 'fas fa-align-left', select: 'fas fa-list', dropdown: 'fas fa-list',
+  text: 'fas fa-font',            string: 'fas fa-font',
+  email: 'fas fa-envelope',       password: 'fas fa-lock',
+  number: 'fas fa-hashtag',       integer: 'fas fa-hashtag',
+  decimal: 'fas fa-calculator',   float: 'fas fa-calculator',
+  tel: 'fas fa-phone',            phone: 'fas fa-phone',
+  url: 'fas fa-link',             search: 'fas fa-search',
+  date: 'fas fa-calendar',        time: 'fas fa-clock',
+  'datetime-local': 'fas fa-calendar-alt', datetime: 'fas fa-calendar-alt',
+  month: 'fas fa-calendar-check', week: 'fas fa-calendar-week',
+  textarea: 'fas fa-align-left',  text_area: 'fas fa-align-left',
+  select: 'fas fa-list',          dropdown: 'fas fa-list',
   checkbox: 'fas fa-check-square', radio: 'fas fa-dot-circle',
-  file: 'fas fa-file-upload', image: 'fas fa-image',
-  range: 'fas fa-sliders-h', color: 'fas fa-palette',
+  file: 'fas fa-file-upload',     image: 'fas fa-image',
+  range: 'fas fa-sliders-h',      color: 'fas fa-palette',
 };
 
-const INPUT_TYPE_MAP: Record<string, string> = {
-  string: 'text', phone: 'tel', integer: 'number', decimal: 'number', float: 'number',
+// BUG FIX #1: 'number', 'integer', 'decimal', 'float' ahora están en TEXT_INPUT_TYPES
+// para que el bloque de input los renderice correctamente.
+const TEXT_INPUT_TYPES = new Set([
+  'text', 'string', 'email', 'password', 'tel', 'phone', 'url', 'search',
+  'number', 'integer', 'decimal', 'float',   // ← estos faltaban → campos no se renderizaban
+]);
+
+const DATETIME_TYPES  = new Set(['date', 'time', 'datetime-local', 'datetime', 'month', 'week']);
+const NUMERIC_TYPES   = new Set(['number', 'integer', 'decimal', 'float']);
+const FULL_WIDTH_TYPES = new Set(['textarea', 'text_area', 'file', 'image', 'range', 'color']);
+
+// Mapeo de tipo lógico → tipo HTML de input
+const HTML_INPUT_TYPE_MAP: Record<string, string> = {
+  string: 'text', phone: 'tel',
+  integer: 'number', decimal: 'number', float: 'number',
 };
 
-const TEXT_FIELD_TYPES  = new Set(['text', 'string', 'email', 'password', 'tel', 'phone', 'url', 'search']);
-const DATETIME_FIELD_TYPES = new Set(['date', 'time', 'datetime-local', 'datetime', 'month', 'week']);
-const NUMERIC_FIELD_TYPES  = new Set(['number', 'integer', 'decimal', 'float']);
-const FULL_WIDTH_TYPES  = new Set(['textarea', 'text_area', 'file', 'image', 'range', 'color']);
+// ─── Componente ───────────────────────────────────────────────────────────────
 
 @Component({
   selector: 'app-forms',
@@ -97,11 +114,11 @@ export class FormsComponent implements OnInit, OnDestroy {
 
   forms$: Observable<AppForm[]> = this.store.select(FormResponseSelectors.selectForms);
 
-  // Estado modal
-  modalVisible  = false;
-  loadingFields = false;
+  // Estado UI
+  modalVisible   = false;
+  loadingFields  = false;
   loadingBatches = false;
-  submitting    = false;
+  submitting     = false;
 
   selectedForm: AppForm | null = null;
   dynamicForm!: FormGroup;
@@ -116,7 +133,8 @@ export class FormsComponent implements OnInit, OnDestroy {
     return this.selectedForm?.title ?? this.selectedForm?.name ?? 'Formulario';
   }
 
-  private destroy$ = new Subject<void>();
+  private destroy$     = new Subject<void>(); // ciclo de vida del componente
+  private modalClose$  = new Subject<void>(); // BUG FIX #2: cancela suscripciones del modal actual
 
   constructor(
     private store: Store,
@@ -132,30 +150,42 @@ export class FormsComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+    this.modalClose$.next();
+    this.modalClose$.complete();
   }
 
-  // ── Modal ────────────────────────────────────────────────────────────────
+  // ── Modal ─────────────────────────────────────────────────────────────────
 
   openModal(form: AppForm): void {
-    this.selectedForm = { ...form };
-    this.modalVisible = true;
-    this.dynamicForm  = this.fb.group({});
+    // BUG FIX #2: cancelar cualquier suscripción de carga activa del modal anterior
+    this.modalClose$.next();
+
+    this.selectedForm  = { ...form };
+    this.modalVisible  = true;
+    this.loadingFields = false;
+    this.dynamicForm   = this.fb.group({});
+
     this.loadBatches();
     if (form.id) this.loadFormFields(form.id);
   }
 
   closeModal(): void {
-    this.modalVisible   = false;
-    this.selectedForm   = null;
-    this.dynamicForm    = this.fb.group({});
+    // BUG FIX #2: cancelar suscripciones activas del modal
+    this.modalClose$.next();
+
+    this.modalVisible    = false;
+    this.selectedForm    = null;
+    this.dynamicForm     = this.fb.group({});
     this.selectedBatchId = null;
     this.batchSearchText = '';
     this.batches         = [];
     this.filteredBatches = [];
     this.submitting      = false;
+    this.loadingFields   = false;
+    this.loadingBatches  = false;
   }
 
-  // ── Carga de datos ───────────────────────────────────────────────────────
+  // ── Carga de datos ────────────────────────────────────────────────────────
 
   private loadBatches(): void {
     this.loadingBatches = true;
@@ -181,25 +211,44 @@ export class FormsComponent implements OnInit, OnDestroy {
     this.store.dispatch(FormResponseActions.loadFormFields({ formId }));
 
     this.store.select(FormResponseSelectors.selectFormFieldsByFormId(formId))
-      .pipe(takeUntil(this.destroy$))
+      .pipe(
+        // BUG FIX #3: solo procesar la primera emisión con datos, ignorar re-emisiones
+        // que destruirían un formulario ya iniciado por el usuario.
+        filter(fields => Array.isArray(fields) && fields.length > 0),
+        take(1),
+        // BUG FIX #2: cancelar si el modal se cierra o se abre otro formulario
+        takeUntil(this.modalClose$),
+        takeUntil(this.destroy$),
+      )
       .subscribe(fields => {
-        if (!fields?.length) return;
+        if (this.selectedForm?.id !== formId) return; // el usuario cambió de form
         this.loadingFields = false;
-        if (this.selectedForm?.id === formId) {
-          this.selectedForm = { ...this.selectedForm, form_fields: [...fields] };
-          this.buildDynamicForm(fields);
-        }
+        this.selectedForm  = { ...this.selectedForm!, form_fields: [...(fields ?? [])] };
+        this.buildDynamicForm(fields ?? []);
       });
   }
 
-  // ── Formulario dinámico ──────────────────────────────────────────────────
+  // ── Formulario dinámico ───────────────────────────────────────────────────
 
   private buildDynamicForm(fields: FormField[]): void {
     const controls = fields.reduce((acc, field) => {
-      acc[this.getFieldCode(field)] = ['', this.buildValidators(field)];
+      const code         = this.getFieldCode(field);
+      const defaultValue = this.getDefaultValue(field);
+      acc[code]          = [defaultValue, this.buildValidators(field)];
       return acc;
     }, {} as Record<string, any>);
+
     this.dynamicForm = this.fb.group(controls);
+  }
+
+  /** Valor inicial por tipo de campo */
+  private getDefaultValue(field: FormField): any {
+    const type = this.getFieldType(field);
+    if (type === 'checkbox' && !field.options) return false;
+    if (type === 'checkbox' && field.options)  return [];
+    if (NUMERIC_TYPES.has(type))              return null;
+    if (type === 'range')                     return field.min ?? 0;
+    return '';
   }
 
   private buildValidators(field: FormField): any[] {
@@ -208,8 +257,9 @@ export class FormsComponent implements OnInit, OnDestroy {
 
     if (this.isFieldRequired(field)) validators.push(Validators.required);
 
-    if (NUMERIC_FIELD_TYPES.has(type)) {
-      validators.push(Validators.pattern(/^-?\d+(?:\.\d+)?$/));
+    // BUG FIX #4: quitar pattern numérico — rompe la escritura intermedia (ej: "-", "1.").
+    // Los inputs type="number" ya validan en el navegador; Validators.min/max cubren el rango.
+    if (NUMERIC_TYPES.has(type)) {
       if (field.min !== undefined) validators.push(Validators.min(field.min));
       if (field.max !== undefined) validators.push(Validators.max(field.max));
     } else if (type === 'email') {
@@ -230,7 +280,7 @@ export class FormsComponent implements OnInit, OnDestroy {
     return validators;
   }
 
-  // ── Envío ────────────────────────────────────────────────────────────────
+  // ── Envío ─────────────────────────────────────────────────────────────────
 
   onSubmitForm(): void {
     if (!this.dynamicForm?.valid) {
@@ -252,6 +302,7 @@ export class FormsComponent implements OnInit, OnDestroy {
       },
     }));
 
+    // Idealmente: reaccionar a un selector de éxito/error del store en lugar de setTimeout
     setTimeout(() => {
       this.submitting = false;
       this.alertService.success('Formulario enviado correctamente');
@@ -261,9 +312,14 @@ export class FormsComponent implements OnInit, OnDestroy {
 
   resetForm(): void {
     this.dynamicForm?.reset();
+    // Restaurar valores default para checkboxes y ranges
+    this.selectedForm?.form_fields?.forEach(field => {
+      const code = this.getFieldCode(field);
+      this.dynamicForm.get(code)?.setValue(this.getDefaultValue(field));
+    });
   }
 
-  // ── Lotes ────────────────────────────────────────────────────────────────
+  // ── Lotes ─────────────────────────────────────────────────────────────────
 
   filterBatches(): void {
     const search = this.batchSearchText.trim().toLowerCase();
@@ -286,24 +342,68 @@ export class FormsComponent implements OnInit, OnDestroy {
     return batch ? `${batch.name ?? 'Lote'} (${batch.code ?? '#' + batch.id})` : '';
   }
 
-  // ── Helpers de campos ────────────────────────────────────────────────────
+  // ── Helpers de campos ─────────────────────────────────────────────────────
 
-  getFieldCode(field: FormField): string        { return field.field_code ?? field.name ?? field.code ?? 'unknown_field'; }
-  getFieldLabel(field: FormField): string       { return field.label ?? field.title ?? field.name ?? 'Campo'; }
-  getFieldType(field: FormField): string        { return field.type ?? field.field_type ?? 'text'; }
-  getFieldPlaceholder(field: FormField): string { return field.placeholder ?? field.hint ?? ''; }
-  getFieldDescription(field: FormField): string { return field.description ?? field.help ?? ''; }
-  getFieldIcon(field: FormField): string        { return FIELD_ICON_MAP[this.getFieldType(field)] ?? 'fas fa-question-circle'; }
-  getInputType(field: FormField): string        { return INPUT_TYPE_MAP[this.getFieldType(field)] ?? this.getFieldType(field); }
-  getAcceptedFileTypes(field: FormField): string { return this.getFieldType(field) === 'image' ? 'image/*' : field.accept ?? '*/*'; }
+  getFieldCode(field: FormField): string {
+    return field.field_code ?? field.name ?? field.code ?? 'unknown_field';
+  }
 
-  isFieldRequired(field: FormField): boolean  { return field.required === true || field.required === 'true' || field.mandatory === true; }
-  isTextInputField(field: FormField): boolean  { return TEXT_FIELD_TYPES.has(this.getFieldType(field)); }
-  isDateTimeField(field: FormField): boolean   { return DATETIME_FIELD_TYPES.has(this.getFieldType(field)); }
-  isNumericField(field: FormField): boolean    { return NUMERIC_FIELD_TYPES.has(this.getFieldType(field)); }
-  isFullWidthField(field: FormField): boolean  { return FULL_WIDTH_TYPES.has(this.getFieldType(field)) || field.fullWidth === true; }
+  getFieldLabel(field: FormField): string {
+    return field.label ?? field.title ?? field.name ?? 'Campo';
+  }
 
-  // ── Progreso ─────────────────────────────────────────────────────────────
+  getFieldType(field: FormField): string {
+    return (field.type ?? field.field_type ?? 'text').toLowerCase();
+  }
+
+  getFieldPlaceholder(field: FormField): string {
+    return field.placeholder ?? field.hint ?? '';
+  }
+
+  getFieldDescription(field: FormField): string {
+    return field.description ?? field.help ?? '';
+  }
+
+  getFieldIcon(field: FormField): string {
+    return FIELD_ICON_MAP[this.getFieldType(field)] ?? 'fas fa-question-circle';
+  }
+
+  /** Tipo HTML correcto para el atributo [type] del input */
+  getInputType(field: FormField): string {
+    const type = this.getFieldType(field);
+    return HTML_INPUT_TYPE_MAP[type] ?? type;
+  }
+
+  getAcceptedFileTypes(field: FormField): string {
+    return this.getFieldType(field) === 'image' ? 'image/*' : field.accept ?? '*/*';
+  }
+
+  isFieldRequired(field: FormField): boolean {
+    return field.required === true || field.required === 'true' || field.mandatory === true;
+  }
+
+  /** BUG FIX #1: ahora incluye los tipos numéricos */
+  isTextInputField(field: FormField): boolean {
+    return TEXT_INPUT_TYPES.has(this.getFieldType(field));
+  }
+
+  isDateTimeField(field: FormField): boolean {
+    return DATETIME_TYPES.has(this.getFieldType(field));
+  }
+
+  isNumericField(field: FormField): boolean {
+    return NUMERIC_TYPES.has(this.getFieldType(field));
+  }
+
+  isFullWidthField(field: FormField): boolean {
+    return FULL_WIDTH_TYPES.has(this.getFieldType(field)) || field.fullWidth === true;
+  }
+
+  getControl(field: FormField): AbstractControl | null {
+    return this.dynamicForm?.get(this.getFieldCode(field)) ?? null;
+  }
+
+  // ── Progreso ──────────────────────────────────────────────────────────────
 
   getActiveFormsCount(forms: AppForm[]): number {
     return forms?.filter(f => f.status === 'active' || !f.status).length ?? 0;
@@ -319,7 +419,9 @@ export class FormsComponent implements OnInit, OnDestroy {
     if (!this.selectedForm?.form_fields || !this.dynamicForm) return 0;
     return this.selectedForm.form_fields.reduce((count, field) => {
       const value = this.dynamicForm.get(this.getFieldCode(field))?.value;
-      return value !== null && value !== undefined && value !== '' ? count + 1 : count;
+      const filled = value !== null && value !== undefined && value !== '' &&
+                     !(Array.isArray(value) && value.length === 0);
+      return filled ? count + 1 : count;
     }, 0);
   }
 
@@ -341,6 +443,7 @@ export class FormsComponent implements OnInit, OnDestroy {
     if (oversized) {
       this.alertService.error(`El archivo "${oversized.name}" excede el tamaño máximo (5MB)`);
       this.dynamicForm.patchValue({ [fieldCode]: null });
+      input.value = '';
       return;
     }
     this.dynamicForm.patchValue({ [fieldCode]: input.multiple ? Array.from(files) : files[0] });

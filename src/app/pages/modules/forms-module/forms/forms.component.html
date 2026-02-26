@@ -4,8 +4,7 @@
   <div class="hero-content">
     <div class="hero-text">
       <h1 class="hero-title">
-        <i class="ti ti-file-text me-3"></i>
-        Centro de Formularios
+        <i class="ti ti-file-text me-3"></i>Centro de Formularios
       </h1>
       <p class="hero-subtitle">Gestiona y completa los formularios de tu organización</p>
     </div>
@@ -90,7 +89,9 @@
         <div class="progress-fill" [style.width]="getFormProgress() + '%'"></div>
       </div>
       <div class="progress-info">
-        <span class="progress-text">{{ getCompletedFieldsCount() }} de {{ selectedForm!.form_fields!.length }} campos</span>
+        <span class="progress-text">
+          {{ getCompletedFieldsCount() }} de {{ selectedForm!.form_fields!.length }} campos
+        </span>
         <span class="progress-percent">{{ getFormProgress() }}%</span>
       </div>
     </div>
@@ -98,6 +99,7 @@
     <!-- Body -->
     <div class="modal-body">
 
+      <!-- Cargando campos -->
       <div *ngIf="loadingFields" class="loading-state">
         <div class="loading-spinner"></div>
         <p>Cargando formulario...</p>
@@ -135,14 +137,16 @@
                    [class.selected]="selectedBatchId === batch.id"
                    (click)="selectBatch(batch.id)">
                 <div class="batch-option-check">
-                  <i class="ti ti-circle-filled"     *ngIf="selectedBatchId !== batch.id"></i>
+                  <i class="ti ti-circle-filled"           *ngIf="selectedBatchId !== batch.id"></i>
                   <i class="ti ti-circle-check text-primary" *ngIf="selectedBatchId === batch.id"></i>
                 </div>
                 <div class="batch-option-info">
                   <div class="batch-name">{{ batch.name || 'Lote sin nombre' }}</div>
                   <div class="batch-meta">
                     <span class="batch-code">{{ batch.code }}</span>
-                    <span class="batch-status" [ngClass]="'status-' + batch.status">{{ batch.status || 'N/A' }}</span>
+                    <span class="batch-status" [ngClass]="'status-' + batch.status">
+                      {{ batch.status || 'N/A' }}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -167,182 +171,202 @@
               (ngSubmit)="onSubmitForm()"
               *ngIf="dynamicForm && selectedForm.form_fields?.length">
           <div class="fields-grid">
-            <div class="field-wrapper"
-                 *ngFor="let field of selectedForm.form_fields"
-                 [class.full-width]="isFullWidthField(field)"
-                 [class.has-error]="dynamicForm.get(getFieldCode(field))?.invalid && dynamicForm.get(getFieldCode(field))?.touched"
-                 [class.is-filled]="dynamicForm.get(getFieldCode(field))?.value">
 
-              <label class="field-label" [for]="getFieldCode(field)">
-                <i [class]="getFieldIcon(field)" class="field-icon"></i>
-                {{ getFieldLabel(field) }}
-                <span class="required-badge" *ngIf="isFieldRequired(field)">Requerido</span>
-              </label>
+            <!--
+              FIX: usamos una variable local "ctrl" y "code" via ng-container
+              para no llamar getControl()/getFieldCode() 7+ veces por campo.
+            -->
+            <ng-container *ngFor="let field of selectedForm.form_fields">
+              <ng-container *ngIf="{ code: getFieldCode(field), ctrl: getControl(field) } as f">
 
-              <!-- Text / Email / Password / Tel / URL -->
-              <div class="input-wrapper" *ngIf="isTextInputField(field)">
-                <input [type]="getInputType(field)"
-                       [id]="getFieldCode(field)"
-                       [formControlName]="getFieldCode(field)"
-                       [placeholder]="getFieldPlaceholder(field) || 'Ingresa ' + getFieldLabel(field)"
-                       class="form-input"
-                       [maxlength]="field.maxLength || field.max_length || null"
-                       [min]="field.min || null"
-                       [max]="field.max || null"
-                       [step]="field.step || (isNumericField(field) ? (getFieldType(field) === 'integer' ? 1 : 0.01) : null)" />
-                <span class="input-icon-right"
-                      *ngIf="dynamicForm.get(getFieldCode(field))?.valid && dynamicForm.get(getFieldCode(field))?.value">
-                  <i class="ti ti-check text-success"></i>
-                </span>
-              </div>
+                <div class="field-wrapper"
+                     [class.full-width]="isFullWidthField(field)"
+                     [class.has-error]="f.ctrl?.invalid && f.ctrl?.touched"
+                     [class.is-filled]="f.ctrl?.value !== null && f.ctrl?.value !== '' && f.ctrl?.value !== undefined">
 
-              <!-- Date / Time / Datetime -->
-              <div class="input-wrapper" *ngIf="isDateTimeField(field)">
-                <input [type]="getInputType(field)"
-                       [id]="getFieldCode(field)"
-                       [formControlName]="getFieldCode(field)"
-                       class="form-input"
-                       [min]="field.min || null"
-                       [max]="field.max || null" />
-              </div>
+                  <!-- Label -->
+                  <label class="field-label" [for]="f.code">
+                    <i [class]="getFieldIcon(field)" class="field-icon"></i>
+                    {{ getFieldLabel(field) }}
+                    <span class="required-badge" *ngIf="isFieldRequired(field)">Requerido</span>
+                  </label>
 
-              <!-- Textarea -->
-              <div class="textarea-wrapper"
-                   *ngIf="getFieldType(field) === 'textarea' || getFieldType(field) === 'text_area'">
-                <textarea [id]="getFieldCode(field)"
-                          [formControlName]="getFieldCode(field)"
-                          [placeholder]="getFieldPlaceholder(field) || 'Describe aquí...'"
-                          class="form-textarea"
-                          [maxlength]="field.maxLength || field.max_length || 500"
-                          rows="4"></textarea>
-                <div class="char-counter" *ngIf="field.maxLength || field.max_length">
-                  {{ dynamicForm.get(getFieldCode(field))?.value?.length || 0 }} / {{ field.maxLength || field.max_length }}
+                  <!-- ── Text / Email / Password / Tel / URL / Number / Integer / Decimal / Float
+                       FIX #1: isTextInputField ahora incluye los tipos numéricos
+                  ── -->
+                  <div class="input-wrapper" *ngIf="isTextInputField(field)">
+                    <input [type]="getInputType(field)"
+                           [id]="f.code"
+                           [formControlName]="f.code"
+                           [placeholder]="getFieldPlaceholder(field) || ('Ingresa ' + getFieldLabel(field))"
+                           class="form-input"
+                           [maxlength]="isNumericField(field) ? null : (field.maxLength || field.max_length || null)"
+                           [min]="field.min ?? null"
+                           [max]="field.max ?? null"
+                           [step]="field.step || (getFieldType(field) === 'integer' ? 1 : (isNumericField(field) ? 0.01 : null))" />
+                    <span class="input-icon-right" *ngIf="f.ctrl?.valid && f.ctrl?.value !== null && f.ctrl?.value !== ''">
+                      <i class="ti ti-check text-success"></i>
+                    </span>
+                  </div>
+
+                  <!-- ── Date / Time / Datetime ── -->
+                  <div class="input-wrapper" *ngIf="isDateTimeField(field)">
+                    <input [type]="getInputType(field)"
+                           [id]="f.code"
+                           [formControlName]="f.code"
+                           class="form-input"
+                           [min]="field.min ?? null"
+                           [max]="field.max ?? null" />
+                  </div>
+
+                  <!-- ── Textarea ── -->
+                  <div class="textarea-wrapper"
+                       *ngIf="getFieldType(field) === 'textarea' || getFieldType(field) === 'text_area'">
+                    <textarea [id]="f.code"
+                              [formControlName]="f.code"
+                              [placeholder]="getFieldPlaceholder(field) || 'Describe aquí...'"
+                              class="form-textarea"
+                              [maxlength]="field.maxLength || field.max_length || 500"
+                              rows="4"></textarea>
+                    <div class="char-counter" *ngIf="field.maxLength || field.max_length">
+                      {{ f.ctrl?.value?.length || 0 }} / {{ field.maxLength || field.max_length }}
+                    </div>
+                  </div>
+
+                  <!-- ── Select / Dropdown ── -->
+                  <div class="select-wrapper"
+                       *ngIf="getFieldType(field) === 'select' || getFieldType(field) === 'dropdown'">
+                    <select [id]="f.code"
+                            [formControlName]="f.code"
+                            class="form-select-custom">
+                      <option value="" disabled>Selecciona una opción</option>
+                      <option *ngFor="let opt of field.options" [value]="opt.value || opt">
+                        {{ opt.label || opt }}
+                      </option>
+                    </select>
+                    <i class="ti ti-chevron-down select-icon"></i>
+                  </div>
+
+                  <!-- ── Checkbox único ── -->
+                  <label class="checkbox-wrapper"
+                         *ngIf="getFieldType(field) === 'checkbox' && !field.options">
+                    <input type="checkbox"
+                           [id]="f.code"
+                           [formControlName]="f.code" />
+                    <span class="checkbox-custom"></span>
+                    <span class="checkbox-label">{{ getFieldPlaceholder(field) || 'Sí, confirmo' }}</span>
+                  </label>
+
+                  <!-- ── Checkbox múltiple ── -->
+                  <div class="checkbox-group"
+                       *ngIf="getFieldType(field) === 'checkbox' && field.options">
+                    <label class="checkbox-wrapper" *ngFor="let opt of field.options">
+                      <input type="checkbox"
+                             [checked]="isChecked(f.code, opt.value || opt)"
+                             [value]="opt.value || opt"
+                             (change)="onCheckboxChange($event, f.code, opt.value || opt)" />
+                      <span class="checkbox-custom"></span>
+                      <span class="checkbox-label">{{ opt.label || opt }}</span>
+                    </label>
+                  </div>
+
+                  <!-- ── Radio ── -->
+                  <div class="radio-group" *ngIf="getFieldType(field) === 'radio'">
+                    <label class="radio-wrapper" *ngFor="let opt of field.options">
+                      <input type="radio"
+                             [name]="f.code"
+                             [formControlName]="f.code"
+                             [value]="opt.value || opt" />
+                      <span class="radio-custom"></span>
+                      <span class="radio-label">{{ opt.label || opt }}</span>
+                    </label>
+                  </div>
+
+                  <!-- ── File / Image ── -->
+                  <div class="file-upload-wrapper"
+                       *ngIf="getFieldType(field) === 'file' || getFieldType(field) === 'image'">
+                    <input type="file"
+                           [id]="f.code"
+                           [accept]="getAcceptedFileTypes(field)"
+                           (change)="onFileChange($event, f.code)"
+                           class="file-input" />
+                    <label [for]="f.code" class="file-upload-label">
+                      <i class="ti ti-cloud-upload"></i>
+                      <span class="upload-text">Arrastra archivos aquí o haz clic</span>
+                      <span class="upload-hint">
+                        {{ getFieldType(field) === 'image' ? 'PNG, JPG hasta 5MB' : 'Cualquier archivo hasta 5MB' }}
+                      </span>
+                    </label>
+                    <span class="upload-selected" *ngIf="f.ctrl?.value">
+                      <i class="ti ti-paperclip me-1"></i>
+                      {{ f.ctrl?.value?.name || 'Archivo seleccionado' }}
+                    </span>
+                  </div>
+
+                  <!-- ── Range ── -->
+                  <div class="range-wrapper" *ngIf="getFieldType(field) === 'range'">
+                    <input type="range"
+                           [id]="f.code"
+                           [formControlName]="f.code"
+                           [min]="field.min ?? 0"
+                           [max]="field.max ?? 100"
+                           [step]="field.step ?? 1"
+                           class="form-range" />
+                    <div class="range-labels">
+                      <span>{{ field.min ?? 0 }}</span>
+                      <span class="range-value">{{ f.ctrl?.value ?? field.min ?? 0 }}</span>
+                      <span>{{ field.max ?? 100 }}</span>
+                    </div>
+                  </div>
+
+                  <!-- ── Color ── -->
+                  <div class="color-wrapper" *ngIf="getFieldType(field) === 'color'">
+                    <input type="color"
+                           [id]="f.code"
+                           [formControlName]="f.code"
+                           class="color-input" />
+                    <span class="color-value">{{ f.ctrl?.value || '#000000' }}</span>
+                  </div>
+
+                  <!-- Descripción del campo -->
+                  <p class="field-description" *ngIf="getFieldDescription(field)">
+                    <i class="ti ti-info-circle me-1"></i>{{ getFieldDescription(field) }}
+                  </p>
+
+                  <!-- Errores de validación -->
+                  <div class="field-error" *ngIf="f.ctrl?.invalid && f.ctrl?.touched">
+                    <i class="ti ti-alert-circle me-1"></i>
+                    <ng-container [ngSwitch]="true">
+                      <span *ngSwitchCase="!!f.ctrl?.errors?.['required']">
+                        Este campo es obligatorio
+                      </span>
+                      <span *ngSwitchCase="!!f.ctrl?.errors?.['email']">
+                        Ingresa un email válido
+                      </span>
+                      <span *ngSwitchCase="!!f.ctrl?.errors?.['minlength']">
+                        Mínimo {{ f.ctrl?.errors?.['minlength'].requiredLength }} caracteres
+                      </span>
+                      <span *ngSwitchCase="!!f.ctrl?.errors?.['maxlength']">
+                        Máximo {{ f.ctrl?.errors?.['maxlength'].requiredLength }} caracteres
+                      </span>
+                      <span *ngSwitchCase="!!f.ctrl?.errors?.['min']">
+                        El valor mínimo es {{ f.ctrl?.errors?.['min'].min }}
+                      </span>
+                      <span *ngSwitchCase="!!f.ctrl?.errors?.['max']">
+                        El valor máximo es {{ f.ctrl?.errors?.['max'].max }}
+                      </span>
+                      <span *ngSwitchDefault>Formato inválido</span>
+                    </ng-container>
+                  </div>
+
                 </div>
-              </div>
+              </ng-container>
+            </ng-container>
 
-              <!-- Select -->
-              <div class="select-wrapper"
-                   *ngIf="getFieldType(field) === 'select' || getFieldType(field) === 'dropdown'">
-                <select [id]="getFieldCode(field)"
-                        [formControlName]="getFieldCode(field)"
-                        class="form-select-custom">
-                  <option value="" disabled>Selecciona una opción</option>
-                  <option *ngFor="let opt of field.options" [value]="opt.value || opt">
-                    {{ opt.label || opt }}
-                  </option>
-                </select>
-                <i class="ti ti-chevron-down select-icon"></i>
-              </div>
-
-              <!-- Checkbox único -->
-              <label class="checkbox-wrapper"
-                     *ngIf="getFieldType(field) === 'checkbox' && !field.options">
-                <input type="checkbox"
-                       [id]="getFieldCode(field)"
-                       [formControlName]="getFieldCode(field)" />
-                <span class="checkbox-custom"></span>
-                <span class="checkbox-label">{{ getFieldPlaceholder(field) || 'Sí, confirmo' }}</span>
-              </label>
-
-              <!-- Checkbox múltiple -->
-              <div class="checkbox-group"
-                   *ngIf="getFieldType(field) === 'checkbox' && field.options">
-                <label class="checkbox-wrapper" *ngFor="let opt of field.options">
-                  <input type="checkbox"
-                         [value]="opt.value || opt"
-                         (change)="onCheckboxChange($event, getFieldCode(field), opt.value || opt)" />
-                  <span class="checkbox-custom"></span>
-                  <span class="checkbox-label">{{ opt.label || opt }}</span>
-                </label>
-              </div>
-
-              <!-- Radio -->
-              <div class="radio-group" *ngIf="getFieldType(field) === 'radio'">
-                <label class="radio-wrapper" *ngFor="let opt of field.options">
-                  <input type="radio"
-                         [name]="getFieldCode(field)"
-                         [formControlName]="getFieldCode(field)"
-                         [value]="opt.value || opt" />
-                  <span class="radio-custom"></span>
-                  <span class="radio-label">{{ opt.label || opt }}</span>
-                </label>
-              </div>
-
-              <!-- File / Image -->
-              <div class="file-upload-wrapper"
-                   *ngIf="getFieldType(field) === 'file' || getFieldType(field) === 'image'">
-                <input type="file"
-                       [id]="getFieldCode(field)"
-                       [accept]="getAcceptedFileTypes(field)"
-                       (change)="onFileChange($event, getFieldCode(field))"
-                       class="file-input" />
-                <label [for]="getFieldCode(field)" class="file-upload-label">
-                  <i class="ti ti-cloud-upload"></i>
-                  <span class="upload-text">Arrastra archivos aquí o haz clic</span>
-                  <span class="upload-hint">
-                    {{ getFieldType(field) === 'image' ? 'PNG, JPG hasta 5MB' : 'Cualquier archivo hasta 5MB' }}
-                  </span>
-                </label>
-              </div>
-
-              <!-- Range -->
-              <div class="range-wrapper" *ngIf="getFieldType(field) === 'range'">
-                <input type="range"
-                       [id]="getFieldCode(field)"
-                       [formControlName]="getFieldCode(field)"
-                       [min]="field.min || 0"
-                       [max]="field.max || 100"
-                       [step]="field.step || 1"
-                       class="form-range" />
-                <div class="range-labels">
-                  <span>{{ field.min || 0 }}</span>
-                  <span class="range-value">{{ dynamicForm.get(getFieldCode(field))?.value || field.min || 0 }}</span>
-                  <span>{{ field.max || 100 }}</span>
-                </div>
-              </div>
-
-              <!-- Color -->
-              <div class="color-wrapper" *ngIf="getFieldType(field) === 'color'">
-                <input type="color"
-                       [id]="getFieldCode(field)"
-                       [formControlName]="getFieldCode(field)"
-                       class="color-input" />
-                <span class="color-value">{{ dynamicForm.get(getFieldCode(field))?.value || '#000000' }}</span>
-              </div>
-
-              <!-- Descripción -->
-              <p class="field-description" *ngIf="getFieldDescription(field)">
-                <i class="ti ti-info-circle me-1"></i>{{ getFieldDescription(field) }}
-              </p>
-
-              <!-- Errores -->
-              <div class="field-error"
-                   *ngIf="dynamicForm.get(getFieldCode(field))?.invalid && dynamicForm.get(getFieldCode(field))?.touched">
-                <i class="ti ti-alert-circle me-1"></i>
-                <ng-container [ngSwitch]="true">
-                  <span *ngSwitchCase="!!dynamicForm.get(getFieldCode(field))?.errors?.['required']">Este campo es obligatorio</span>
-                  <span *ngSwitchCase="!!dynamicForm.get(getFieldCode(field))?.errors?.['email']">Ingresa un email válido</span>
-                  <span *ngSwitchCase="!!dynamicForm.get(getFieldCode(field))?.errors?.['minlength']">
-                    Mínimo {{ dynamicForm.get(getFieldCode(field))?.errors?.['minlength'].requiredLength }} caracteres
-                  </span>
-                  <span *ngSwitchCase="!!dynamicForm.get(getFieldCode(field))?.errors?.['maxlength']">
-                    Máximo {{ dynamicForm.get(getFieldCode(field))?.errors?.['maxlength'].requiredLength }} caracteres
-                  </span>
-                  <span *ngSwitchCase="!!dynamicForm.get(getFieldCode(field))?.errors?.['min']">
-                    El valor mínimo es {{ dynamicForm.get(getFieldCode(field))?.errors?.['min'].min }}
-                  </span>
-                  <span *ngSwitchCase="!!dynamicForm.get(getFieldCode(field))?.errors?.['max']">
-                    El valor máximo es {{ dynamicForm.get(getFieldCode(field))?.errors?.['max'].max }}
-                  </span>
-                  <span *ngSwitchDefault>Formato inválido</span>
-                </ng-container>
-              </div>
-
-            </div>
           </div>
         </form>
 
-        <!-- Sin campos -->
+        <!-- Sin campos configurados -->
         <div class="empty-fields" *ngIf="!selectedForm?.form_fields?.length">
           <div class="empty-icon"><i class="ti ti-file-off"></i></div>
           <h5>Sin campos configurados</h5>
