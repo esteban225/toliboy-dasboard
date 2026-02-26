@@ -1,219 +1,179 @@
-<div class="container-fluid px-2 px-md-4 py-3 py-md-4">
-    <!-- Header -->
-    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-3 mb-md-4 rounded-4 bg-body p-3 p-md-4 shadow-sm border gap-3">
-        <div>
-            <h2 class="mb-1 fw-bold fs-4 fs-md-3">
-                <i class="bi bi-diagram-3 text-primary me-2"></i>Seguimiento de Lotes
-            </h2>
-            <p class="text-muted mb-0 small">Monitoreo del progreso y estado de producción</p>
+<div class="container-fluid px-2 px-md-4 py-3 py-md-4 bg-light-subtle min-vh-100">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3 bg-white p-4 rounded-4 shadow-sm border-0">
+        <div class="d-flex align-items-center">
+            <div class="p-3 bg-primary bg-opacity-10 rounded-3 me-3 d-none d-sm-block">
+                <i class="bi bi-diagram-3-fill text-primary fs-3"></i>
+            </div>
+            <div>
+                <h2 class="mb-0 fw-bold fs-4">Seguimiento de Lotes</h2>
+                <p class="text-muted mb-0 small text-uppercase fw-semibold tracking-wider">Centro de Monitoreo de Producción</p>
+            </div>
         </div>
-        <button class="btn btn-outline-primary w-100 w-md-auto" (click)="loadBatches()" [disabled]="loading()">
-            <i class="bi bi-arrow-clockwise me-2"></i>Actualizar
+        <button class="btn btn-primary px-4 rounded-3 shadow-sm" (click)="loadBatches()" [disabled]="loading()">
+            <i class="bi bi-arrow-clockwise me-2" [class.spin-animation]="loading()"></i>Actualizar Vista
         </button>
     </div>
 
-    <!-- Loading & Error Alerts -->
-    <div *ngIf="loading()" class="alert alert-info d-flex align-items-center mb-3">
-        <div class="spinner-border spinner-border-sm me-2 me-md-3" role="status">
-            <span class="visually-hidden">Cargando...</span>
-        </div>
-        <div class="small">Cargando seguimiento de lotes...</div>
+    <div *ngIf="loading()" class="alert border-0 bg-white shadow-sm d-flex align-items-center mb-4 p-3 rounded-4 text-primary">
+        <div class="spinner-grow spinner-grow-sm me-3" role="status"></div>
+        <span class="fw-medium small">Sincronizando flujos de trabajo...</span>
     </div>
 
-    <div *ngIf="error()" class="alert alert-danger d-flex align-items-center mb-3">
-        <i class="bi bi-exclamation-triangle-fill me-2 me-md-3"></i>
-        <div class="small">{{ error() }}</div>
+    <div *ngIf="error()" class="alert bg-danger-subtle border-0 text-danger d-flex align-items-center mb-4 p-3 rounded-4 shadow-sm">
+        <i class="bi bi-exclamation-octagon-fill me-3 fs-5"></i>
+        <div class="small fw-bold">{{ error() }}</div>
     </div>
 
-    <!-- Filters -->
-    <div class="card mb-3 mb-md-4 border-0 shadow-sm" *ngIf="!loading()">
-        <div class="card-header bg-light border-0 p-2 p-md-3">
-            <h6 class="mb-0 fw-semibold small">
-                <i class="bi bi-funnel me-2"></i>Filtros
-            </h6>
-        </div>
-        <div class="card-body p-2 p-md-3">
-            <div class="row g-2 g-md-3">
-                <div class="col-12 col-md-6">
-                    <label class="form-label fw-semibold small mb-1">
-                        <i class="bi bi-search me-1"></i>Búsqueda
-                    </label>
-                    <input type="text" class="form-control form-control-sm" placeholder="Nombre, código o ID del lote"
-                           [value]="searchFilter()" (input)="searchFilter.set($any($event.target).value); onSearchChange()" />
+    <div class="card border-0 shadow-sm rounded-4 mb-4" *ngIf="!loading()">
+        <div class="card-body p-3">
+            <div class="row g-3 align-items-end">
+                <div class="col-12 col-md-6 col-lg-7">
+                    <label class="form-label fw-bold text-muted small ms-1">Búsqueda Inteligente</label>
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text bg-light border-0"><i class="bi bi-search"></i></span>
+                        <input type="text" class="form-control border-0 bg-light shadow-none" placeholder="Nombre, código o ID del lote..."
+                               [value]="searchFilter()" (input)="searchFilter.set($any($event.target).value); onSearchChange()" />
+                    </div>
                 </div>
-                <div class="col-12 col-sm-8 col-md-4">
-                    <label class="form-label fw-semibold small mb-1">
-                        <i class="bi bi-filter me-1"></i>Estado
-                    </label>
-                    <select class="form-select form-select-sm" [value]="statusFilter()" (change)="statusFilter.set($any($event.target).value); onStatusFilterChange()">
-                        <option value="all">Todos</option>
-                        <option value="active">Activos</option>
+                <div class="col-12 col-sm-6 col-md-3 col-lg-3">
+                    <label class="form-label fw-bold text-muted small ms-1">Filtrar por Estado</label>
+                    <select class="form-select form-select-sm border-0 bg-light shadow-none" [value]="statusFilter()" (change)="statusFilter.set($any($event.target).value); onStatusFilterChange()">
+                        <option value="all">Ver todos los estados</option>
+                        <option value="active">Solo Activos</option>
                         <option value="completed">Completados</option>
-                        <option value="at-risk">En Riesgo (Retrasados)</option>
+                        <option value="at-risk">En Riesgo de Atraso</option>
                     </select>
                 </div>
-                <div class="col-12 col-sm-4 col-md-2">
-                    <label class="form-label fw-semibold small mb-1 d-none d-sm-block">&nbsp;</label>
-                    <button class="btn btn-outline-secondary btn-sm w-100" (click)="clearFilters()">
-                        <i class="bi bi-x-lg me-1"></i>Limpiar
+                <div class="col-12 col-sm-6 col-md-3 col-lg-2">
+                    <button class="btn btn-light btn-sm w-100 fw-bold text-muted border-0 py-2" (click)="clearFilters()">
+                        <i class="bi bi-eraser-fill me-2"></i>Limpiar
                     </button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Batches Timeline -->
-    <div class="row g-2 g-md-3 rounded-4 bg-body p-2 p-md-4 shadow-sm border" *ngIf="!loading()">
+    <div class="row g-4" *ngIf="!loading()">
         <div class="col-12" *ngFor="let timeline of filteredTimelines()">
-            <div class="card shadow-sm rounded-4 bg-body border">
-                <div class="card-body p-2 p-md-4">
-                    <!-- Header Info -->
-                    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start mb-3 gap-2">
-                        <div class="flex-grow-1 w-100 w-md-auto">
-                            <div class="d-flex flex-column flex-sm-row align-items-start align-items-sm-center gap-2 mb-1">
-                                <h5 class="mb-0 fw-bold fs-6 fs-md-5">{{ timeline.batch.name }}</h5>
-                                <span class="badge small" [ngClass]="timeline.statusClass">
+            <div class="card border-0 shadow-sm rounded-4 hover-lift overflow-hidden bg-white">
+                <div class="card-body p-3 p-md-4">
+                    <div class="row align-items-center mb-4">
+                        <div class="col-md-8">
+                            <div class="d-flex align-items-center gap-3 flex-wrap">
+                                <span class="badge rounded-pill px-3 py-2 fw-bold shadow-sm" [ngClass]="timeline.statusClass">
                                     {{ timeline.statusLabel }}
                                 </span>
+                                <h5 class="mb-0 fw-bold text-dark fs-5">{{ timeline.batch.name }}</h5>
+                                <span class="text-muted font-monospace small bg-light px-2 py-1 rounded">ID #{{ timeline.batch.id }}</span>
                             </div>
-                            <small class="text-muted d-block">
-                                <i class="bi bi-upc-scan me-1"></i>Código: {{ timeline.batch.code }}
-                            </small>
-                            <small class="text-muted d-block d-md-inline">
-                                <i class="bi bi-box me-1"></i>Producto ID: {{ timeline.batch.product_id }}
-                            </small>
+                            <div class="mt-2 d-flex gap-3 text-muted small">
+                                <span><i class="bi bi-upc-scan me-1"></i>{{ timeline.batch.code }}</span>
+                                <span class="d-none d-md-inline">•</span>
+                                <span><i class="bi bi-box-fill me-1 text-primary-emphasis"></i>SKU: {{ timeline.batch.product_id }}</span>
+                            </div>
                         </div>
-                        <div class="text-start text-md-end w-100 w-md-auto">
-                            <div class="fw-bold text-primary small">
-                                <i class="bi bi-calendar-event me-1"></i>ID #{{ timeline.batch.id }}
+                        <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                            <div class="d-inline-flex align-items-center bg-light px-3 py-2 rounded-pill">
+                                <i class="bi bi-stopwatch-fill me-2 text-primary"></i>
+                                <span class="fw-bold text-dark">{{ timeline.daysElapsed }} días <small class="fw-normal text-muted">activos</small></span>
                             </div>
-                            <small class="text-muted d-block mt-1">
-                                {{ timeline.daysElapsed }} días transcurridos
-                            </small>
                         </div>
                     </div>
 
-                    <!-- Progress Bar -->
-                    <div class="mb-3">
+                    <div class="mb-4 bg-light p-3 rounded-3">
                         <div class="d-flex justify-content-between align-items-center mb-2">
-                            <small class="text-muted fw-semibold">Progreso de Tiempo</small>
-                            <span class="badge bg-secondary small">{{ timeline.progress }}%</span>
+                            <span class="text-uppercase small fw-bold text-muted" style="letter-spacing: 1px;">Estado del Cronograma</span>
+                            <span class="fw-bold text-primary">{{ timeline.progress }}% completado</span>
                         </div>
-                        <div class="progress" style="height: 8px;" role="progressbar" [attr.aria-valuenow]="timeline.progress" aria-valuemin="0" aria-valuemax="100">
-                            <div class="progress-bar" [ngClass]="timeline.progressBarClass" [style.width.%]="timeline.progress"></div>
-                        </div>
-                    </div>
-
-                    <!-- Dates and Production Info -->
-                    <div class="row g-2 mb-3">
-                        <div class="col-12 col-md-6">
-                            <div class="p-2 bg-light rounded">
-                                <small class="text-muted d-block mb-1">
-                                    <i class="bi bi-calendar-event me-1 text-info"></i>Inicio
-                                </small>
-                                <strong class="text-info small">
-                                    {{ timeline.batch.start_date | date: 'short' }}
-                                </strong>
-                            </div>
-                        </div>
-                        <div class="col-12 col-md-6">
-                            <div class="p-2 bg-light rounded">
-                                <small class="text-muted d-block mb-1">
-                                    <i class="bi bi-calendar-range me-1 text-warning"></i>Fin Esperado
-                                </small>
-                                <strong class="text-warning small">
-                                    {{ timeline.batch.expected_end_date | date: 'short' }}
-                                </strong>
-                            </div>
+                        <div class="progress" style="height: 6px; background-color: rgba(0,0,0,0.05);">
+                            <div class="progress-bar rounded-pill shadow-sm" [ngClass]="timeline.progressBarClass" [style.width.%]="timeline.progress"></div>
                         </div>
                     </div>
 
-                    <div *ngIf="timeline.batch.actual_end_date" class="p-2 bg-success bg-opacity-10 rounded mb-3">
-                        <small class="text-muted d-block mb-1">
-                            <i class="bi bi-calendar-check me-1 text-success"></i>Fin Real
-                        </small>
-                        <strong class="text-success small">
-                            {{ timeline.batch.actual_end_date | date: 'short' }}
-                        </strong>
-                    </div>
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <div class="card bg-light border-0 p-3 h-100 rounded-4">
+                                <div class="mb-3">
+                                    <small class="text-muted d-block text-uppercase fw-bold fs-xs mb-1">Inicio</small>
+                                    <div class="fw-bold"><i class="bi bi-calendar-check text-success me-2"></i>{{ timeline.batch.start_date | date: 'mediumDate' }}</div>
+                                </div>
+                                <div class="mb-0">
+                                    <small class="text-muted d-block text-uppercase fw-bold fs-xs mb-1">Entrega Esperada</small>
+                                    <div class="fw-bold"><i class="bi bi-calendar-x text-warning me-2"></i>{{ timeline.batch.expected_end_date | date: 'mediumDate' }}</div>
+                                </div>
+                                <div *ngIf="timeline.batch.actual_end_date" class="mt-3 pt-3 border-top border-secondary-subtle">
+                                    <small class="text-success d-block text-uppercase fw-bold fs-xs mb-1">Finalizado el</small>
+                                    <div class="fw-bold text-success">{{ timeline.batch.actual_end_date | date: 'mediumDate' }}</div>
+                                </div>
+                            </div>
+                        </div>
 
-                    <!-- Production Stats -->
-                    <div class="row g-2">
-                        <div class="col-6 col-md-3">
-                            <div class="p-2 text-center border rounded">
-                                <small class="text-muted d-block mb-1" style="font-size: 0.7rem;">
-                                    <i class="bi bi-bag-check me-1"></i>Cantidad
-                                </small>
-                                <span class="badge bg-success small">{{ timeline.batch.quantity ?? 0 }}</span>
-                            </div>
-                        </div>
-                        <div class="col-6 col-md-3">
-                            <div class="p-2 text-center border rounded">
-                                <small class="text-muted d-block mb-1" style="font-size: 0.7rem;">
-                                    <i class="bi bi-exclamation-circle me-1"></i>Defectos
-                                </small>
-                                <span class="badge small" [ngClass]="timeline.defectBadgeClass">
-                                    {{ timeline.batch.defect_quantity ?? 0 }}
-                                </span>
-                            </div>
-                        </div>
-                        <div class="col-6 col-md-3">
-                            <div class="p-2 text-center border rounded">
-                                <small class="text-muted d-block mb-1" style="font-size: 0.7rem;">
-                                    <i class="bi bi-percent me-1"></i>Tasa Def.
-                                </small>
-                                <span class="badge small" [ngClass]="timeline.defectBadgeClass">
-                                    {{ timeline.defectRate | number: '1.1-1' }}%
-                                </span>
-                            </div>
-                        </div>
-                        <div class="col-6 col-md-3">
-                            <div class="p-2 text-center border rounded" [ngClass]="timeline.isDelayed ? 'bg-danger bg-opacity-10' : ''">
-                                <small class="text-muted d-block mb-1" style="font-size: 0.7rem;">
-                                    <i class="bi bi-clock me-1"></i>{{ timeline.isDelayed ? 'Atraso' : 'Rest.' }}
-                                </small>
-                                <span class="badge small" [ngClass]="timeline.isDelayed ? 'bg-danger' : (timeline.estimatedDaysRemaining > 0 ? 'bg-info' : 'bg-success')">
-                                    {{ timeline.isDelayed ? timeline.delayDays : timeline.estimatedDaysRemaining }} días
-                                </span>
+                        <div class="col-md-8">
+                            <div class="row g-3 h-100">
+                                <div class="col-6 col-md-3">
+                                    <div class="p-3 bg-white border border-light shadow-sm rounded-4 text-center h-100">
+                                        <i class="bi bi-boxes fs-4 text-primary d-block mb-2"></i>
+                                        <div class="fs-5 fw-bold">{{ timeline.batch.quantity ?? 0 }}</div>
+                                        <div class="text-muted fs-xs fw-bold text-uppercase">Cantidad</div>
+                                    </div>
+                                </div>
+                                <div class="col-6 col-md-3">
+                                    <div class="p-3 bg-white border border-light shadow-sm rounded-4 text-center h-100">
+                                        <i class="bi bi-shield-exclamation fs-4 text-danger d-block mb-2"></i>
+                                        <div class="fs-5 fw-bold text-danger">{{ timeline.batch.defect_quantity ?? 0 }}</div>
+                                        <div class="text-muted fs-xs fw-bold text-uppercase">Defectos</div>
+                                    </div>
+                                </div>
+                                <div class="col-6 col-md-3">
+                                    <div class="p-3 bg-white border border-light shadow-sm rounded-4 text-center h-100">
+                                        <i class="bi bi-pie-chart fs-4 text-info d-block mb-2"></i>
+                                        <div class="fs-5 fw-bold">{{ timeline.defectRate | number: '1.1-1' }}%</div>
+                                        <div class="text-muted fs-xs fw-bold text-uppercase">Tasa Def.</div>
+                                    </div>
+                                </div>
+                                <div class="col-6 col-md-3">
+                                    <div class="p-3 border border-light shadow-sm rounded-4 text-center h-100" 
+                                         [ngClass]="timeline.isDelayed ? 'bg-danger-subtle border-danger-subtle' : 'bg-white'">
+                                        <i class="bi fs-4 d-block mb-2" [ngClass]="timeline.isDelayed ? 'bi-clock-history text-danger' : 'bi-clock-check text-success'"></i>
+                                        <div class="fs-5 fw-bold" [ngClass]="timeline.isDelayed ? 'text-danger' : 'text-success'">
+                                            {{ timeline.isDelayed ? timeline.delayDays : timeline.estimatedDaysRemaining }}
+                                        </div>
+                                        <div class="text-muted fs-xs fw-bold text-uppercase">{{ timeline.isDelayed ? 'Días Atraso' : 'Días Rest.' }}</div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="alert alert-warning d-flex align-items-center mt-3 mb-0 py-2" *ngIf="timeline.isDelayed">
-                        <i class="bi bi-exclamation-octagon-fill me-2"></i>
-                        <small class="mb-0">El lote supera la fecha prevista por {{ timeline.delayDays }} días.</small>
+                    <div class="alert bg-danger-subtle border-0 d-flex align-items-center mt-4 mb-0 py-3 rounded-3" *ngIf="timeline.isDelayed">
+                        <i class="bi bi-exclamation-triangle-fill me-3 fs-5 text-danger"></i>
+                        <span class="text-danger-emphasis fw-medium small">ALERTA CRÍTICA: Este lote presenta un retraso de {{ timeline.delayDays }} días sobre la fecha prevista.</span>
                     </div>
 
-                    <!-- Notes -->
-                    <div *ngIf="timeline.batch.notes" class="mt-3">
-                        <small class="text-muted d-block mb-1">
-                            <i class="bi bi-sticky me-1"></i>Notas
-                        </small>
-                        <p class="mb-0 text-muted small">{{ timeline.batch.notes }}</p>
+                    <div *ngIf="timeline.batch.notes" class="mt-4 p-3 bg-light rounded-3 border-start border-primary border-4">
+                        <small class="text-uppercase fw-bold text-muted fs-xs d-block mb-1">Notas de Producción</small>
+                        <p class="mb-0 text-dark small fst-italic">"{{ timeline.batch.notes }}"</p>
                     </div>
 
-                    <!-- Action Buttons -->
-                    <div class="mt-3 d-flex flex-column flex-sm-row justify-content-end gap-2">
-                        <button class="btn btn-outline-primary btn-sm w-100 w-sm-auto" (click)="viewBatchTimeline(timeline.batch.id)">
-                            <i class="bi bi-eye me-1"></i>Seguimiento
-                        </button>
-                        <button class="btn btn-outline-secondary btn-sm w-100 w-sm-auto" (click)="viewBatchDetails(timeline.batch.id)">
-                            <i class="bi bi-info-circle me-1"></i>Detalles
+                    <div class="mt-4 pt-3 border-top border-light d-flex flex-column flex-sm-row justify-content-end gap-2">
+                        <button class="btn btn-outline-primary btn-sm px-4 py-2 rounded-3 fw-bold" (click)="viewBatchTimeline(timeline.batch.id)">
+                            <i class="bi bi-diagram-3-fill me-2"></i>Registrar Seguimiento
                         </button>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Empty State -->
         <div class="col-12" *ngIf="filteredTimelines().length === 0 && !loading()">
-            <div class="card shadow-sm border-0">
-                <div class="card-body py-4 py-md-5 text-center">
-                    <i class="bi bi-inbox text-muted display-4 display-md-1 d-block mb-3"></i>
-                    <h5 class="text-muted mb-2 fs-6 fs-md-5">No hay lotes para mostrar</h5>
-                    <p class="text-muted mb-3 small">No se encontraron lotes que coincidan con los filtros aplicados</p>
-                    <button class="btn btn-outline-primary btn-sm" (click)="clearFilters()">
-                        <i class="bi bi-funnel-off me-1"></i>Limpiar filtros
+            <div class="card border-0 shadow-sm py-5 rounded-4 text-center bg-white">
+                <div class="card-body">
+                    <div class="bg-light d-inline-block p-4 rounded-circle mb-4">
+                        <i class="bi bi-search text-muted display-4"></i>
+                    </div>
+                    <h5 class="fw-bold">No se encontraron resultados</h5>
+                    <p class="text-muted mx-auto" style="max-width: 350px;">Ajusta los filtros de búsqueda o el estado para localizar los lotes que necesitas.</p>
+                    <button class="btn btn-primary rounded-pill px-4" (click)="clearFilters()">
+                        Restaurar Filtros
                     </button>
                 </div>
             </div>
@@ -221,80 +181,3 @@
     </div>
 </div>
 
-<!-- Modal Seguimiento -->
-<div class="modal fade show d-block" tabindex="-1" *ngIf="isModalOpen" style="background-color: rgba(0,0,0,0.5);">
-    <div class="modal-dialog modal-lg modal-dialog-centered mx-2 mx-md-auto modal-dialog-scrollable">
-        <div class="modal-content">
-            <div class="modal-header p-2 p-md-3">
-                <div class="w-100">
-                    <h5 class="modal-title fw-bold mb-0 fs-6 fs-md-5">
-                        <i class="bi bi-diagram-3 me-2 text-primary"></i>Seguimiento del Lote #{{ selectedBatchId }}
-                    </h5>
-                </div>
-                <button type="button" class="btn-close" (click)="closeModal()" aria-label="Close"></button>
-            </div>
-            <div class="modal-body p-2 p-md-3">
-                <form #batchForm="ngForm" (ngSubmit)="onSaveBatch()">
-                    <input type="hidden" name="id" [(ngModel)]="editBatch.id" />
-
-                    <div class="row g-2 g-md-3">
-                        <div class="col-12 col-md-6">
-                            <label class="form-label small fw-semibold mb-1">Fecha de fin real</label>
-                            <input type="datetime-local" class="form-control form-control-sm" name="actual_end_date" required [(ngModel)]="editBatch.actual_end_date" />
-                        </div>
-                        <div class="col-12 col-md-6">
-                            <label class="form-label small fw-semibold mb-1">Cantidad de defectos</label>
-                            <input type="number" class="form-control form-control-sm" name="defect_quantity" [(ngModel)]="editBatch.defect_quantity" />
-                        </div>
-
-                        <div class="col-12 col-md-6">
-                            <label class="form-label small fw-semibold mb-1">Estado del lote</label>
-                            <select class="form-select form-select-sm" name="status" [(ngModel)]="editBatch.status">
-                                <option value="planned">Planificado</option>
-                                <option value="in_process">En Progreso</option>
-                                <option value="paused">Pausado</option>
-                                <option value="completed">Completado</option>
-                                <option value="delivered">Entregado</option>
-                                <option value="cancelled">Cancelado</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="mt-3 mt-md-4 d-flex flex-column flex-sm-row justify-content-end gap-2">
-                        <button type="button" class="btn btn-outline-secondary btn-sm order-2 order-sm-1" (click)="onCancelEdit()">
-                            Cancelar
-                        </button>
-                        <button type="submit" class="btn btn-primary btn-sm order-1 order-sm-2" [disabled]="batchForm.invalid || isSaving()">
-                            <span *ngIf="isSaving()" class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                            <i class="bi bi-save me-1" *ngIf="!isSaving()"></i>
-                            <span *ngIf="!isSaving()">Guardar</span>
-                            <span *ngIf="isSaving()">Guardando...</span>
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Modal Detalles -->
-<div class="modal fade show d-block" tabindex="-1" *ngIf="isModalOpenDetail" style="background-color: rgba(0,0,0,0.5);">
-    <div class="modal-dialog modal-lg modal-dialog-centered mx-2 mx-md-auto modal-dialog-scrollable">
-        <div class="modal-content">
-            <div class="modal-header p-2 p-md-3 flex-column flex-md-row align-items-start align-items-md-center gap-2">
-                <div>
-                    <h5 class="modal-title fw-bold mb-1 fs-6 fs-md-5">
-                        <i class="bi bi-info-circle me-2 text-primary"></i>Detalles del Lote #{{ selectedBatchId }}
-                    </h5>
-                    <p class="mb-0 text-muted small">
-                        Nombre: {{ batchData?.name || 'N/A' }}
-                    </p>
-                </div>
-                <button type="button" class="btn-close position-absolute top-0 end-0 m-2 m-md-3" (click)="closeModal()" aria-label="Close"></button>
-            </div>
-            <div class="modal-body p-2 p-md-3">
-                <app-batch-details [batchId]="selectedBatchId" [batch]="batchData" (close)="closeModal()"></app-batch-details>
-            </div>
-        </div>
-    </div>
-</div>

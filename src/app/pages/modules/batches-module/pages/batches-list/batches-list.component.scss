@@ -1,0 +1,152 @@
+    /* Estilos UX Premium */
+    .bg-light-subtle {
+        background-color: #f8fafc !important;
+    }
+
+    .fs-xs {
+        font-size: 0.7rem;
+    }
+
+    .tracking-wider {
+        letter-spacing: 0.05em;
+    }
+
+    .uppercase {
+        text-transform: uppercase;
+    }
+
+    .spin {
+        animation: rotate 1s linear infinite;
+    }
+
+    @keyframes rotate {
+        from {
+            transform: rotate(0deg);
+        }
+
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    /* Custom Modal UI */
+    .modal-backdrop-custom {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(15, 23, 42, 0.7);
+        backdrop-filter: blur(4px);
+        z-index: 2000;
+    }
+
+    .modal-header-custom {
+        border-bottom: 0;
+    }
+
+    .btn-close-custom {
+        background: rgba(255, 255, 255, 0.2);
+        border: 0;
+        color: white;
+        border-radius: 50%;
+        width: 32px;
+        height: 32px;
+        transition: 0.2s;
+    }
+
+    .btn-close-custom:hover {
+        background: rgba(255, 255, 255, 0.4);
+        transform: rotate(90deg);
+    }
+
+    .table-hover tbody tr:hover {
+        background-color: #f1f5f9;
+        cursor: pointer;
+    }
+
+    .badge {
+        letter-spacing: 0.02em;
+        border: 1px solid rgba(0, 0, 0, 0.05);
+    }
+
+    /* Estilos para Badges Soft (Ejemplos) */
+    .bg-success-subtle {
+        background-color: #dcfce7 !important;
+        color: #15803d !important;
+    }
+
+    .bg-warning-subtle {
+        background-color: #fef9c3 !important;
+        color: #854d0e !important;
+    }
+
+    .bg-danger-subtle {
+        background-color: #fee2e2 !important;
+        color: #b91c1c !important;
+    }
+
+    .modal-backdrop-custom {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(15, 23, 42, 0.6);
+        backdrop-filter: blur(8px);
+        z-index: 2000;
+    }
+
+    .modal-dialog-custom {
+        position: relative;
+        width: 100%;
+        max-width: 650px;
+        /* Ancho máximo en desktop */
+        max-height: 90vh;
+        /* Evita que el modal se salga de la pantalla */
+        display: flex;
+        flex-direction: column;
+        z-index: 2001;
+    }
+
+    .modal-body-custom {
+        overflow-y: auto;
+        flex: 1;
+        /* Permite que el cuerpo crezca y tenga scroll */
+    }
+
+    /* Ajustes para móviles (Pantallas < 768px) */
+    @media (max-width: 767.98px) {
+        .modal-dialog-custom {
+            max-height: 95vh;
+            border-radius: 20px 20px 0 0 !important;
+            /* Estilo Bottom Sheet */
+        }
+
+        .modal-body-custom {
+            padding-bottom: 2rem !important;
+            /* Espacio para el teclado/dedos */
+        }
+
+        .section-card {
+            border-radius: 12px !important;
+        }
+
+        .btn {
+            width: 100%;
+            /* Botones de ancho completo en móvil */
+            padding: 12px;
+        }
+    }
+
+    /* Estética de campos */
+    .form-control:focus,
+    .form-select:focus {
+        background-color: #fff !important;
+        border-color: #cbd5e1 !important;
+        box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+    }
+
+    .fs-xs {
+        font-size: 0.7rem;
+    }
