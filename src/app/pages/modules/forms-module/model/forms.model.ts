@@ -84,6 +84,7 @@ export interface FormResponseFilters {
 export interface CreateFormResponsePayload {
     form_id: number;
     batch_id?: number | null;
+    status?: 'pending' | 'in_progress' | 'completed';
     values: { field_id: number; value: any }[];
 }
 
