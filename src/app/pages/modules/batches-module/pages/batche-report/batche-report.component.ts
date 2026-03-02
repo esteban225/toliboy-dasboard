@@ -360,28 +360,23 @@ export class BatcheReportComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Carga estadísticas de materiales del lote (tolerante a errores)
+   * Carga estadísticas de materiales del lote para CUALQUIER estado
+   * Usa getMaterialStatsForBatch que no filtra por status
    */
   private loadBatchMaterialStats(batchId: number): Promise<any> {
+    const batch = this.batches.find(b => b.id === batchId);
+    if (!batch) {
+      console.warn('[BATCH-REPORT] loadBatchMaterialStats: lote no encontrado', batchId);
+      return Promise.resolve({ totalMaterials: 0, materialsReleased: 0, totalQuantity: 0, materials: [] });
+    }
+
     return new Promise((resolve) => {
-      // Obtener materiales liberados del servicio
-      this.materialReleaseService.getPendingReleaseBatches()
+      this.materialReleaseService.getMaterialStatsForBatch(batch)
         .pipe(takeUntil(this.destroy$))
         .subscribe({
-          next: (batches) => {
-            const batchData = batches.find(b => b.batch?.id === batchId);
-            if (batchData) {
-              const stats = {
-                totalMaterials: batchData.requiredMaterials.length,
-                materialsReleased: batchData.requiredMaterials.filter((m: any) => m.hasSufficientStock).length,
-                totalQuantity: batchData.requiredMaterials.reduce((sum: number, m: any) => sum + (m.totalQuantityNeeded || 0), 0),
-                materials: batchData.requiredMaterials
-              };
-              console.log('[BATCH-REPORT] Estadísticas de materiales:', stats);
-              resolve(stats);
-            } else {
-              resolve({ totalMaterials: 0, materialsReleased: 0, materials: [] });
-            }
+          next: (stats) => {
+            console.log('[BATCH-REPORT] Estadísticas de materiales:', stats);
+            resolve(stats);
           },
           error: (err) => {
             console.warn('[BATCH-REPORT] Error cargando estadísticas de materiales:', err?.message || err);
@@ -541,18 +536,37 @@ export class BatcheReportComponent implements OnInit, OnDestroy {
     console.log('[BATCH-REPORT] Generando PDF...');
 
     try {
-      // Estructura HTML para PDF
-      let htmlContent = this.buildPDFContent();
+      const htmlContent = this.buildPDFContent();
+      const printWindow = window.open('', '_blank', 'width=900,height=700');
+      if (!printWindow) {
+        this.alert.error('Error', 'El navegador bloqueó la ventana emergente. Permite ventanas emergentes para este sitio.');
+        this.reportGenerating = false;
+        return;
+      }
 
-      // Usar técnica de impresión para generar PDF
-      const printWindow = window.open('', '', 'width=800,height=600');
-      if (printWindow) {
-        printWindow.document.write(htmlContent);
-        printWindow.document.close();
-        setTimeout(() => {
+      printWindow.document.open();
+      printWindow.document.write(htmlContent);
+      printWindow.document.close();
+
+      // Esperar a que el DOM esté completamente cargado antes de imprimir
+      const triggerPrint = () => {
+        try {
+          printWindow.focus();
           printWindow.print();
+        } catch (printError) {
+          console.error('[BATCH-REPORT] Error al ejecutar print():', printError);
+        } finally {
           this.reportGenerating = false;
-        }, 250);
+        }
+      };
+
+      if (printWindow.document.readyState === 'complete') {
+        // Ya está listo, dar 500ms para que los estilos se apliquen
+        setTimeout(triggerPrint, 500);
+      } else {
+        printWindow.onload = () => setTimeout(triggerPrint, 300);
+        // Fallback por si onload no se dispara (algunos browsers)
+        setTimeout(triggerPrint, 1500);
       }
     } catch (error) {
       console.error('[BATCH-REPORT] Error generando PDF:', error);
@@ -623,7 +637,7 @@ export class BatcheReportComponent implements OnInit, OnDestroy {
           </div>
           <div class="info-row">
             <span class="info-label">Producto:</span>
-            <span>${b.batch.product_name || 'N/A'}</span>
+            <span>${this.getProductName(b.batch.product_id) || b.batch.product_name || 'N/A'}</span>
           </div>
           <div class="info-row">
             <span class="info-label">Estado:</span>
@@ -647,6 +661,11 @@ export class BatcheReportComponent implements OnInit, OnDestroy {
             <span class="info-label">Fecha Real:</span>
             <span>${b.batch.actual_end_date ? new Date(b.batch.actual_end_date).toLocaleString('es-ES') : 'En progreso'}</span>
           </div>
+          ${b.batch.notes ? `
+          <div class="info-row">
+            <span class="info-label">Observaciones:</span>
+            <span>${b.batch.notes}</span>
+          </div>` : ''}
         </div>
 
         <!-- Métricas de Calidad -->
@@ -743,7 +762,7 @@ export class BatcheReportComponent implements OnInit, OnDestroy {
                 <tr>
                   <td>${f.form_name || 'Sin nombre'}</td>
                   <td>${f.created_at ? new Date(f.created_at).toLocaleString('es-ES') : 'N/A'}</td>
-                  <td>${f.answered_by || 'Desconocido'}</td>
+                  <td>${this.getUserName(f.answered_by)}</td>
                 </tr>
               `).join('')}
             </tbody>

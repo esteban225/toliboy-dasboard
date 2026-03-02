@@ -17,484 +17,340 @@ export class MenuService {
 
   // 🎯 Configuración de menús por rol según tu backend
   private menuConfig: MenuConfig = {
-    // DEV: Desarrollador - Acceso completo
+
+
     'DEV': [
-      /*{
-        id: 1,
-        label: 'MENUITEMS.MENU.TEXT',
-        isTitle: true
-      },
+      /*{ id: 1, label: 'MENUITEMS.MENU.TEXT', isTitle: true },
+
+       Dashboard 
       {
         id: 2,
         label: 'MENUITEMS.DASHBOARD.TEXT',
         icon: 'ti ti-brand-google-home',
         subItems: [
-          {
-            id: 3,
-            label: 'MENUITEMS.DASHBOARD.LIST.ANALYTICS',
-            link: '/',
-            parentId: 2
-          }
+          { id: 3, label: 'MENUITEMS.DASHBOARD.LIST.ANALYTICS', link: '/', parentId: 2 }
         ]
       },
+      { id: 4, label: 'MENUITEMS.APPS.TEXT', isTitle: true },
+
+      { id: 5, label: 'MENUITEMS.APPS.LIST.CALENDAR', icon: 'ti ti-calendar', link: '/apps/calendar' },
+      { id: 6, label: 'MENUITEMS.APPS.LIST.CHAT', icon: 'ti ti-messages', link: '/apps/chat' },
+      { id: 7, label: 'MENUITEMS.APPS.LIST.EMAIL', icon: 'ti ti-mail', link: '/apps/email' },
+      { id: 8, label: 'MENUITEMS.APPS.LIST.FILEMANAGER', icon: 'ti ti-folders', link: '/apps/file-manager' },
+      { id: 9, label: 'MENUITEMS.APPS.LIST.TODO', icon: 'ti ti-list', link: '/apps/to-do' },
+      { id: 10, label: 'MENUITEMS.APPS.LIST.CONTACTS', icon: 'ti ti-address-book', link: '/apps/contacts' },
+      { id: 11, label: 'MENUITEMS.APPS.LIST.KANBANBOARD', icon: 'ti ti-subtask', link: '/apps/kanbanboard' },
+*/
+      /* Módulos */
+      { id: 12, label: 'MENUITEMS.MODULES.TEXT', isTitle: true },
+
+      /* Users */
       {
-        id: 8,
-        label: 'MENUITEMS.APPS.TEXT',
-        isTitle: true
-      },
-      {
-        id: 9,
-        label: 'MENUITEMS.APPS.LIST.CALENDAR',
-        icon: 'ti ti-calendar',
-        link: '/apps/calendar',
-        parentId: 8
-      },
-      {
-        id: 10,
-        label: 'MENUITEMS.APPS.LIST.CHAT',
-        icon: 'ti ti-messages',
-        link: '/apps/chat',
-        parentId: 8
-      },
-      {
-        id: 11,
-        label: 'MENUITEMS.APPS.LIST.EMAIL',
-        icon: 'ti ti-mail',
-        link: '/apps/email',
-        parentId: 8,
-      },
-      {
-        id: 23,
-        label: 'MENUITEMS.APPS.LIST.FILEMANAGER',
-        icon: 'ti ti-folders',
-        link: '/apps/file-manager',
-        parentId: 8,
-      },
-      {
-        id: 24,
-        label: 'MENUITEMS.APPS.LIST.TODO',
-        icon: 'ti ti-list',
-        link: '/apps/to-do',
-        parentId: 8,
-      },
-      {
-        id: 25,
-        label: 'MENUITEMS.APPS.LIST.CONTACTS',
-        icon: 'ti ti-address-book',
-        link: '/apps/contacts',
-        parentId: 8,
-      },
-      {
-        id: 26,
-        label: 'MENUITEMS.APPS.LIST.KANBANBOARD',
-        icon: 'ti ti-subtask',
-        link: '/apps/kanbanboard',
-        parentId: 8,
-      },
-      {
-        id: 100,
-        label: 'MENUITEMS.MODULES.TEXT',
-        isTitle: true
-      },
-      */
-      {
-        id: 101,
+        id: 13,
         label: 'MENUITEMS.USERMANAGEMENT.TEXT',
         icon: 'ti ti-users-group',
         subItems: [
-          {
-            id: 102,
-            label: 'MENUITEMS.USERMANAGEMENT.LIST.USERMANAGEMENT',
-            link: '/modules/users',
-            parentId: 101
-          },
-          {
-            id: 103,
-            label: 'MENUITEMS.USERMANAGEMENT.LIST.WORKLOGUSERS',
-            link: '/modules/users/worklog-users',
-            parentId: 101
-          },
-          {
-            id: 104,
-            label: 'MENUITEMS.USERMANAGEMENT.LIST.ANALYTICS',
-            link: '/modules/users/analytics',
-            parentId: 101
-          }
-        ],
-        parentId: 100
+          { id: 14, label: 'MENUITEMS.USERMANAGEMENT.LIST.USERMANAGEMENT', link: '/modules/users', parentId: 13 },
+          { id: 15, label: 'MENUITEMS.USERMANAGEMENT.LIST.WORKLOGUSERS', link: '/modules/users/worklog-users', parentId: 13 },
+          { id: 16, label: 'MENUITEMS.USERMANAGEMENT.LIST.ANALYTICS', link: '/modules/users/analytics', parentId: 13 }
+        ]
       },
+
+      /* Forms */
       {
-        id: 103,
+        id: 17,
         label: 'MENUITEMS.FORMMANAGER.TEXT',
         icon: 'ti ti-clipboard-list',
         subItems: [
-          {
-            id: 104,
-            label: 'MENUITEMS.FORMMANAGER.LIST.FORMRESPONSES',
-            link: '/modules/forms',
-            parentId: 103
-          },
-          {
-            id: 105,
-            label: 'MENUITEMS.FORMMANAGER.LIST.FORMMANAGER',
-            link: '/modules/forms/forms-manager',
-            parentId: 103
-          },
-          {
-            id: 106,
-            label: 'MENUITEMS.FORMMANAGER.LIST.FORMSTRAZABILITY',
-            link: '/modules/forms/forms-trazability',
-            parentId: 103
-          },
-          {
-            id: 107,
-            label: 'MENUITEMS.FORMMANAGER.LIST.FORMRESPONSESDETAIL',
-            link: '/modules/forms/forms-responses',
-            parentId: 103
-          }
-        ],
-        parentId: 100
-
+          { id: 18, label: 'MENUITEMS.FORMMANAGER.LIST.FORMRESPONSES', link: '/modules/forms', parentId: 17 },
+          { id: 19, label: 'MENUITEMS.FORMMANAGER.LIST.FORMMANAGER', link: '/modules/forms/forms-manager', parentId: 17 },
+          { id: 20, label: 'MENUITEMS.FORMMANAGER.LIST.FORMSTRAZABILITY', link: '/modules/forms/forms-trazability', parentId: 17 },
+          { id: 21, label: 'MENUITEMS.FORMMANAGER.LIST.FORMRESPONSESDETAIL', link: '/modules/forms/forms-responses', parentId: 17 }
+        ]
       },
+
+      /* Inventory */
       {
-        id: 200,
+        id: 22,
         label: 'MENUITEMS.INVENTORY.TEXT',
         icon: 'ti ti-building-warehouse',
         subItems: [
-          {
-            id: 201,
-            label: 'MENUITEMS.INVENTORY.LIST.GESTIONINVENTORY',
-            link: '/modules/inventory',
-            parentId: 200
-          },
-          {
-            id: 202,
-            label: 'MENUITEMS.INVENTORY.LIST.INVENTORYMOVEMENT',
-            link: '/modules/inventory/inventoryMovement',
-            parentId: 200
-          },
-          {
-            id: 203,
-            label: 'MENUITEMS.INVENTORY.LIST.RAWMATERIALS',
-            link: '/modules/inventory/rawMaterial',
-            parentId: 200
-          },
-          {
-            id: 204,
-            label: 'MENUITEMS.INVENTORY.LIST.BATCHEMOVEMENT',
-            link: '/modules/inventory/batchMovement',
-            parentId: 200
-          }
-        ],
-        parentId: 100
+          { id: 23, label: 'MENUITEMS.INVENTORY.LIST.GESTIONINVENTORY', link: '/modules/inventory', parentId: 22 },
+          { id: 24, label: 'MENUITEMS.INVENTORY.LIST.INVENTORYMOVEMENT', link: '/modules/inventory/inventoryMovement', parentId: 22 },
+          { id: 25, label: 'MENUITEMS.INVENTORY.LIST.RAWMATERIALS', link: '/modules/inventory/rawMaterial', parentId: 22 },
+          { id: 26, label: 'MENUITEMS.INVENTORY.LIST.BATCHEMOVEMENT', link: '/modules/inventory/batchMovement', parentId: 22 }
+        ]
       },
+
+      /* Products */
       {
-        id: 300,
+        id: 27,
         label: 'MENUITEMS.PRODUCT.TEXT',
         icon: 'ti ti-package',
         subItems: [
-          {
-            id: 301,
-            label: 'MENUITEMS.PRODUCT.LIST.PRODUCTSANALYTICS',
-            link: '/modules/product/analytics',
-            parentId: 300
-          },
-          {
-            id: 302,
-            label: 'MENUITEMS.PRODUCT.LIST.PRODUCTSLIST',
-            link: '/modules/product',
-            parentId: 300
-          }
-        ],
-        parentId: 100
+          { id: 28, label: 'MENUITEMS.PRODUCT.LIST.PRODUCTSANALYTICS', link: '/modules/product/analytics', parentId: 27 },
+          { id: 29, label: 'MENUITEMS.PRODUCT.LIST.PRODUCTSLIST', link: '/modules/product', parentId: 27 }
+        ]
       },
+
+      /* Batches */
       {
-        id: 400,
+        id: 30,
         label: 'MENUITEMS.BATCHES.TEXT',
         icon: 'ti ti-layers-intersect',
         subItems: [
-          {
-            id: 401,
-            label: 'MENUITEMS.BATCHES.LIST.BATCHLIST',
-            link: '/modules/batches',
-            parentId: 400
-          },
-          {
-            id: 402,
-            label: 'MENUITEMS.BATCHES.LIST.ANALYTICS',
-            link: '/modules/batches/analytics',
-            parentId: 400
-          },
-          {
-            id: 403,
-            label: 'MENUITEMS.BATCHES.LIST.BATCHTRACKING',
-            link: '/modules/batches/batch-tracking',
-            parentId: 400
-          },
-          {
-            id:404,
-            label: "MENUITEMS.BATCHES.LIST.BATCHREPORT",
-            link: '/modules/batches/batch-report',
-            parentId: 400
-          }
-        ],
-        parentId: 100
+          { id: 31, label: 'MENUITEMS.BATCHES.LIST.BATCHLIST', link: '/modules/batches', parentId: 30 },
+          { id: 32, label: 'MENUITEMS.BATCHES.LIST.ANALYTICS', link: '/modules/batches/analytics', parentId: 30 },
+          { id: 33, label: 'MENUITEMS.BATCHES.LIST.BATCHTRACKING', link: '/modules/batches/batch-tracking', parentId: 30 },
+          { id: 34, label: 'MENUITEMS.BATCHES.LIST.BATCHREPORT', link: '/modules/batches/batch-report', parentId: 30 }
+        ]
+      }
+    ],
+
+
+    'GG': [
+      /*
+      { id: 101, label: 'MENUITEMS.MENU.TEXT', isTitle: true },
+
+      {
+        id: 102,
+        label: 'MENUITEMS.DASHBOARD.TEXT',
+        icon: 'ti ti-brand-google-home',
+        subItems: [
+          { id: 103, label: 'MENUITEMS.DASHBOARD.LIST.ANALYTICS', link: '/', parentId: 102 }
+        ]
       },
-      /*{
-        id: 500,
+ */
+      /* Módulos completos */
+      { id: 104, label: 'MENUITEMS.MODULES.TEXT', isTitle: true },
+
+      /* Inventario */
+      {
+        id: 105,
+        label: 'MENUITEMS.INVENTORY.TEXT',
+        icon: 'ti ti-building-warehouse',
+        subItems: [
+          { id: 106, label: 'MENUITEMS.INVENTORY.LIST.GESTIONINVENTORY', link: '/modules/inventory', parentId: 105 },
+          { id: 107, label: 'MENUITEMS.INVENTORY.LIST.INVENTORYMOVEMENT', link: '/modules/inventory/inventoryMovement', parentId: 105 },
+          { id: 108, label: 'MENUITEMS.INVENTORY.LIST.RAWMATERIALS', link: '/modules/inventory/rawMaterial', parentId: 105 },
+          { id: 109, label: 'MENUITEMS.INVENTORY.LIST.BATCHEMOVEMENT', link: '/modules/inventory/batchMovement', parentId: 105 }
+        ]
+      },
+
+      /* Productos */
+      {
+        id: 110,
+        label: 'MENUITEMS.PRODUCT.TEXT',
+        icon: 'ti ti-package',
+        subItems: [
+          { id: 111, label: 'MENUITEMS.PRODUCT.LIST.PRODUCTSANALYTICS', link: '/modules/product/analytics', parentId: 110 },
+          { id: 112, label: 'MENUITEMS.PRODUCT.LIST.PRODUCTSLIST', link: '/modules/product', parentId: 110 }
+        ]
+      },
+
+      /* Batches */
+      {
+        id: 113,
+        label: 'MENUITEMS.BATCHES.TEXT',
+        icon: 'ti ti-layers-intersect',
+        subItems: [
+          { id: 114, label: 'MENUITEMS.BATCHES.LIST.BATCHLIST', link: '/modules/batches', parentId: 113 },
+          { id: 115, label: 'MENUITEMS.BATCHES.LIST.ANALYTICS', link: '/modules/batches/analytics', parentId: 113 },
+          { id: 116, label: 'MENUITEMS.BATCHES.LIST.BATCHTRACKING', link: '/modules/batches/batch-tracking', parentId: 113 }
+        ]
+      },
+
+      /* Formularios */
+      {
+        id: 117,
+        label: 'MENUITEMS.FORMMANAGER.TEXT',
+        icon: 'ti ti-clipboard-list',
+        subItems: [
+          { id: 118, link: '/modules/forms', label: 'MENUITEMS.FORMMANAGER.LIST.FORMRESPONSES', parentId: 117 },
+          { id: 119, link: '/modules/forms/forms-manager', label: 'MENUITEMS.FORMMANAGER.LIST.FORMMANAGER', parentId: 117 }
+        ]
+      },
+
+      /* Usuarios */
+      {
+        id: 120,
+        label: 'MENUITEMS.USERMANAGEMENT.TEXT',
+        icon: 'ti ti-users-group',
+        subItems: [
+          { id: 121, label: 'MENUITEMS.USERMANAGEMENT.LIST.USERMANAGEMENT', link: '/modules/users', parentId: 120 },
+          { id: 122, label: 'MENUITEMS.USERMANAGEMENT.LIST.ANALYTICS', link: '/modules/users/analytics', parentId: 120 }
+        ]
+      }
+    ],
+
+
+    'INGPL': [
+      /* { id: 201, label: 'MENUITEMS.MENU.TEXT', isTitle: true },
+ 
+       {
+         id: 202,
+         label: 'MENUITEMS.DASHBOARD.TEXT',
+         icon: 'ti ti-brand-google-home',
+         subItems: [{ id: 203, label: 'MENUITEMS.DASHBOARD.LIST.ANALYTICS', link: '/', parentId: 202 }]
+       },
+ */
+      { id: 204, label: 'MENUITEMS.MODULES.TEXT', isTitle: true },
+
+      /* Inventario */
+      {
+        id: 205,
+        label: 'MENUITEMS.INVENTORY.TEXT',
+        icon: 'ti ti-building-warehouse',
+        subItems: [
+          { id: 206, link: '/modules/inventory', label: 'MENUITEMS.INVENTORY.LIST.GESTIONINVENTORY', parentId: 205 },
+          { id: 207, link: '/modules/inventory/inventoryMovement', label: 'MENUITEMS.INVENTORY.LIST.INVENTORYMOVEMENT', parentId: 205 }
+        ]
+      },
+
+      /* Productos */
+      {
+        id: 208,
+        label: 'MENUITEMS.PRODUCT.TEXT',
+        icon: 'ti ti-package',
+        subItems: [
+          { id: 209, link: '/modules/product', label: 'MENUITEMS.PRODUCT.LIST.PRODUCTSLIST', parentId: 208 }
+        ]
+      },
+
+      /* Batches */
+      {
+        id: 210,
+        label: 'MENUITEMS.BATCHES.TEXT',
+        icon: 'ti ti-layers-intersect',
+        subItems: [
+          { id: 211, link: '/modules/batches', label: 'MENUITEMS.BATCHES.LIST.BATCHLIST', parentId: 210 },
+          { id: 212, link: '/modules/batches/batch-tracking', label: 'MENUITEMS.BATCHES.LIST.BATCHTRACKING', parentId: 210 }
+        ]
+      },
+
+      /* Formularios */
+      {
+        id: 213,
+        label: 'MENUITEMS.FORMMANAGER.TEXT',
+        icon: 'ti ti-clipboard-list',
+        subItems: [
+          { id: 214, link: '/modules/forms', label: 'MENUITEMS.FORMMANAGER.LIST.FORMRESPONSES', parentId: 213 }
+        ]
+      },
+
+      /* Trazabilidad */
+      {
+        id: 215,
         label: 'MENUITEMS.TRACEABILITY.TEXT',
         icon: 'ti ti-route',
-        subItems: [
-          {
-            id: 501,
-            label: 'MENUITEMS.TRACEABILITY.LIST.DASHBOARDTRACEABILITY',
-            link: '/modules/traceability',
-            parentId: 500
-          }
-        ],
-        parentId: 100
-      }
-      
-      {INVENTORY
-        id: 200,
-        label: 'MENUITEMS.ADMIN.TEXT',
-        isTitle: true
-      },
-      {
-        id: 201,
-        label: 'MENUITEMS.ADMIN.LIST.USERS',
-        icon: 'ti ti-users',
-        link: '/admin/users',
-        parentId: 200
-      },
-      {
-        id: 202,
-        label: 'MENUITEMS.ADMIN.LIST.SETTINGS',
-        icon: 'ti ti-settings',
-        link: '/admin/settings',
-        parentId: 200
-      }*/
-    ],
-
-    // GG: Gerente General - Dashboard y aplicaciones principales
-    'GG': [
-      {
-        id: 1,
-        label: 'MENUITEMS.MENU.TEXT',
-        isTitle: true
-      },
-      {
-        id: 2,
-        label: 'MENUITEMS.DASHBOARD.TEXT',
-        icon: 'ti ti-brand-google-home',
-        subItems: [
-          {
-            id: 3,
-            label: 'MENUITEMS.DASHBOARD.LIST.ANALYTICS',
-            link: '/',
-            parentId: 2
-          }
-        ]
-      },
-      {
-        id: 8,
-        label: 'MENUITEMS.APPS.TEXT',
-        isTitle: true
-      },
-      {
-        id: 9,
-        label: 'MENUITEMS.APPS.LIST.CALENDAR',
-        icon: 'ti ti-calendar',
-        link: '/apps/calendar',
-        parentId: 8
-      },
-      {
-        id: 11,
-        label: 'MENUITEMS.APPS.LIST.EMAIL',
-        icon: 'ti ti-mail',
-        link: '/apps/email',
-        parentId: 8,
-      },
-      {
-        id: 26,
-        label: 'MENUITEMS.APPS.LIST.KANBANBOARD',
-        icon: 'ti ti-subtask',
-        link: '/apps/kanbanboard',
-        parentId: 8,
-      },
-      {
-        id: 100,
-        label: 'MENUITEMS.MODULES.TEXT',
-        isTitle: true,
-        subItems: [
-          {
-            id: 101,
-            label: 'MENUITEMS.MODULES.LIST.USERMANAGEMENT',
-            icon: 'ti ti-user',
-            link: '/pages/modules/users',
-            parentId: 100
-          },
-          {
-            id: 102,
-            label: 'MENUITEMS.MODULES.LIST.INVENTORY',
-            icon: 'ti ti-box',
-            link: '/pages/modules/inventory',
-            parentId: 100
-          },
-          {
-            id: 103,
-            label: 'MENUITEMS.MODULES.LIST.FORMS',
-            icon: 'ti ti-forms',
-            link: '/pages/modules/forms',
-            parentId: 100
-          }
-        ]
+        link: '/modules/traceability'
       }
     ],
 
-    // INGPL: Ingeniero de Planta - Dashboard y herramientas de planta
-    'INGPL': [
-      {
-        id: 1,
-        label: 'MENUITEMS.MENU.TEXT',
-        isTitle: true
-      },
-      {
-        id: 2,
-        label: 'MENUITEMS.DASHBOARD.TEXT',
-        icon: 'ti ti-brand-google-home',
-        subItems: [
-          {
-            id: 3,
-            label: 'MENUITEMS.DASHBOARD.LIST.ANALYTICS',
-            link: '/',
-            parentId: 2
-          }
-        ]
-      },
-      {
-        id: 8,
-        label: 'MENUITEMS.APPS.TEXT',
-        isTitle: true
-      },
-      {
-        id: 26,
-        label: 'MENUITEMS.APPS.LIST.KANBANBOARD',
-        icon: 'ti ti-subtask',
-        link: '/apps/kanbanboard',
-        parentId: 8,
-      },
-      {
-        id: 24,
-        label: 'MENUITEMS.APPS.LIST.TODO',
-        icon: 'ti ti-list',
-        link: '/apps/to-do',
-        parentId: 8,
-      },
-      {
-        id: 100,
-        label: 'MENUITEMS.MODULES.TEXT',
-        isTitle: true
-      }
-    ],
-
-    // INGPR: Ingeniero de Producción - Dashboard y herramientas de producción
     'INGPR': [
+
+      /*
+      { id: 301, label: 'MENUITEMS.MENU.TEXT', isTitle: true },
+
       {
-        id: 1,
-        label: 'MENUITEMS.MENU.TEXT',
-        isTitle: true
-      },
-      {
-        id: 2,
+        id: 302,
         label: 'MENUITEMS.DASHBOARD.TEXT',
         icon: 'ti ti-brand-google-home',
+        subItems: [{ id: 303, label: 'MENUITEMS.DASHBOARD.LIST.ANALYTICS', link: '/', parentId: 302 }]
+      },*/
+
+      { id: 304, label: 'MENUITEMS.MODULES.TEXT', isTitle: true },
+
+      /* Inventario */
+      {
+        id: 305,
+        label: 'MENUITEMS.INVENTORY.TEXT',
+        icon: 'ti ti-building-warehouse',
         subItems: [
-          {
-            id: 3,
-            label: 'MENUITEMS.DASHBOARD.LIST.ANALYTICS',
-            link: '/',
-            parentId: 2
-          }
+          { id: 306, link: '/modules/inventory', label: 'MENUITEMS.INVENTORY.LIST.GESTIONINVENTORY', parentId: 305 },
+          { id: 307, link: '/modules/inventory/inventoryMovement', label: 'MENUITEMS.INVENTORY.LIST.INVENTORYMOVEMENT', parentId: 305 }
         ]
       },
-      {
-        id: 8,
-        label: 'MENUITEMS.APPS.TEXT',
-        isTitle: true
-      },
-      {
-        id: 26,
-        label: 'MENUITEMS.APPS.LIST.KANBANBOARD',
-        icon: 'ti ti-subtask',
-        link: '/apps/kanbanboard',
-        parentId: 8,
-      },
-      {
-        id: 24,
-        label: 'MENUITEMS.APPS.LIST.TODO',
-        icon: 'ti ti-list',
-        link: '/apps/to-do',
-        parentId: 8,
-      },
-      {
-        id: 100,
-        label: 'MENUITEMS.MODULES.TEXT',
-        isTitle: true
-      }
-    ],
 
-    // TRZ: Trazabilidad - Aplicaciones específicas de trazabilidad
-    'TRZ': [
+      /* Productos */
       {
-        id: 300,
+        id: 308,
         label: 'MENUITEMS.PRODUCT.TEXT',
         icon: 'ti ti-package',
         subItems: [
-          {
-            id: 301,
-            label: 'MENUITEMS.PRODUCT.LIST.PRODUCTSANALYTICS',
-            link: '/modules/product/analytics',
-            parentId: 300
-          },
-          {
-            id: 302,
-            label: 'MENUITEMS.PRODUCT.LIST.PRODUCTSLIST',
-            link: '/modules/product',
-            parentId: 300
-          }
-        ],
-        parentId: 100
+          { id: 309, link: '/modules/product', label: 'MENUITEMS.PRODUCT.LIST.PRODUCTSLIST', parentId: 308 }
+        ]
       },
+
+      /* Batches */
       {
-        id: 400,
+        id: 310,
         label: 'MENUITEMS.BATCHES.TEXT',
         icon: 'ti ti-layers-intersect',
         subItems: [
-          {
-            id: 401,
-            label: 'MENUITEMS.BATCHES.LIST.BATCHLIST',
-            link: '/modules/batches',
-            parentId: 400
-          },
-          {
-            id: 402,
-            label: 'MENUITEMS.BATCHES.LIST.ANALYTICS',
-            link: '/modules/batches/analytics',
-            parentId: 400
-          },
-          {
-            id: 403,
-            label: 'MENUITEMS.BATCHES.LIST.BATCHTRACKING',
-            link: '/modules/batches/batch-tracking',
-            parentId: 400
-          }
-        ],
-        parentId: 100
+          { id: 311, link: '/modules/batches', label: 'MENUITEMS.BATCHES.LIST.BATCHLIST', parentId: 310 },
+          { id: 312, link: '/modules/batches/batch-tracking', label: 'MENUITEMS.BATCHES.LIST.BATCHTRACKING', parentId: 310 }
+        ]
       },
+
+      /* Formularios */
+      {
+        id: 313,
+        label: 'MENUITEMS.FORMMANAGER.TEXT',
+        icon: 'ti ti-clipboard-list',
+        subItems: [
+          { id: 314, link: '/modules/forms', label: 'MENUITEMS.FORMMANAGER.LIST.FORMRESPONSES', parentId: 313 }
+        ]
+      },
+
+      /* Trazabilidad */
+      {
+        id: 315,
+        label: 'MENUITEMS.TRACEABILITY.TEXT',
+        icon: 'ti ti-route',
+        link: '/modules/traceability'
+      }
     ],
 
-    // OP: Operador - Solo Kanban y herramientas básicas
+
+    'TRZ': [
+      {
+        id: 403,
+        label: 'MENUITEMS.BATCHES.TEXT',
+        icon: 'ti ti-layers-intersect',
+        subItems: [
+          { id: 404, link: '/modules/batches', label: 'MENUITEMS.BATCHES.LIST.BATCHLIST', parentId: 403 },
+          { id: 405, link: '/modules/batches/batch-tracking', label: 'MENUITEMS.BATCHES.LIST.BATCHTRACKING', parentId: 403 },
+          { id: 406, label: 'MENUITEMS.BATCHES.LIST.BATCHREPORT', link: '/modules/batches/batch-report', parentId: 403 }
+        ]
+      },
+      {
+        id: 401,
+        label: 'MENUITEMS.PRODUCT.TEXT',
+        icon: 'ti ti-package',
+        subItems: [
+          { id: 402, link: '/modules/product', label: 'MENUITEMS.PRODUCT.LIST.PRODUCTSLIST', parentId: 401 }
+        ]
+      },
+      {
+        id: 407,
+        label: 'MENUITEMS.INVENTORY.TEXT',
+        icon: 'ti ti-building-warehouse',
+        subItems: [
+          { id: 407, link: '/modules/inventory', label: 'MENUITEMS.INVENTORY.LIST.GESTIONINVENTORY', parentId: 407 }
+        ]
+      },
+      {
+        id: 408,
+        label: 'MENUITEMS.FORMMANAGER.TEXT',
+        icon: 'ti ti-clipboard-list',
+        subItems: [
+          { id: 409, link: '/modules/forms/forms-trazability', label: 'MENUITEMS.FORMMANAGER.LIST.FORMSTRAZABILITY', parentId: 408 },
+          { id: 410, label: 'MENUITEMS.FORMMANAGER.LIST.FORMRESPONSESDETAIL', link: '/modules/forms/forms-responses', parentId: 408 }
+        ]
+      }
+    ],
+
     'OP': [
       {
         id: 1,
@@ -597,7 +453,7 @@ export class MenuService {
       'GG': '/', // Dashboard gerencial  
       'INGPL': '/', // Dashboard de planta
       'INGPR': '/', // Dashboard de producción
-      'TRZ': '/modules/batches/analytics', // Kanban para trazabilidad
+      'TRZ': '/modules/batches', // Kanban para trazabilidad
       'OP': '/modules/inventory' // Solo Kanban para operadores
     };
 

@@ -26,7 +26,7 @@ export class InventoryMovementComponent implements OnInit, OnDestroy {
   loading = false;
   error: string | null = null;
   page = 1;
-  perPage = 500;
+  perPage = 50;
   meta: any = null;
   hasActiveFilters = false;
   totalRawMaterialsOut = 0;

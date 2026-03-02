@@ -434,4 +434,68 @@ export class MaterialReleaseService {
   getProductionLines(): string[] {
     return ['richard', 'panaderia', 'pasteleria', 'principal', 'empaque'];
   }
+
+  /**
+   * Calcula estadísticas de materiales para CUALQUIER lote,
+   * independientemente de su estado (completed, delivered, cancelled, etc.)
+   */
+  getMaterialStatsForBatch(batch: Batch): Observable<{
+    totalMaterials: number;
+    materialsReleased: number;
+    totalQuantity: number;
+    materials: MaterialRequirement[];
+  }> {
+    return forkJoin({
+      products: this.getAllProducts(),
+      rawMaterials: this.getAllRawMaterials()
+    }).pipe(
+      map(({ products, rawMaterials }) => {
+        const product = products.find(p => p.id === batch.product_id);
+        if (!product) {
+          console.warn('[MaterialRelease] getMaterialStatsForBatch: producto no encontrado para batch', batch.id);
+          return { totalMaterials: 0, materialsReleased: 0, totalQuantity: 0, materials: [] };
+        }
+
+        const rawMaterialByCode = new Map(rawMaterials.map(rm => [rm.code?.toLowerCase(), rm]));
+        const rawMaterialByName = new Map(rawMaterials.map(rm => [this.normalizeText(rm.name || ''), rm]));
+
+        const materialSpecs = this.parseSpecifications(product.specifications || []);
+        const unitsToRelease = batch.quantity || 0;
+
+        const materials: MaterialRequirement[] = materialSpecs.map(spec => {
+          let rawMaterial = rawMaterialByCode.get(spec.rawMaterialCode.toLowerCase());
+          if (!rawMaterial) {
+            rawMaterial = rawMaterialByName.get(this.normalizeText(spec.rawMaterialCode));
+          }
+
+          const totalNeeded = spec.quantityPerUnit * unitsToRelease;
+          const currentStock = rawMaterial?.stock || 0;
+          const hasSufficient = currentStock >= totalNeeded;
+
+          return {
+            rawMaterialId: rawMaterial?.id || 0,
+            rawMaterialCode: rawMaterial?.code || spec.rawMaterialCode,
+            rawMaterialName: rawMaterial?.name || spec.rawMaterialCode,
+            quantityPerUnit: spec.quantityPerUnit,
+            totalQuantityNeeded: totalNeeded,
+            currentStock,
+            unitOfMeasure: rawMaterial?.unit_of_measure || 'unidad',
+            hasSufficientStock: hasSufficient,
+            stockDeficit: hasSufficient ? 0 : totalNeeded - currentStock
+          };
+        });
+
+        return {
+          totalMaterials: materials.length,
+          materialsReleased: materials.filter(m => m.hasSufficientStock).length,
+          totalQuantity: materials.reduce((sum, m) => sum + m.totalQuantityNeeded, 0),
+          materials
+        };
+      }),
+      catchError(err => {
+        console.error('[MaterialRelease] getMaterialStatsForBatch error:', err);
+        return of({ totalMaterials: 0, materialsReleased: 0, totalQuantity: 0, materials: [] });
+      })
+    );
+  }
 }

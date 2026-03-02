@@ -1,6 +1,6 @@
 import { Component, effect, signal, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormsModule } from '@angular/forms';
 import { ProductsService } from '../../services/products.service';
 import { AlertService } from 'src/app/core/services/alert.service';
 import { AuthenticationService } from 'src/app/core/services/auth.service';
@@ -10,7 +10,7 @@ import { Product, PaginationMeta } from '../../models/product.model';
 @Component({
   selector: 'app-products-list',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule],
   templateUrl: './products-list.component.html'
 })
 export class ProductsListComponent implements OnInit, OnDestroy {
@@ -31,6 +31,11 @@ export class ProductsListComponent implements OnInit, OnDestroy {
 
   form: FormGroup;
   filterForm: FormGroup;
+  newSpecification: string = '';
+  specKey: string = '';
+  specQty: number | null = null;
+  specFormatError: string = '';
+  editingSpecIndex: number | null = null;
 
   private destroy$ = new Subject<void>();
 
@@ -69,9 +74,7 @@ export class ProductsListComponent implements OnInit, OnDestroy {
       code: [''],
       description: [''],
       category: [''],
-      specifications: [''],
-      // ✅ FIX: unit_price inicia en null para no bloquear validación min(0.01)
-      //    cuando el backend devuelve 0 en productos existentes
+      specifications: [[]], // Array of strings
       unit_price: [null, [Validators.required, Validators.min(0)]],
       is_active: [true],
       created_by: [createdBy]
@@ -142,59 +145,64 @@ export class ProductsListComponent implements OnInit, OnDestroy {
   // -----------------------------
   select(product: Product | null): void {
     this.selected.set(product);
-
+    this.specKey = '';
+    this.specQty = null;
+    this.specFormatError = '';
+    this.editingSpecIndex = null;
+    this.newSpecification = '';
     if (product) {
-      // ✅ FIX PRINCIPAL: convertir specifications[] → string CSV para el textarea
-      const specsAsString = Array.isArray(product.specifications)
-        ? product.specifications.join(', ')
-        : (product.specifications ?? '');
-
-      // ✅ patchValue con spread + specifications convertida
+      // Asegura que specifications sea array
+      const specsArr = Array.isArray(product.specifications)
+        ? product.specifications
+        : (typeof product.specifications === 'string' && (product.specifications as string).length > 0)
+          ? (product.specifications as string).split(',').map((s: string) => s.trim()).filter(Boolean)
+          : [];
       this.form.patchValue({
         ...product,
-        specifications: specsAsString
+        specifications: specsArr
       });
-
+      this.newSpecification = '';
       this.showForm.set(true);
     } else {
       const user = this.auth.currentUserValue;
       const createdBy = user?.id?.toString() ?? user?.name ?? 'system';
-
       this.form.reset({
         id: null,
         name: '',
         code: '',
         description: '',
         category: '',
-        specifications: '',
+        specifications: [],
         unit_price: null,
         is_active: true,
         created_by: createdBy
       });
-
+      this.newSpecification = '';
       this.showForm.set(false);
     }
   }
 
   openCreate(): void {
-    // ✅ FIX: no llamar select(null) primero (ya cierra el form),
-    //    limpiar el form y abrir directamente
     const user = this.auth.currentUserValue;
     const createdBy = user?.id?.toString() ?? user?.name ?? 'system';
-
     this.selected.set(null);
+    this.specKey = '';
+    this.specQty = null;
+    this.specFormatError = '';
+    this.editingSpecIndex = null;
+    this.newSpecification = '';
     this.form.reset({
       id: null,
       name: '',
       code: '',
       description: '',
       category: '',
-      specifications: '',
+      specifications: [],
       unit_price: null,
       is_active: true,
       created_by: createdBy
     });
-
+    this.newSpecification = '';
     this.showForm.set(true);
   }
 
@@ -207,12 +215,9 @@ export class ProductsListComponent implements OnInit, OnDestroy {
 
     const payload = { ...this.form.value } as Partial<Product>;
 
-    // ✅ Convertir specifications string CSV → array antes de enviar
-    if (typeof payload.specifications === 'string') {
-      const raw = (payload.specifications as string).trim();
-      payload.specifications = raw
-        ? raw.split(',').map((s: string) => s.trim()).filter(Boolean)
-        : [];
+    // Asegura que specifications es array de strings
+    if (!Array.isArray(payload.specifications)) {
+      payload.specifications = [];
     }
 
     // Asegurar created_by
@@ -244,6 +249,84 @@ export class ProductsListComponent implements OnInit, OnDestroy {
         this.loading.set(false);
       }
     });
+  }
+
+  addSpecification(): void {
+    this.specFormatError = '';
+
+    const key = (this.specKey || '').trim();
+
+    if (!key) {
+      this.specFormatError = 'El nombre o código de materia prima es requerido.';
+      return;
+    }
+    if (this.specQty === null || this.specQty === undefined || (this.specQty as any) === '') {
+      this.specFormatError = 'La cantidad por unidad es requerida.';
+      return;
+    }
+
+    const qty = typeof this.specQty === 'number'
+      ? this.specQty
+      : parseFloat(String(this.specQty).replace(',', '.'));
+
+    if (!Number.isFinite(qty) || qty <= 0) {
+      this.specFormatError = 'La cantidad debe ser un número mayor a 0.';
+      return;
+    }
+
+    const value = `${key}: ${qty}`;
+    const current: string[] = this.form.get('specifications')?.value || [];
+
+    const duplicate = current.some((s, idx) => {
+      if (idx === this.editingSpecIndex) return false; // ignorar el que se está editando
+      const existingKey = s.includes(':') ? s.split(':')[0].trim().toLowerCase() : s.trim().toLowerCase();
+      return existingKey === key.toLowerCase();
+    });
+
+    if (duplicate) {
+      this.specFormatError = `Ya existe una especificación para "${key}".`;
+      return;
+    }
+
+    if (this.editingSpecIndex !== null && this.editingSpecIndex >= 0 && this.editingSpecIndex < current.length) {
+      // Reemplazar en su posición original
+      const updated = [...current];
+      updated[this.editingSpecIndex] = value;
+      this.form.get('specifications')?.setValue(updated);
+    } else {
+      this.form.get('specifications')?.setValue([...current, value]);
+    }
+
+    this.specKey = '';
+    this.specQty = null;
+    this.editingSpecIndex = null;
+    this.newSpecification = '';
+  }
+
+  editSpecification(index: number): void {
+    const current: string[] = this.form.get('specifications')?.value || [];
+    const spec = current[index];
+    if (!spec) return;
+    const colonIdx = spec.lastIndexOf(':');
+    this.specKey = colonIdx >= 0 ? spec.substring(0, colonIdx).trim() : spec.trim();
+    const rawQty = colonIdx >= 0 ? spec.substring(colonIdx + 1).trim() : '';
+    this.specQty = rawQty ? parseFloat(rawQty) : null;
+    this.specFormatError = '';
+    this.editingSpecIndex = index;
+  }
+
+  cancelEditSpec(): void {
+    this.specKey = '';
+    this.specQty = null;
+    this.specFormatError = '';
+    this.editingSpecIndex = null;
+  }
+
+  removeSpecification(index: number): void {
+    const current = this.form.get('specifications')?.value || [];
+    if (index < 0 || index >= current.length) return;
+    const updated = [...current.slice(0, index), ...current.slice(index + 1)];
+    this.form.get('specifications')?.setValue(updated);
   }
 
   remove(id?: number): void {
