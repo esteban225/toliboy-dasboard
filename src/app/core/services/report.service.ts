@@ -20,7 +20,7 @@ export class ReportService {
     title: string;
     headings: string[];
     rows: string[][];
-    format: 'pdf' | 'csv' | 'excel' | 'html';
+    format: 'pdf' | 'csv' | 'xlsx' | 'html';
   }): Observable<Blob> {
     const url = `${this.apiUrl}/reports/export`;
     

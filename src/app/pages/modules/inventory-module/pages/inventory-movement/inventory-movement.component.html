@@ -28,14 +28,15 @@
                         <span class="d-none d-sm-inline">PDF</span>
                     </button>
 
-                    <!---
-                    <button type="button" class="btn btn-outline-success" (click)="generateReport('excel')"
+
+                    <button type="button" class="btn btn-outline-success" (click)="generateReport('xlsx')"
                         [disabled]="loading || movements.length === 0 || generatingReport">
                         <span *ngIf="generatingReport" class="spinner-border spinner-border-sm me-2"
                             role="status"></span>
                         <i *ngIf="!generatingReport" class="bi bi-filetype-xlsx me-2"></i>
                         <span class="d-none d-sm-inline">Excel</span>
                     </button>
+                    <!---
                     <button type="button" class="btn btn-outline-primary" (click)="generateReport('csv')"
                         [disabled]="loading || movements.length === 0 || generatingReport">
                         <span *ngIf="generatingReport" class="spinner-border spinner-border-sm me-2"
@@ -290,55 +291,55 @@
                     <thead class="table-light border-bottom">
                         <tr>
                             <th class="px-4 py-3 text-center sortable-header" style="width: 80px; cursor: pointer;"
-                                    (click)="sort('id')">
+                                (click)="sort('id')">
                                 <div class="d-flex align-items-center justify-content-center">
                                     <small class="text-uppercase fw-bold text-muted">ID</small>
-                                        <i class="bi ms-1 tiny-sort-icon"
-                                           [ngClass]="sortColumn === 'id' ? (sortDirection === 'asc' ? 'bi-arrow-up' : 'bi-arrow-down') : 'bi-arrow-down-up'"></i>
+                                    <i class="bi ms-1 tiny-sort-icon"
+                                        [ngClass]="sortColumn === 'id' ? (sortDirection === 'asc' ? 'bi-arrow-up' : 'bi-arrow-down') : 'bi-arrow-down-up'"></i>
                                 </div>
                             </th>
 
                             <th class="px-4 py-3 sortable-header" style="width: 130px; cursor: pointer;"
-                                    (click)="sort('type')">
+                                (click)="sort('type')">
                                 <div class="d-flex align-items-center">
                                     <small class="text-uppercase fw-bold text-muted">
                                         <i class="bi bi-arrow-left-right me-1"></i>Tipo
                                     </small>
-                                        <i class="bi ms-auto tiny-sort-icon"
-                                           [ngClass]="sortColumn === 'type' ? (sortDirection === 'asc' ? 'bi-arrow-up' : 'bi-arrow-down') : 'bi-arrow-down-up'"></i>
+                                    <i class="bi ms-auto tiny-sort-icon"
+                                        [ngClass]="sortColumn === 'type' ? (sortDirection === 'asc' ? 'bi-arrow-up' : 'bi-arrow-down') : 'bi-arrow-down-up'"></i>
                                 </div>
                             </th>
 
                             <th class="px-4 py-3 sortable-header" style="min-width: 200px; cursor: pointer;"
-                                    (click)="sort('product_name')">
+                                (click)="sort('product_name')">
                                 <div class="d-flex align-items-center">
                                     <small class="text-uppercase fw-bold text-muted">
                                         <i class="bi bi-box-seam me-1"></i>Producto
                                     </small>
-                                        <i class="bi ms-auto tiny-sort-icon"
-                                           [ngClass]="sortColumn === 'product_name' ? (sortDirection === 'asc' ? 'bi-arrow-up' : 'bi-arrow-down') : 'bi-arrow-down-up'"></i>
+                                    <i class="bi ms-auto tiny-sort-icon"
+                                        [ngClass]="sortColumn === 'product_name' ? (sortDirection === 'asc' ? 'bi-arrow-up' : 'bi-arrow-down') : 'bi-arrow-down-up'"></i>
                                 </div>
                             </th>
 
                             <th class="px-4 py-3 text-end sortable-header" style="width: 110px; cursor: pointer;"
-                                    (click)="sort('quantity')">
+                                (click)="sort('quantity')">
                                 <div class="d-flex align-items-center justify-content-end">
                                     <small class="text-uppercase fw-bold text-muted">
                                         <i class="bi bi-hash me-1"></i>Cant.
                                     </small>
-                                        <i class="bi ms-1 tiny-sort-icon"
-                                           [ngClass]="sortColumn === 'quantity' ? (sortDirection === 'asc' ? 'bi-arrow-up' : 'bi-arrow-down') : 'bi-arrow-down-up'"></i>
+                                    <i class="bi ms-1 tiny-sort-icon"
+                                        [ngClass]="sortColumn === 'quantity' ? (sortDirection === 'asc' ? 'bi-arrow-up' : 'bi-arrow-down') : 'bi-arrow-down-up'"></i>
                                 </div>
                             </th>
 
                             <th class="px-4 py-3 sortable-header" style="width: 140px; cursor: pointer;"
-                                    (click)="sort('production_line')">
+                                (click)="sort('production_line')">
                                 <div class="d-flex align-items-center">
                                     <small class="text-uppercase fw-bold text-muted">
                                         <i class="bi bi-gear me-1"></i>Línea
                                     </small>
-                                        <i class="bi ms-auto tiny-sort-icon"
-                                           [ngClass]="sortColumn === 'production_line' ? (sortDirection === 'asc' ? 'bi-arrow-up' : 'bi-arrow-down') : 'bi-arrow-down-up'"></i>
+                                    <i class="bi ms-auto tiny-sort-icon"
+                                        [ngClass]="sortColumn === 'production_line' ? (sortDirection === 'asc' ? 'bi-arrow-up' : 'bi-arrow-down') : 'bi-arrow-down-up'"></i>
                                 </div>
                             </th>
 
@@ -873,6 +874,11 @@
                                     </label>
                                     <input type="date" class="form-control" id="expiryDateOut"
                                         (change)="updateNotesSummary()">
+
+                                    <button class="btn btn-sm btn-outline-secondary mt-2" type="button"
+                                        (click)="setExpiryDateNA()">
+                                        NA
+                                    </button>
                                 </div>
                                 <div class="col-sm-6">
                                     <label class="form-label small fw-semibold">
@@ -1184,79 +1190,82 @@
         </div>
     </div>
 
-<div *ngIf="showDetailsModalFlag" class="modal fade show d-block" tabindex="-1" role="dialog"
-    style="background-color: rgba(15, 23, 42, 0.7); backdrop-filter: blur(4px);">
-    
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg" style="border-radius: 1rem;">
-            
-            <div class="modal-header border-0 bg-light-subtle py-3 px-4" style="border-radius: 1rem 1rem 0 0;">
-                <div class="d-flex align-items-center">
-                    <div class="bg-info bg-opacity-10 p-2 rounded-3 me-3">
-                        <i class="bi bi-card-list text-info fs-5"></i>
-                    </div>
-                    <div>
-                        <h6 class="modal-title fw-bold text-dark mb-0">Detalles Técnicos</h6>
-                        <small class="text-muted">Información adicional del registro</small>
-                    </div>
-                </div>
-                <button type="button" class="btn-close shadow-none" (click)="closeDetailsModal()"></button>
-            </div>
+    <div *ngIf="showDetailsModalFlag" class="modal fade show d-block" tabindex="-1" role="dialog"
+        style="background-color: rgba(15, 23, 42, 0.7); backdrop-filter: blur(4px);">
 
-            <div class="modal-body p-0">
-                <div class="list-group list-group-flush" *ngIf="currentDetailsModal && currentDetailsModal.length > 0">
-                    
-                    <div *ngFor="let detail of currentDetailsModal" 
-                         class="list-group-item border-light px-4 py-3 bg-transparent">
-                        
-                        <div class="d-flex justify-content-between align-items-center mb-1">
-                            <span class="text-uppercase fw-bold text-muted small" style="letter-spacing: 0.5px;">
-                                {{ detail.label }}
-                            </span>
-                            
-                            <div class="d-flex gap-2">
-                                <span *ngIf="detail.label === 'Empaque Limpio' || detail.label === 'Aceptado'"
-                                    class="badge rounded-pill d-flex align-items-center px-2 py-1" 
-                                    [ngClass]="{
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 1rem;">
+
+                <div class="modal-header border-0 bg-light-subtle py-3 px-4" style="border-radius: 1rem 1rem 0 0;">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-info bg-opacity-10 p-2 rounded-3 me-3">
+                            <i class="bi bi-card-list text-info fs-5"></i>
+                        </div>
+                        <div>
+                            <h6 class="modal-title fw-bold text-dark mb-0">Detalles Técnicos</h6>
+                            <small class="text-muted">Información adicional del registro</small>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close shadow-none" (click)="closeDetailsModal()"></button>
+                </div>
+
+                <div class="modal-body p-0">
+                    <div class="list-group list-group-flush"
+                        *ngIf="currentDetailsModal && currentDetailsModal.length > 0">
+
+                        <div *ngFor="let detail of currentDetailsModal"
+                            class="list-group-item border-light px-4 py-3 bg-transparent">
+
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <span class="text-uppercase fw-bold text-muted small" style="letter-spacing: 0.5px;">
+                                    {{ detail.label }}
+                                </span>
+
+                                <div class="d-flex gap-2">
+                                    <span *ngIf="detail.label === 'Empaque Limpio' || detail.label === 'Aceptado'"
+                                        class="badge rounded-pill d-flex align-items-center px-2 py-1" [ngClass]="{
                                         'bg-success-subtle text-success border border-success-subtle': detail.value.toLowerCase().includes('si'),
                                         'bg-danger-subtle text-danger border border-danger-subtle': detail.value.toLowerCase() === 'no'
                                     }">
-                                    <i class="bi me-1" [ngClass]="detail.value.toLowerCase().includes('si') ? 'bi-check-circle-fill' : 'bi-x-circle-fill'"></i>
-                                    {{ detail.value }}
-                                </span>
+                                        <i class="bi me-1"
+                                            [ngClass]="detail.value.toLowerCase().includes('si') ? 'bi-check-circle-fill' : 'bi-x-circle-fill'"></i>
+                                        {{ detail.value }}
+                                    </span>
 
-                                <span *ngIf="detail.label === 'Condiciones de Transporte'" 
-                                    class="badge rounded-pill px-2 py-1" 
-                                    [ngClass]="{
+                                    <span *ngIf="detail.label === 'Condiciones de Transporte'"
+                                        class="badge rounded-pill px-2 py-1" [ngClass]="{
                                         'bg-success-subtle text-success border border-success-subtle': detail.value.toLowerCase() === 'buenas',
                                         'bg-warning-subtle text-warning-emphasis border border-warning-subtle': detail.value.toLowerCase() === 'regulares',
                                         'bg-danger-subtle text-danger border border-danger-subtle': detail.value.toLowerCase() === 'malas' || detail.value.toLowerCase() === 'danado'
                                     }">
+                                        {{ detail.value }}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="text-dark fw-medium"
+                                *ngIf="detail.label !== 'Empaque Limpio' && detail.label !== 'Aceptado' && detail.label !== 'Condiciones de Transporte'">
+                                <span class="d-inline-block text-truncate w-100" [title]="detail.value"
+                                    style="max-width: 100%;">
                                     {{ detail.value }}
                                 </span>
                             </div>
                         </div>
+                    </div>
 
-                        <div class="text-dark fw-medium" *ngIf="detail.label !== 'Empaque Limpio' && detail.label !== 'Aceptado' && detail.label !== 'Condiciones de Transporte'">
-                            <span class="d-inline-block text-truncate w-100" [title]="detail.value" style="max-width: 100%;">
-                                {{ detail.value }}
-                            </span>
-                        </div>
+                    <div *ngIf="!currentDetailsModal || currentDetailsModal.length === 0" class="text-center py-5">
+                        <i class="bi bi-patch-question display-4 text-secondary opacity-25"></i>
+                        <p class="text-muted mt-2">No hay información detallada.</p>
                     </div>
                 </div>
 
-                <div *ngIf="!currentDetailsModal || currentDetailsModal.length === 0" class="text-center py-5">
-                    <i class="bi bi-patch-question display-4 text-secondary opacity-25"></i>
-                    <p class="text-muted mt-2">No hay información detallada.</p>
+                <div class="modal-footer border-0 p-4 pt-2">
+                    <button class="btn btn-secondary w-100 py-2 fw-bold shadow-sm rounded-3"
+                        (click)="closeDetailsModal()">
+                        Cerrar Detalles
+                    </button>
                 </div>
-            </div>
-
-            <div class="modal-footer border-0 p-4 pt-2">
-                <button class="btn btn-secondary w-100 py-2 fw-bold shadow-sm rounded-3" (click)="closeDetailsModal()">
-                    Cerrar Detalles
-                </button>
             </div>
         </div>
     </div>
-</div>
 </div>

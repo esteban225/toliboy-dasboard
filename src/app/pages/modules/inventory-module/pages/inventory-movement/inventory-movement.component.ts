@@ -26,7 +26,7 @@ export class InventoryMovementComponent implements OnInit, OnDestroy {
   loading = false;
   error: string | null = null;
   page = 1;
-  perPage = 50;
+  perPage = 500;
   meta: any = null;
   hasActiveFilters = false;
   totalRawMaterialsOut = 0;
@@ -1718,9 +1718,9 @@ export class InventoryMovementComponent implements OnInit, OnDestroy {
 
   /**
    * Genera un reporte de movimientos de inventario con columnas organizadas
-   * @param format Formato del reporte: pdf, csv, excel o html
+   * @param format Formato del reporte: pdf, csv, xlsx o html
    */
-  generateReport(format: 'pdf' | 'csv' | 'excel' | 'html'): void {
+  generateReport(format: 'pdf' | 'csv' | 'xlsx' | 'html'): void {
     console.log('generateReport llamado con formato:', format);
     console.log('Movimientos disponibles:', this.movements?.length || 0);
 
@@ -1758,20 +1758,20 @@ export class InventoryMovementComponent implements OnInit, OnDestroy {
       rows: this.movements.map(movement => [
         movement.id?.toString() || '',
         this.getMovementTypeText(movement),
-        movement.production_line || '—',
-        this.parseNotesField(movement.notes, 'Recibido por') || '—',
-        this.parseNotesField(movement.notes, 'Entregado por') || '—',
-        movement.product_name || movement.raw_material_name || 'Sin especificar',
-        this.parseNotesField(movement.notes, 'Proveedor') || '—',
+        movement.production_line?.toString() || '—',
+        (this.parseNotesField(movement.notes, 'Recibido por') || '—').toString(),
+        (this.parseNotesField(movement.notes, 'Entregado por') || '—').toString(),
+        (movement.product_name || movement.raw_material_name || 'Sin especificar').toString(),
+        (this.parseNotesField(movement.notes, 'Proveedor') || '—').toString(),
         movement.quantity?.toString() || '0',
-        this.parseNotesField(movement.notes, 'Lote') || '—',
-        this.parseNotesField(movement.notes, 'Vencimiento') || '—',
-        this.parseNotesField(movement.notes, 'Sellos') || '—',
-        this.parseNotesField(movement.notes, 'Tipo de Empaque') || '—',
-        this.parseNotesField(movement.notes, 'Empaque Limpio') || '—',
-        this.parseNotesField(movement.notes, 'Condiciones de Transporte') || '—',
-        this.parseNotesField(movement.notes, 'Aceptado') || '—',
-        this.parseNotesField(movement.notes, 'Observaciones') || '—',
+        (this.parseNotesField(movement.notes, 'Lote') || '—').toString(),
+        (this.parseNotesField(movement.notes, 'Vencimiento') || '—').toString(),
+        (this.parseNotesField(movement.notes, 'Sellos') || '—').toString(),
+        (this.parseNotesField(movement.notes, 'Tipo de Empaque') || '—').toString(),
+        (this.parseNotesField(movement.notes, 'Empaque Limpio') || '—').toString(),
+        (this.parseNotesField(movement.notes, 'Condiciones de Transporte') || '—').toString(),
+        (this.parseNotesField(movement.notes, 'Aceptado') || '—').toString(),
+        (this.parseNotesField(movement.notes, 'Observaciones') || '—').toString(),
         movement.created_at ? new Date(movement.created_at).toLocaleDateString('es-ES') : 'Sin fecha'
       ]),
       format: format
@@ -1786,7 +1786,7 @@ export class InventoryMovementComponent implements OnInit, OnDestroy {
 
         // Generar nombre de archivo con timestamp
         const timestamp = new Date().toISOString().slice(0, 16).replace(/[:T]/g, '_');
-        const filename = `movimientos_inventario_${timestamp}.${format === 'excel' ? 'xlsx' : format}`;
+        const filename = `movimientos_inventario_${timestamp}.${format === 'xlsx' ? 'xlsx' : format}`;
 
         console.log('Descargando archivo:', filename);
         // Descargar archivo
