@@ -4,8 +4,8 @@
 export const environment = {
   production: false,
   defaultauth: 'fackbackend',
-  authEndpoint: 'https://apitoliboy.lat/api/broadcasting/auth',
-  AUTH_API: 'https://apitoliboy.lat/api',   // <- USAR LA RAÍZ SIN "/api"
+  authEndpoint: 'https://test.apitoliboy.lat/api/broadcasting/auth',
+  AUTH_API: 'https://test.apitoliboy.lat/api',   // <- USAR LA RAÍZ SIN "/api"
   firebaseConfig: {
     apiKey: 'AIzaSyAIrRUP8z39yFhjsfnLsxwDhzxzAguzHvI',
     authDomain: 'vixon-angular.firebaseapp.com',

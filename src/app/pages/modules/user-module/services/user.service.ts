@@ -40,7 +40,7 @@ export class UserService {
     }
 
     createUser(user: Partial<UserData>): Observable<UserData> {
-        return this.http.post<any>(`https://apitoliboy.lat/api/auth/register`, user).pipe(
+        return this.http.post<any>(`https://test.apitoliboy.lat/api/auth/register`, user).pipe(
             // si el backend devuelve { status, message, data: user }
             map((resp) => resp?.data ?? resp),
             catchError(this.handleError)
